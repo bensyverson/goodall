@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goodall web chat</title>
+<style>
+  :root { color-scheme: light dark; --edge: color-mix(in srgb, currentColor 15%, transparent); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0 auto; max-width: 46rem; padding: 1rem;
+    font: 16px/1.5 system-ui, sans-serif;
+    display: flex; flex-direction: column; min-height: 100vh; gap: .75rem;
+  }
+  header { display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; }
+  header h1 { font-size: 1.1rem; margin: 0; letter-spacing: .02em; }
+  header .meta { font-size: .8rem; opacity: .65; margin-left: auto; }
+  #transcript, #live { display: flex; flex-direction: column; gap: .75rem; }
+  #live { opacity: .95; }
+  .msg { border: 1px solid var(--edge); border-radius: .6rem; padding: .6rem .8rem; }
+  .msg.user { background: color-mix(in srgb, currentColor 6%, transparent); }
+  .msg .who { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; opacity: .55; }
+  .msg p { margin: .35rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  details.think { margin: .35rem 0; font-size: .9rem; opacity: .8; }
+  details.think > div { white-space: pre-wrap; border-left: 2px solid var(--edge); padding-left: .6rem; margin-top: .35rem; }
+  .chip {
+    display: inline-flex; align-items: center; gap: .35rem; margin: .2rem .3rem .2rem 0;
+    border: 1px solid var(--edge); border-radius: 999px; padding: .1rem .6rem;
+    font-size: .8rem; font-family: ui-monospace, monospace;
+  }
+  .chip .dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; opacity: .4; }
+  .chip.running .dot { animation: pulse 1s ease-in-out infinite; }
+  .chip.ok .dot { background: seagreen; opacity: 1; }
+  .chip.error .dot { background: crimson; opacity: 1; }
+  @keyframes pulse { 50% { opacity: .15; } }
+  .media, .mark { font-size: .85rem; opacity: .6; font-style: italic; }
+  form { display: flex; gap: .5rem; margin-top: auto; position: sticky; bottom: 0; padding-bottom: .5rem; background: Canvas; }
+  input, button { font: inherit; border-radius: .5rem; border: 1px solid var(--edge); padding: .5rem .8rem; }
+  input { flex: 1; min-width: 0; background: Canvas; color: inherit; }
+  button { cursor: pointer; background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; }
+  button[disabled] { cursor: default; opacity: .4; }
+  #note { font-size: .85rem; color: crimson; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>goodall</h1>
+  <button id="new" type="button">New thread</button>
+  <span class="meta" id="meta"></span>
+</header>
+
+<div id="transcript"></div>
+<div id="live"></div>
+<div id="note" role="status"></div>
+
+<form id="composer" autocomplete="off">
+  <input id="text" name="text" placeholder="Say something…" aria-label="Message">
+  <button id="send">Send</button>
+  <button id="stop" type="button" disabled>Stop</button>
+</form>
+
+<script>
+"use strict";
+
+// The event names the server writes frames under. An EventSource delivers a
+// named frame only to a listener for that name, so every one the page acts on
+// is listed here; the rest of goodall's events are simply not listened for.
+const EVENTS = [
+  "turn_start", "message_start", "block_start", "text_delta", "thinking_delta",
+  "signature_delta", "tool_input_delta", "block_stop", "message_delta",
+  "message_stop", "tool_call_start", "tool_call_end", "turn_end", "unknown",
+  "done", "stopped",
+];
+
+const el = {
+  transcript: document.getElementById("transcript"),
+  live: document.getElementById("live"),
+  note: document.getElementById("note"),
+  meta: document.getElementById("meta"),
+  form: document.getElementById("composer"),
+  text: document.getElementById("text"),
+  send: document.getElementById("send"),
+  stop: document.getElementById("stop"),
+  fresh: document.getElementById("new"),
+};
+
+let threadID = "";
+let source = null;      // the open EventSource, or null
+let sawEvent = false;   // anything arrived on this connection
+let sawTerminal = false;// a done or stopped frame arrived on this connection
+let endTimer = 0;       // fallback for a stream the server ended but a proxy holds open
+let messageSeq = 0;     // which assistant message of the run the deltas belong to
+const liveNodes = new Map();
+
+// ---- routes -----------------------------------------------------------
+
+const threadURL = id => "/threads/" + encodeURIComponent(id);
+
+async function createThread() {
+  const resp = await fetch("/threads", { method: "POST" });
+  if (!resp.ok) throw new Error("could not create a thread");
+  return resp.json();
+}
+
+async function fetchView(id) {
+  const resp = await fetch(threadURL(id));
+  return resp.ok ? resp.json() : null;
+}
+
+// ---- the thread the page is looking at --------------------------------
+
+// A thread id lives in the fragment so a link reopens the same conversation,
+// and in localStorage so a plain reload does too.
+function rememberThread(id) {
+  threadID = id;
+  localStorage.setItem("goodall.thread", id);
+  if (location.hash.slice(1) !== id) history.replaceState(null, "", "#" + id);
+}
+
+// The line the person sent is not in the thread until the run ends — the
+// service persists once — and it is not an event either, so the page keeps it
+// until the answer is stored. This is what makes a reload mid-answer show the
+// question as well as the partial answer.
+const pendingKey = () => "goodall.pending." + threadID;
+const pending = () => localStorage.getItem(pendingKey()) || "";
+const setPending = text => text ? localStorage.setItem(pendingKey(), text) : localStorage.removeItem(pendingKey());
+
+// ---- rendering the stored thread --------------------------------------
+
+function render(view) {
+  el.transcript.replaceChildren();
+  // A tool call and its result are two blocks in two messages; the call is
+  // what a reader wants to see, with how it turned out on it.
+  const status = new Map();
+  for (const msg of view.messages) {
+    for (const block of msg.content) {
+      if (block.kind === "tool_result") status.set(block.tool_use_id, block.status);
+    }
+  }
+  for (const msg of view.messages) {
+    const blocks = msg.content.filter(b => b.kind !== "tool_result");
+    if (blocks.length === 0) continue;
+    const node = messageNode(msg.role);
+    for (const block of blocks) node.append(blockNode(block, status));
+    if (msg.partial) node.append(mark("interrupted"));
+    el.transcript.append(node);
+  }
+  el.meta.textContent = summary(view);
+}
+
+function summary(view) {
+  const u = view.usage || {};
+  const parts = [];
+  const tokens = (u.input_tokens || 0) + (u.output_tokens || 0);
+  if (tokens) parts.push(tokens + " tokens");
+  if (view.cost && view.cost.reported) parts.push("$" + Number(view.cost.amount).toFixed(4));
+  if (view.system) parts.push("system prompt set");
+  return parts.join(" · ");
+}
+
+function messageNode(role) {
+  const node = document.createElement("div");
+  node.className = "msg " + role;
+  const who = document.createElement("div");
+  who.className = "who";
+  who.textContent = role;
+  node.append(who);
+  return node;
+}
+
+function blockNode(block, status) {
+  switch (block.kind) {
+    case "text": return textNode(block.text);
+    case "thinking": return thinkingNode(block.text);
+    case "redacted_thinking": return mark("thought, encrypted by the provider");
+    case "tool_call": return chipNode(block.tool_name, status.get(block.tool_use_id) || "ok");
+    case "image": return mark("image: " + mediaLabel(block.media));
+    case "document": return mark("document: " + mediaLabel(block.media));
+    case "unknown": return mark("a " + (block.block_type || "unknown") + " block");
+    default: return mark("a " + block.kind + " block");
+  }
+}
+
+// Media is a placeholder by design: the view carries where a picture came
+// from, never its bytes, because the page is the side that sent them.
+function mediaLabel(media) {
+  if (!media) return "unavailable";
+  return media.title || media.url || media.file_id || (media.media_type || "bytes") + " held by the server";
+}
+
+function textNode(text) {
+  const p = document.createElement("p");
+  p.textContent = text;
+  return p;
+}
+
+function thinkingNode(text) {
+  const details = document.createElement("details");
+  details.className = "think";
+  const summaryEl = document.createElement("summary");
+  summaryEl.textContent = "Thinking";
+  const body = document.createElement("div");
+  body.textContent = text || "(not displayed)";
+  details.append(summaryEl, body);
+  return details;
+}
+
+function chipNode(name, state) {
+  const chip = document.createElement("span");
+  chip.className = "chip " + state;
+  const dot = document.createElement("span");
+  dot.className = "dot";
+  const label = document.createElement("span");
+  label.textContent = name + (state === "running" ? "…" : "");
+  chip.append(dot, label);
+  return chip;
+}
+
+function mark(text) {
+  const span = document.createElement("div");
+  span.className = "mark";
+  span.textContent = "[" + text + "]";
+  return span;
+}
+
+function note(text) { el.note.textContent = text; }
+
+// ---- the run in flight ------------------------------------------------
+
+// The live area is rebuilt from the stream every time the page attaches,
+// because a subscription replays the run's events verbatim before its live
+// tail: folding the replay gives exactly what an earlier listener is looking
+// at, so there is no second code path for catching up.
+function resetLive() {
+  liveNodes.clear();
+  el.live.replaceChildren();
+  messageSeq = 0;
+  const question = pending();
+  if (question) {
+    const node = messageNode("user");
+    node.append(textNode(question));
+    el.live.append(node);
+  }
+}
+
+function liveMessage() {
+  let node = liveNodes.get("msg:" + messageSeq);
+  if (!node) {
+    node = messageNode("assistant");
+    liveNodes.set("msg:" + messageSeq, node);
+    el.live.append(node);
+  }
+  return node;
+}
+
+function liveNode(key, make) {
+  let node = liveNodes.get(key);
+  if (!node) {
+    node = make();
+    liveNodes.set(key, node);
+    liveMessage().append(node);
+  }
+  return node;
+}
+
+function apply(ev) {
+  switch (ev.type) {
+    case "turn_start":
+      running(true);
+      break;
+    case "message_start":
+      messageSeq++;
+      break;
+    case "text_delta": {
+      const p = liveNode(messageSeq + ":text:" + (ev.index || 0), () => textNode(""));
+      p.textContent += ev.text || "";
+      break;
+    }
+    case "thinking_delta": {
+      const details = liveNode(messageSeq + ":think:" + (ev.index || 0), () => thinkingNode(""));
+      const body = details.lastElementChild;
+      if (body.textContent === "(not displayed)") body.textContent = "";
+      body.textContent += ev.text || "";
+      break;
+    }
+    case "tool_call_start":
+      replaceChip(ev.tool_use.id, ev.tool_use.name, "running");
+      break;
+    case "tool_call_end":
+      replaceChip(ev.tool_use.id, ev.tool_use.name, ev.result && ev.result.is_error ? "error" : "ok");
+      break;
+    case "done":
+      terminal("");
+      break;
+    case "stopped":
+      terminal(ev.cause || "stopped");
+      break;
+  }
+  window.scrollTo({ top: document.body.scrollHeight });
+}
+
+function replaceChip(id, name, state) {
+  const key = "tool:" + id;
+  const fresh = chipNode(name, state);
+  const existing = liveNodes.get(key);
+  if (existing) existing.replaceWith(fresh); else liveMessage().append(fresh);
+  liveNodes.set(key, fresh);
+}
+
+// A terminal event says the run is over, but the service persists the thread
+// *after* it and closes the stream after that, so the stored thread is read
+// when the stream ends rather than here. The timer covers a stream the server
+// ended and something in between is still holding open.
+function terminal(cause) {
+  sawTerminal = true;
+  running(false);
+  if (cause) note("the run ended early: " + cause);
+  clearTimeout(endTimer);
+  endTimer = setTimeout(endOfRun, 2000);
+}
+
+async function endOfRun() {
+  clearTimeout(endTimer);
+  closeEvents();
+  setPending("");
+  const view = await fetchView(threadID);
+  if (view) render(view);
+  liveNodes.clear();
+  el.live.replaceChildren();
+}
+
+// ---- the event stream -------------------------------------------------
+
+function openEvents() {
+  closeEvents();
+  resetLive();
+  sawEvent = false;
+  sawTerminal = false;
+  source = new EventSource(threadURL(threadID) + "/events");
+  for (const name of EVENTS) {
+    source.addEventListener(name, e => { sawEvent = true; apply(JSON.parse(e.data)); });
+  }
+  // An EventSource delivers its own connection failures as "error" too, and
+  // the chat layer's error frame is named "error" as well: a frame has data,
+  // a connection failure does not.
+  source.addEventListener("error", e => e.data ? streamError(JSON.parse(e.data)) : disconnected());
+}
+
+function closeEvents() {
+  if (source) { source.close(); source = null; }
+}
+
+function streamError(frame) {
+  note(frame.message || "the stream failed");
+  // A dropped subscriber catches up by attaching again: the run replays.
+  if (frame.code === "subscriber_overflow") openEvents();
+}
+
+// The stream ended. An EventSource would reconnect for ever, including to a
+// thread with nothing running, so the page decides instead: after a terminal
+// event the run is over, after events without one the connection dropped
+// mid-answer and is worth one reattach, and with no events at all there was
+// simply nothing in flight.
+function disconnected() {
+  closeEvents();
+  if (sawTerminal) { endOfRun(); return; }
+  if (sawEvent) { setTimeout(openEvents, 500); return; }
+  running(false);
+}
+
+function running(active) {
+  el.stop.disabled = !active;
+  el.send.disabled = active;
+}
+
+// ---- actions ----------------------------------------------------------
+
+el.form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = el.text.value.trim();
+  if (!text) return;
+  note("");
+  el.text.value = "";
+  const resp = await fetch(threadURL(threadID) + "/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!resp.ok) {
+    const body = await resp.json().catch(() => ({}));
+    note(body.error || "the message was refused");
+    el.text.value = text; // a refused line is handed back rather than lost
+    return;
+  }
+  setPending(text);
+  running(true);
+  openEvents();
+});
+
+el.stop.addEventListener("click", async () => {
+  const resp = await fetch(threadURL(threadID) + "/stop", { method: "POST" });
+  if (!resp.ok && resp.status !== 409) note("could not stop the run");
+});
+
+el.fresh.addEventListener("click", async () => {
+  closeEvents();
+  setPending("");
+  const view = await createThread();
+  rememberThread(view.id);
+  render(view);
+  el.live.replaceChildren();
+  note("");
+});
+
+// ---- start ------------------------------------------------------------
+
+async function start() {
+  let id = location.hash.slice(1) || localStorage.getItem("goodall.thread") || "";
+  let view = id ? await fetchView(id) : null;
+  if (!view) view = await createThread();
+  rememberThread(view.id);
+  render(view);
+  // Always attach, even on a plain load: a reload in the middle of an answer
+  // is handed the run's backlog and then keeps streaming, and a thread with
+  // nothing in flight streams nothing and ends.
+  openEvents();
+  el.text.focus();
+}
+
+start().catch(err => note("could not start: " + err.message));
+</script>
+</body>
+</html>
