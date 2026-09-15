@@ -25,3 +25,7 @@ Writing a test case for BOM-stripping with `"﻿" + "data: ..."` fails the build
 ## 2026-09-14 Inside `synctest.Test`, derive contexts from `context.Background()`, not `t.Context()`
 
 `synctest.Test` waits for every bubbled goroutine to exit before it returns, and `t.Context()` is only cancelled when the test function returns; a goroutine parked on that context (the transport's body watcher, anything selecting on `ctx.Done()`) deadlocks the bubble. A nil `Done` channel is the mirror trap: a `select` over one is not durably blocked, so the bubble never goes idle and fake time never advances. Found by the transport leaf (`internal/transport/retry_test.go` shows the working pattern).
+
+## 2026-09-14 A second `json.WithUnmarshalers` replaces the first instead of adding to it
+
+The root package now has two interface dispatches, `Block` and `Event`. Building the option set as `json.JoinOptions(json.WithUnmarshalers(evFn), blockUnmarshalers)` compiles and runs, and the *event* dispatch silently never fires: json/v2 treats a later option of the same kind as an override, so only the block unmarshalers survive. The failure reads as "cannot derive concrete type for nil interface with finite type set" on the outer type, which points at the interface rather than at the options. Join the funcs, not the options: `json.WithUnmarshalers(json.JoinUnmarshalers(json.UnmarshalFromFunc(a), json.UnmarshalFromFunc(b)))`. Any leaf adding a third dispatch does the same.

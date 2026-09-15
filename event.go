@@ -1,0 +1,318 @@
+package goodall
+
+import "encoding/json/jsontext"
+
+// EventType is the tag that identifies an event on the wire. Providers
+// neutralise their own event vocabularies onto these, and the agent loop adds
+// the six that describe a run; anything a provider sends that does not map
+// onto one arrives as an UnknownEvent rather than being dropped.
+type EventType string
+
+const (
+	// EventMessageStart opens an assistant message.
+	EventMessageStart EventType = "message_start"
+	// EventBlockStart opens a content block.
+	EventBlockStart EventType = "block_start"
+	// EventTextDelta adds text to an open text block.
+	EventTextDelta EventType = "text_delta"
+	// EventThinkingDelta adds text to an open thinking block.
+	EventThinkingDelta EventType = "thinking_delta"
+	// EventSignatureDelta adds the signature of an open thinking block.
+	EventSignatureDelta EventType = "signature_delta"
+	// EventToolInputDelta adds a fragment of an open tool call's input.
+	EventToolInputDelta EventType = "tool_input_delta"
+	// EventBlockStop closes a content block.
+	EventBlockStop EventType = "block_stop"
+	// EventMessageDelta carries the stop reason and the message's usage.
+	EventMessageDelta EventType = "message_delta"
+	// EventMessageStop closes the assistant message.
+	EventMessageStop EventType = "message_stop"
+	// EventUnknown is a provider event goodall does not recognise.
+	EventUnknown EventType = "unknown"
+
+	// EventTurnStart opens one model call of a run.
+	EventTurnStart EventType = "turn_start"
+	// EventToolCallStart reports that a tool is about to run.
+	EventToolCallStart EventType = "tool_call_start"
+	// EventToolCallEnd reports a tool's result.
+	EventToolCallEnd EventType = "tool_call_end"
+	// EventTurnEnd closes one model call of a run.
+	EventTurnEnd EventType = "turn_end"
+	// EventDone is the terminal event of a run that finished.
+	EventDone EventType = "done"
+	// EventStopped is the terminal event of a run that ended early.
+	EventStopped EventType = "stopped"
+)
+
+// String names the event type as it appears on the wire.
+func (t EventType) String() string { return string(t) }
+
+// Known reports whether this is one of the event types goodall defines.
+func (t EventType) Known() bool {
+	switch t {
+	case EventMessageStart, EventBlockStart, EventTextDelta, EventThinkingDelta,
+		EventSignatureDelta, EventToolInputDelta, EventBlockStop, EventMessageDelta,
+		EventMessageStop, EventUnknown:
+		return true
+	}
+	return t.FromLoop()
+}
+
+// FromLoop reports whether the agent loop emits this event rather than a
+// provider. A run stream carries both kinds, and an accumulator over the
+// model's message ignores the loop's.
+func (t EventType) FromLoop() bool {
+	switch t {
+	case EventTurnStart, EventToolCallStart, EventToolCallEnd, EventTurnEnd, EventDone, EventStopped:
+		return true
+	}
+	return false
+}
+
+// Event is one thing that happened while a model answered or while a run
+// progressed. The interface is sealed: only the types in this package
+// implement it, so a type switch over an Event is exhaustive once it handles
+// UnknownEvent. Events are values, so a Stream yields MessageStart{…} rather
+// than &MessageStart{…}, and every one is JSON-serialisable (invariant 4).
+type Event interface {
+	// Type is the event's wire tag, so a consumer can log or route an
+	// event without a full type switch.
+	Type() EventType
+	isEvent()
+}
+
+// MessageStart opens an assistant message. Usage is what the provider knows
+// at the start, which on Anthropic is the input side of the ledger; the
+// output counts arrive on MessageDelta.
+type MessageStart struct {
+	ID    string `json:"id,omitzero"`
+	Model string `json:"model,omitzero"`
+	Usage Usage  `json:"usage,omitzero"`
+}
+
+// BlockStart opens a content block at Index. Block is the block as far as the
+// provider knows it at the opening: a Text or Thinking with no content yet, a
+// ToolUse with its id and name but no input, a RedactedThinking that is
+// already complete, or an Unknown carrying the provider's bytes.
+type BlockStart struct {
+	Index int   `json:"index,omitzero"`
+	Block Block `json:"block,omitzero"`
+}
+
+// TextDelta adds text to the open text block at Index.
+type TextDelta struct {
+	Index int    `json:"index,omitzero"`
+	Text  string `json:"text,omitzero"`
+}
+
+// ThinkingDelta adds text to the open thinking block at Index. It arrives
+// empty when the request asked for thinking to be omitted, which still opens
+// and closes a block, because the block itself must be replayed.
+type ThinkingDelta struct {
+	Index int    `json:"index,omitzero"`
+	Text  string `json:"text,omitzero"`
+}
+
+// SignatureDelta carries the signature of the open thinking block at Index.
+// The signature binds the block to the conversation prefix that produced it,
+// so it is never regenerated, only replayed.
+type SignatureDelta struct {
+	Index     int    `json:"index,omitzero"`
+	Signature string `json:"signature,omitzero"`
+}
+
+// ToolInputDelta adds a fragment of the open tool call's input at Index. The
+// fragments are pieces of a JSON document, not JSON values in their own
+// right, so they are concatenated and parsed only once the block closes.
+type ToolInputDelta struct {
+	Index       int    `json:"index,omitzero"`
+	PartialJSON string `json:"partial_json,omitzero"`
+}
+
+// BlockStop closes the block at Index. Raw is the provider's finished block,
+// set only when the neutral fields cannot reproduce it — an OpenRouter
+// reasoning_details entry, whose id, format and index have to go back
+// verbatim. Anthropic rebuilds a thinking block from its text and signature
+// and leaves Raw empty.
+type BlockStop struct {
+	Index int            `json:"index,omitzero"`
+	Raw   jsontext.Value `json:"raw,omitzero"`
+}
+
+// MessageDelta carries the stop reason and the message's usage. Usage is
+// cumulative for the message, not an increment, so a later MessageDelta
+// replaces an earlier one rather than adding to it.
+type MessageDelta struct {
+	StopReason   StopReason `json:"stop_reason,omitzero"`
+	StopSequence string     `json:"stop_sequence,omitzero"`
+	Usage        Usage      `json:"usage,omitzero"`
+	Cost         Cost       `json:"cost,omitzero"`
+}
+
+// MessageStop closes the assistant message. It is the only event that makes a
+// collected message complete rather than partial.
+type MessageStop struct{}
+
+// UnknownEvent is a provider event this version of goodall does not
+// recognise. It keeps the provider's own tag and bytes so a consumer can see
+// what arrived, because both providers add event types without notice and the
+// Anthropic docs require unknown ones to be tolerated.
+//
+// Unlike an Unknown block, it is written under goodall's own "unknown" tag
+// with the provider's tag beside it: an event travels to a front end, never
+// back to a provider, so the front end's switch never meets a surprise tag.
+type UnknownEvent struct {
+	EventType EventType      `json:"event_type,omitzero"`
+	Raw       jsontext.Value `json:"raw,omitzero"`
+}
+
+// TurnStart opens one model call of a run. Turns are numbered from one.
+type TurnStart struct {
+	Turn int `json:"turn,omitzero"`
+}
+
+// ToolCallStart reports that the loop is about to run a tool, after any hook
+// has allowed it.
+type ToolCallStart struct {
+	ToolUse ToolUse `json:"tool_use"`
+}
+
+// ToolCallEnd reports a tool's result, including the error results that a
+// failed or refused call produces: every tool_use gets a tool_result.
+type ToolCallEnd struct {
+	ToolUse ToolUse    `json:"tool_use"`
+	Result  ToolResult `json:"result"`
+}
+
+// TurnEnd closes one model call of a run and carries the whole response, so a
+// consumer that ignores the deltas can still render turn by turn.
+type TurnEnd struct {
+	Turn     int      `json:"turn,omitzero"`
+	Response Response `json:"response"`
+}
+
+// Done is the terminal event of a run that reached a natural end.
+type Done struct {
+	Result Result `json:"result"`
+}
+
+// StopCause is why a run ended before a natural end. It is separate from
+// StopReason, which is why the *model* stopped generating: a run can end for
+// reasons the model knows nothing about.
+type StopCause string
+
+const (
+	// StopCauseCancelled is the caller's context being cancelled.
+	StopCauseCancelled StopCause = "cancelled"
+	// StopCauseTurnLimit is the run's turn budget being spent.
+	StopCauseTurnLimit StopCause = "turn_limit"
+	// StopCauseTokenLimit is the run's token budget being spent.
+	StopCauseTokenLimit StopCause = "token_limit"
+	// StopCauseTimeout is the run's wall-clock budget being spent.
+	StopCauseTimeout StopCause = "timeout"
+	// StopCauseHook is a hook short-circuiting the run.
+	StopCauseHook StopCause = "hook"
+	// StopCauseDeferred is a hook deferring a tool call for approval; the
+	// calls are in the result's Pending.
+	StopCauseDeferred StopCause = "deferred"
+	// StopCauseRefusal is the model declining. Its tool calls are not run.
+	StopCauseRefusal StopCause = "refusal"
+	// StopCauseMaxTokens is the model hitting the output limit, whose
+	// truncated tool input must never be run.
+	StopCauseMaxTokens StopCause = "max_tokens"
+	// StopCauseError is a failure: the message and the kind say which.
+	StopCauseError StopCause = "error"
+	// StopCauseUnknownStop is a stop reason goodall does not recognise,
+	// which ends the run rather than being guessed at.
+	StopCauseUnknownStop StopCause = "unknown_stop"
+)
+
+// String names the cause.
+func (c StopCause) String() string { return string(c) }
+
+// Known reports whether this is one of the causes goodall defines.
+func (c StopCause) Known() bool {
+	switch c {
+	case StopCauseCancelled, StopCauseTurnLimit, StopCauseTokenLimit, StopCauseTimeout,
+		StopCauseHook, StopCauseDeferred, StopCauseRefusal, StopCauseMaxTokens,
+		StopCauseError, StopCauseUnknownStop:
+		return true
+	}
+	return false
+}
+
+// Stopped is the terminal event of a run that ended early. It is not itself an
+// error: a failure travels as Message plus Kind (invariant 4), so the event
+// stays JSON-serialisable and a front end renders the same shape whether the
+// run was cancelled, budgeted out or broken.
+type Stopped struct {
+	Cause   StopCause `json:"cause,omitzero"`
+	Message string    `json:"message,omitzero"`
+	Kind    ErrorKind `json:"kind,omitzero"`
+	Result  Result    `json:"result"`
+}
+
+// Type reports the event's wire tag.
+func (MessageStart) Type() EventType { return EventMessageStart }
+
+// Type reports the event's wire tag.
+func (BlockStart) Type() EventType { return EventBlockStart }
+
+// Type reports the event's wire tag.
+func (TextDelta) Type() EventType { return EventTextDelta }
+
+// Type reports the event's wire tag.
+func (ThinkingDelta) Type() EventType { return EventThinkingDelta }
+
+// Type reports the event's wire tag.
+func (SignatureDelta) Type() EventType { return EventSignatureDelta }
+
+// Type reports the event's wire tag.
+func (ToolInputDelta) Type() EventType { return EventToolInputDelta }
+
+// Type reports the event's wire tag.
+func (BlockStop) Type() EventType { return EventBlockStop }
+
+// Type reports the event's wire tag.
+func (MessageDelta) Type() EventType { return EventMessageDelta }
+
+// Type reports the event's wire tag.
+func (MessageStop) Type() EventType { return EventMessageStop }
+
+// Type reports the event's wire tag.
+func (UnknownEvent) Type() EventType { return EventUnknown }
+
+// Type reports the event's wire tag.
+func (TurnStart) Type() EventType { return EventTurnStart }
+
+// Type reports the event's wire tag.
+func (ToolCallStart) Type() EventType { return EventToolCallStart }
+
+// Type reports the event's wire tag.
+func (ToolCallEnd) Type() EventType { return EventToolCallEnd }
+
+// Type reports the event's wire tag.
+func (TurnEnd) Type() EventType { return EventTurnEnd }
+
+// Type reports the event's wire tag.
+func (Done) Type() EventType { return EventDone }
+
+// Type reports the event's wire tag.
+func (Stopped) Type() EventType { return EventStopped }
+
+func (MessageStart) isEvent()   {}
+func (BlockStart) isEvent()     {}
+func (TextDelta) isEvent()      {}
+func (ThinkingDelta) isEvent()  {}
+func (SignatureDelta) isEvent() {}
+func (ToolInputDelta) isEvent() {}
+func (BlockStop) isEvent()      {}
+func (MessageDelta) isEvent()   {}
+func (MessageStop) isEvent()    {}
+func (UnknownEvent) isEvent()   {}
+func (TurnStart) isEvent()      {}
+func (ToolCallStart) isEvent()  {}
+func (ToolCallEnd) isEvent()    {}
+func (TurnEnd) isEvent()        {}
+func (Done) isEvent()           {}
+func (Stopped) isEvent()        {}

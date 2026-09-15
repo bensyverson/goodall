@@ -66,6 +66,18 @@ type ModelLister interface {        // optional
 
 **Streams and events.** `type Stream iter.Seq2[Event, error]` with `Collect() (*Message, error)`, which runs the accumulator. Events are a sealed family. Provider events: `MessageStart`, `BlockStart`, `TextDelta`, `ThinkingDelta`, `ToolInputDelta`, `BlockStop`, `MessageDelta` (stop reason, cumulative usage), `MessageStop`, `Unknown{Type, Raw}`. Loop events: `TurnStart`, `ToolCallStart`, `ToolCallEnd`, `TurnEnd`, `Done{Result}`, `Stopped{Reason, Result}`. Each event has a stable JSON shape with a `type` discriminator. The accumulator exposes "just finished" edges (a completed tool-use block) and a resumable prefix (all complete text blocks).
 
+> **Corrected 2026-09-14 while building the provider seam and the event stream.** Five details of the two paragraphs above changed; the code is the authority.
+>
+> *Collect returns a `*Response`, not a `*Message`, and so does `Completer.Complete`.* A turn that returned only the message loses the stop reason and the usage — the Swift predecessor's bug — and the loop's whole job is to act on the stop reason. `Response{ID, Model, Message, StopReason, StopSequence, Usage, Cost}`. A run stream is collected by a second method, `CollectResult() (*Result, error)`, which reads the `Result` off the terminal `Done` or `Stopped` rather than folding events; a run stream with no terminal event is a `*ProtocolError`.
+>
+> *The provider event list was missing `SignatureDelta{Index, Signature}`*, which Anthropic sends as its own delta type and which `display: "omitted"` sends even when the thinking text is empty. `BlockStop` carries an optional `Raw jsontext.Value` — the provider's finished block, for the cases the neutral fields cannot rebuild it (OpenRouter's `reasoning_details`).
+>
+> *The unknown provider event is `UnknownEvent`, not `Unknown`*: `Unknown` is already the unknown *block*, and both live in the root package. It writes itself under goodall's own `"unknown"` tag with the provider's tag in `event_type` and its bytes in `raw`, rather than re-emitting the raw verbatim as the unknown block does: an event travels to a front end and never back to a provider, so a front end's switch on `type` never meets a surprise value.
+>
+> *`Stopped` is `{Cause StopCause, Message string, Kind ErrorKind, Result Result}`.* "Reason" collided with `StopReason`, which is why the *model* stopped generating; a run can end for reasons the model knows nothing about. Errors travel as message plus kind (invariant 4), so `Stopped` stays JSON-serialisable and is not itself an error.
+>
+> *`Request.Extensions` is an `Extension` interface* with one method, `Provider() string`. Each provider defines its own options struct, names itself, and rejects another provider's before sending, so a request built for one provider fails loudly on another instead of losing its options.
+
 **Tools.**
 
 ```go
@@ -108,7 +120,7 @@ type Agent struct {
 func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stream
 ```
 
-`Run` appends the input as a user message, then loops: apply hooks, send, accumulate, classify the stop reason (tool use runs tools; pause resends; refusal, max tokens and unknown stop), run tools concurrently with `sync.WaitGroup.Go`, append the assistant message and all results together, repeat until the budget or a terminal stop. `Collect` on the run stream yields a `Result{Message, Conversation, Usage, Cost, StopReason, Pending []ToolUse}`. Cancellation propagates to the request and to running tools; the loop waits for them, marks the assistant message partial, and emits `Stopped`. Resuming is another `Run` over the returned conversation.
+`Run` appends the input as a user message, then loops: apply hooks, send, accumulate, classify the stop reason (tool use runs tools; pause resends; refusal, max tokens and unknown stop), run tools concurrently with `sync.WaitGroup.Go`, append the assistant message and all results together, repeat until the budget or a terminal stop. `Collect` on the run stream yields a `Result{Message, Conversation, Usage, Cost, StopReason, Pending []ToolUse}`. *(Corrected 2026-09-14: `CollectResult` on the run stream yields `Result{Response *Response, Conversation, Usage, Cost, StopReason, Pending []ToolUse}` — the whole last response rather than its message alone, and read off the terminal event rather than accumulated. See the block quote under "Streams and events".)* Cancellation propagates to the request and to running tools; the loop waits for them, marks the assistant message partial, and emits `Stopped`. Resuming is another `Run` over the returned conversation.
 
 **Stop and pause are different mechanisms.** *Stop* means "stop generating tokens now": cancel the run's context, the provider aborts the request (both providers stop billing on an aborted stream), and the partial text is kept. *Pause* means the loop yields at a boundary and can be continued later: a hook defers a tool call for approval, or the turn budget runs out, and the result carries the conversation and any pending calls. Both end in a terminal event; neither loses the conversation.
 
