@@ -59,9 +59,17 @@ func checkImports(root, rel string) ([]violation, error) {
 		return nil, err
 	}
 	var out []violation
+	// self is this package's own import path, which its external test
+	// package imports to reach the API it is testing. That is the package
+	// under test rather than a dependency, so it breaks no rule.
+	self := modulePath
+	if rel != "." {
+		self = modulePath + "/" + rel
+	}
 	check := func(imports []string, external bool) {
 		for _, imp := range imports {
 			switch {
+			case imp == self && external:
 			case strings.HasPrefix(imp, modulePath+"/"):
 				if rel == "." && !external {
 					out = append(out, violation{rel, imp, "the root package must not import a subpackage"})
@@ -117,7 +125,10 @@ func TestCheckImportsCatchesViolations(t *testing.T) {
 	}
 	write("a.go", "package goodall\n\nimport (\n\t_ \"fmt\"\n\t_ \"github.com/example/dep\"\n\t_ \""+modulePath+"/anthropic\"\n)\n")
 	write("a_test.go", "package goodall\n\nimport _ \"testing\"\n")
-	write("b_test.go", "package goodall_test\n\nimport (\n\t_ \""+modulePath+"/anthropic\"\n\t_ \"golang.org/x/tools/present\"\n)\n")
+	// The external test file imports the package under test, which must not
+	// count, alongside a subpackage, which is allowed there, and a
+	// third-party module, which is not.
+	write("b_test.go", "package goodall_test\n\nimport (\n\t_ \""+modulePath+"\"\n\t_ \""+modulePath+"/anthropic\"\n\t_ \"golang.org/x/tools/present\"\n)\n")
 
 	violations, err := checkImports(root, ".")
 	if err != nil {
