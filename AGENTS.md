@@ -4,7 +4,7 @@ IMPORTANT: As you implement features, keep [README.md](README.md) and the dated 
 
 You are working on `goodall`, a reusable, extensible core Go library for agentic prototyping: an agentic loop (an LLM conversation with user-definable tools) that works for any "give an LLM tools" task, chat-shaped or not, plus a set of *optional* components that make chat-oriented agents fast to build. It serves two consumers equally — someone spinning up a chat prototype (a web chat, the Go back end of a mobile app) and someone building a highly customised agent who wants the boilerplate handled — so simple things must be easy and complex things possible. The core is provider-flexible, not provider-agnostic: Anthropic and OpenRouter at minimum, each with full support for streaming, vision and other media, thinking blocks and tool schemas. Streaming is the default with a blocking path available. Its Swift predecessors are the sibling repos `../LLM/` (multi-provider API wrapper) and `../Operator/` (the agentic portion); whether goodall is one library or two like them is an open architecture question, and architecture is the first thing to resolve.
 
-Minimal — ideally zero — dependencies, brought in only with a strong case. Modern Go 1.27 idioms, adopting newer language features where they make code clearer, without going wild on abstraction: the codebase should stay small and tractable. The JSON wrangling and cross-provider differences are covered by a decent number of high-quality unit tests. Module path, licence and the exact package layout are not yet decided; record them in a dated `project/` document when they are.
+Minimal — ideally zero — dependencies, brought in only with a strong case. Modern Go 1.27 idioms, adopting newer language features where they make code clearer, without going wild on abstraction: the codebase should stay small and tractable. The JSON wrangling and cross-provider differences are covered by a decent number of high-quality unit tests. Module path `github.com/bensyverson/goodall` (decided 2026-09-14): the root package `goodall` is the core loop, and providers and optional layers are subpackages (`goodall/anthropic`, `goodall/openrouter`, `goodall/chat`) so the zero-dependency core stays importable on its own. Licence and the exact package layout are not yet decided; record them in a dated `project/` document when they are.
 
 ## Documentation
 
@@ -19,7 +19,7 @@ Minimal — ideally zero — dependencies, brought in only with a strong case. M
 
 ## Build and test
 
-- No `go.mod` yet. Once it exists: `go build ./...` builds everything, `go test ./...` is the full suite. Live-provider tests, when added, read API keys from `.env` (gitignored) and skip when it is absent; the unit suite must pass offline.
+- `go build ./...` builds everything, `go test ./...` is the full suite. `go.mod` pins `go 1.27.0`. Live-provider tests, when added, read API keys from `.env` (gitignored) and skip when it is absent; the unit suite must pass offline.
 - Before every commit: `go fix ./...`, `gofmt -w .`, `go vet ./...`, `go mod tidy`, then the tests. **No pre-commit hook yet**; run them yourself.
 - `git` refuses inside the Bash sandbox (`~/.gitconfig` is unreadable there); re-run git commands with the sandbox disabled, one call at a time — see `project/agents/harness.md`.
 
