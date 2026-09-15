@@ -45,3 +45,7 @@ Preserved thinking allows only "summary as a fresh first message" client-side, o
 ## 2026-09-14 Audio input
 
 OpenRouter carries `input_audio`; Anthropic does not accept audio blocks. Not in v1 so the block set has no case a provider silently drops. Revive by adding an `Audio` block with a capability fact when a consumer needs it through OpenRouter.
+
+## 2026-09-15 Strict tool schemas and structured output on OpenRouter
+
+The plan says the OpenRouter dialect decides whether `strict: true` tools need the `x-anthropic-beta: structured-outputs-2025-11-13` header, and `response_format{json_schema}` is the structured-output path. Neither is built: `goodall.Tool` carries no strict flag and `Request` has no output-format field, so there is nothing neutral to translate from. Parked because no consumer needs it for v1 and it is a root-package decision (a `Strict` fact on tools, an output schema on the request) before it is a provider one. Revive when a consumer needs schema-enforced tool arguments or JSON-schema output; it would be one leaf across the root and both providers.
