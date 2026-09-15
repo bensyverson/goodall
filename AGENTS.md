@@ -21,7 +21,7 @@ Minimal — ideally zero — dependencies, brought in only with a strong case. M
 
 - `go build ./...` builds everything. **`go test -short ./...` is the offline suite** and must pass with no `.env`. A plain `go test ./...` also runs the live-provider tests when `.env` (gitignored, shell-form `export KEY=value`) holds a key, and every pass spends real tokens; they skip loudly, naming the key and the file, when it does not. `GOODALL_ENV_FILE=/abs/path/.env` points them at another file (a worktree has no `.env`). `go.mod` pins `go 1.27.0`.
 - `go run ./scripts/record-fixtures -env .env -out anthropic/testdata` refreshes a provider's recorded fixtures (`live_*`) from the live API; `-list` names the exchanges, `-only <name>` records one.
-- Before every commit: `go fix ./...`, `gofmt -l -w $(git ls-files '*.go')` (never `gofmt -w .`: it recurses into `.claude/worktrees/`), `go vet ./...`, `go mod tidy`, then `go test -short -race ./...`. **No pre-commit hook yet**; run them yourself.
+- **The pre-commit hook is `scripts/git-hooks/pre-commit`**; install it once per clone with `git config core.hooksPath scripts/git-hooks`. It runs `go vet`, `go fix` (refusing a commit whose staged files it changed, with a re-stage hint), `gofmt` over tracked files only (never `gofmt -w .`: it recurses into `.claude/worktrees/`), `go mod tidy`, `go test -short -race ./...`, `go build ./...` and `agents check`. Run the same steps yourself before staging, since a `go fix` rewrite is otherwise a second commit.
 - `git` refuses inside the Bash sandbox (`~/.gitconfig` is unreadable there); re-run git commands with the sandbox disabled, one call at a time — see `project/agents/harness.md`.
 
 <!-- agents:begin core@3a7a5e -->
