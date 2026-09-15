@@ -33,3 +33,7 @@ The root package now has two interface dispatches, `Block` and `Event`. Building
 ## 2026-09-15 `gofmt -w .` and `gofmt -l .` from the main checkout recurse into `.claude/worktrees/`
 
 Unlike the Go toolchain's `./...`, gofmt walks every directory including dot-directories, so a formatting pass in the main checkout rewrites files in every running agent's worktree and `gofmt -l .` reports their half-written files as yours. Format only what git tracks: `gofmt -l -w $(git ls-files '*.go')`. The same applies to any `find`-style tool run from the root.
+
+## 2026-09-15 A `jsontext.Token` is voided by the next decoder call, and the panic names the wrong line
+
+Reading a JSON object member by member with `jsontext.Decoder` — `tok, _ := dec.ReadToken()` for the name, then `dec.ReadValue()` for the value — and only calling `tok.String()` *after* the `ReadValue` panics with "invalid jsontext.Token; it has been voided by a subsequent json.Decoder call". Copy the name out of the token the moment you have it. The trap is that the panic points at the `String()` call, not at the `ReadValue` that invalidated it, and the same code with the two lines swapped looks identical at a glance. `ReadValue`'s result is borrowed the same way, so `Clone()` it before the next call. Hit while merging streamed `reasoning_details` fragments in `openrouter/stream_blocks.go`.

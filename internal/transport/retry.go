@@ -106,13 +106,17 @@ func (c *Client) wait(ctx context.Context, d time.Duration) error {
 }
 
 // requestIDFrom reads the provider's request identifier. Anthropic sends
-// request-id, OpenRouter x-request-id; both are worth carrying because a
-// support conversation starts with one.
+// request-id and OpenRouter names a call only by x-generation-id, with
+// x-request-id the documented name a proxy is likelier to set; all are worth
+// carrying because a support conversation starts with one.
 func requestIDFrom(h http.Header) string {
 	if id := h.Get("Request-Id"); id != "" {
 		return id
 	}
-	return h.Get("X-Request-Id")
+	if id := h.Get("X-Request-Id"); id != "" {
+		return id
+	}
+	return h.Get("X-Generation-Id")
 }
 
 // retryAfterFrom reads a Retry-After header in either RFC 9110 form,

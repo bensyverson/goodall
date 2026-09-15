@@ -56,6 +56,12 @@ func messageBlocks(m chatMessage) (goodall.Blocks, error) {
 			blocks = append(blocks, block)
 		}
 	}
+	if len(m.ReasoningDetails) == 0 && m.Reasoning != "" {
+		// A server that sends the flat string and no entries, a Generic
+		// or LM Studio endpoint, still had its thinking, just without
+		// the provider bytes that would let it re-send verbatim.
+		blocks = append(blocks, goodall.Thinking{Text: m.Reasoning})
+	}
 	switch m.Content.Kind {
 	case contentString:
 		if m.Content.Text != "" {

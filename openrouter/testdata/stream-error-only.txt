@@ -1,0 +1,4 @@
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-fixture-error","object":"chat.completion.chunk","created":1789473655,"model":"anthropic/claude-haiku-4.5","provider":"Amazon Bedrock","error":{"code":429,"message":"Rate limit exceeded: free-models-per-day","metadata":{"error_type":"rate_limit_exceeded","provider_name":"Amazon Bedrock","provider_code":"ThrottlingException"}}}
+

@@ -223,14 +223,18 @@ func (b *accBlock) finish(index int, raw jsontext.Value) (Block, error) {
 			// and its input still has to be an object.
 			in = []byte("{}")
 		}
-		if !jsontext.Value(in).IsValid() {
+		// Compact validates as it normalises: a provider streams the
+		// fragments with whatever whitespace it likes and the blocking
+		// path compacts, so the two paths must agree byte for byte.
+		value := jsontext.Value(bytes.Clone(in))
+		if err := value.Compact(); err != nil {
 			return nil, &ProtocolError{
 				Event:  string(EventBlockStop),
 				Index:  index,
 				Reason: "the tool call's input is not a complete JSON value, so the call was cut short and must not run",
 			}
 		}
-		v.Input = jsontext.Value(bytes.Clone(in))
+		v.Input = value
 		return v, nil
 	case Unknown:
 		if len(raw) > 0 {

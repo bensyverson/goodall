@@ -322,3 +322,18 @@ func TestDoCancelledContextBeforeSend(t *testing.T) {
 		t.Errorf("attempts = %d, want 0", s.count())
 	}
 }
+
+// TestRequestIDFallsBackToGenerationID: OpenRouter names a call only in
+// x-generation-id, so a transport-level failure that never reaches the
+// provider's decoder still carries an identifier.
+func TestRequestIDFallsBackToGenerationID(t *testing.T) {
+	h := http.Header{}
+	h.Set("X-Generation-Id", "gen-1")
+	if got := requestIDFrom(h); got != "gen-1" {
+		t.Errorf("requestIDFrom = %q, want gen-1", got)
+	}
+	h.Set("X-Request-Id", "req-1")
+	if got := requestIDFrom(h); got != "req-1" {
+		t.Errorf("requestIDFrom = %q, want the request id to win", got)
+	}
+}

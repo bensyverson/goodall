@@ -347,3 +347,24 @@ func TestExtensionsNamesItsProvider(t *testing.T) {
 		t.Errorf("Provider() = %q, want %q", got, ProviderName)
 	}
 }
+
+// TestTranslateResponseCarriesFlatReasoning: a server that sends the flat
+// reasoning string and no reasoning_details — a Generic or LM Studio endpoint —
+// still has its thinking carried, as the stream path already does.
+func TestTranslateResponseCarriesFlatReasoning(t *testing.T) {
+	body := &chatResponse{Choices: []choice{{
+		FinishReason: "stop",
+		Message:      chatMessage{Role: roleAssistant, Reasoning: "thinking it over", Content: stringContent("hi")},
+	}}}
+	resp, err := translateResponse(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Message.Content) != 2 {
+		t.Fatalf("blocks = %d, want thinking then text: %#v", len(resp.Message.Content), resp.Message.Content)
+	}
+	think, ok := resp.Message.Content[0].(goodall.Thinking)
+	if !ok || think.Text != "thinking it over" || len(think.Raw) != 0 {
+		t.Errorf("first block = %#v, want a Thinking with the flat text and no Raw", resp.Message.Content[0])
+	}
+}

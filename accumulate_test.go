@@ -467,3 +467,32 @@ func TestProtocolErrorNamesTheEventAndBlock(t *testing.T) {
 		}
 	}
 }
+
+// TestAccumulatorCompactsToolInput: the streamed fragments of a tool call keep
+// whatever whitespace the provider used, and the blocking path compacts, so
+// the two paths would disagree byte for byte on the same call unless the
+// accumulator compacts too.
+func TestAccumulatorCompactsToolInput(t *testing.T) {
+	var acc Accumulator
+	events := []Event{
+		MessageStart{ID: "msg_1"},
+		BlockStart{Index: 0, Block: ToolUse{ID: "toolu_1", Name: "get_weather"}},
+		ToolInputDelta{Index: 0, PartialJSON: `{"city": `},
+		ToolInputDelta{Index: 0, PartialJSON: ` "Paris" }`},
+		BlockStop{Index: 0},
+		MessageDelta{StopReason: StopToolUse},
+		MessageStop{},
+	}
+	for _, ev := range events {
+		if err := acc.Apply(ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	uses := acc.Message().ToolUses()
+	if len(uses) != 1 {
+		t.Fatalf("tool uses = %d, want 1", len(uses))
+	}
+	if got, want := string(uses[0].Input), `{"city":"Paris"}`; got != want {
+		t.Errorf("input = %s, want %s", got, want)
+	}
+}
