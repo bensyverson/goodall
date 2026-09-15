@@ -9,7 +9,7 @@ import (
 // contextBody binds a streaming response body to the context the request was
 // made with. net/http gives no guarantee here that survives an injected
 // RoundTripper: a recording or replaying transport has no connection to tear
-// down, so a cancelled caller could otherwise read on forever from a body
+// down, so a canceled caller could otherwise read on forever from a body
 // nobody is going to close. Wrapping makes the promise the transport's own.
 type contextBody struct {
 	ctx  context.Context
@@ -20,8 +20,8 @@ type contextBody struct {
 	err  error
 }
 
-// newContextBody wraps body so that reads honour ctx and cancellation closes
-// it. A context that can never be cancelled needs no watcher, and gets none:
+// newContextBody wraps body so that reads honor ctx and cancellation closes
+// it. A context that can never be canceled needs no watcher, and gets none:
 // an idle goroutine per stream is a cost worth avoiding, and a goroutine
 // parked on a nil channel is not durably blocked, which would stall a
 // synctest bubble.
@@ -42,7 +42,7 @@ func newContextBody(ctx context.Context, body io.ReadCloser) io.ReadCloser {
 }
 
 // Read reports the context's error in place of anything the underlying body
-// has to say once ctx is done, so a caller that cancelled sees why rather
+// has to say once ctx is done, so a caller that canceled sees why rather
 // than the shrapnel — an unexpected EOF, a reset — that the cancellation
 // produced downstream.
 func (b *contextBody) Read(p []byte) (int, error) {

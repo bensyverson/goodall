@@ -135,11 +135,11 @@ type RedactedThinking struct {
 }
 
 // Unknown is a block whose type tag this version of goodall does not
-// recognise. It keeps the provider's bytes so the block survives a round trip
+// recognize. It keeps the provider's bytes so the block survives a round trip
 // through storage and back to the provider unchanged.
 type Unknown struct {
 	// Type is the provider's own tag for the block, kept even though
-	// goodall does not recognise it.
+	// goodall does not recognize it.
 	Type BlockType `json:"type"`
 	// Raw is the provider's bytes for the block, kept so it survives a
 	// round trip unchanged.

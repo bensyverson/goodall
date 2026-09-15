@@ -64,7 +64,7 @@ func TestDoCancelMidBodyOverRealConnection(t *testing.T) {
 		case <-r.Context().Done():
 			handlerDone <- r.Context().Err()
 		case <-release:
-			handlerDone <- errors.New("handler released without a cancelled request context")
+			handlerDone <- errors.New("handler released without a canceled request context")
 		}
 	}))
 	defer srv.Close()
@@ -88,10 +88,10 @@ func TestDoCancelMidBodyOverRealConnection(t *testing.T) {
 	select {
 	case err := <-handlerDone:
 		if !errors.Is(err, context.Canceled) {
-			t.Errorf("handler saw %v, want the request context cancelled", err)
+			t.Errorf("handler saw %v, want the request context canceled", err)
 		}
 	case <-time.After(5 * time.Second):
-		t.Error("handler never saw its request context cancelled")
+		t.Error("handler never saw its request context canceled")
 	}
 }
 

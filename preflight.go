@@ -8,10 +8,10 @@ import (
 )
 
 // The pre-flight check: what a request asks of a model, measured against what
-// the provider's catalogue says the model accepts.
+// the provider's catalog says the model accepts.
 //
 // It refuses only what a model is *known* to reject (invariant 11): a fact
-// nobody published lets the request through, because a catalogue goodall
+// nobody published lets the request through, because a catalog goodall
 // cannot read must never block a call that would have worked. The check is
 // worth making because the alternative is a round trip that ends in a 400 —
 // paid for in latency, and in a run that has already committed its turn.
@@ -21,9 +21,9 @@ import (
 // nothing of the model that goodall knows how to name.
 const mediaTypePDF = "application/pdf"
 
-// lookupModel reads the catalogue entry for the run's model, once, before the
-// first turn. A provider that lists no models, and a catalogue that cannot
-// answer, both leave the run with no facts and no pre-flight: the catalogue
+// lookupModel reads the catalog entry for the run's model, once, before the
+// first turn. A provider that lists no models, and a catalog that cannot
+// answer, both leave the run with no facts and no pre-flight: the catalog
 // can lag the API, so a model it has never heard of is a warning rather than
 // a failed run.
 func (r *run) lookupModel(ctx context.Context) *ModelInfo {
@@ -33,7 +33,7 @@ func (r *run) lookupModel(ctx context.Context) *ModelInfo {
 	}
 	info, err := lister.Model(ctx, r.agent.Model)
 	if err != nil {
-		r.agent.log(ctx, slog.LevelWarn, "goodall: the model catalogue could not be read, so the run sends without checking capabilities",
+		r.agent.log(ctx, slog.LevelWarn, "goodall: the model catalog could not be read, so the run sends without checking capabilities",
 			"model", r.agent.Model, "error", err.Error())
 		return nil
 	}

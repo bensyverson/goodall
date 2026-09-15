@@ -165,7 +165,7 @@ func (r *run) afterReceive(ctx context.Context, resp *Response) error {
 }
 
 // beforeToolCall runs the BeforeToolCall hook, if there is one. With no hook
-// every call is allowed, which is the loop's behaviour without hooks.
+// every call is allowed, which is the loop's behavior without hooks.
 func (r *run) beforeToolCall(ctx context.Context, use ToolUse) (Decision, error) {
 	if r.agent.Hooks.BeforeToolCall == nil {
 		return Allow(), nil

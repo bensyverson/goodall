@@ -93,7 +93,7 @@ func TestStreamCollectCleansUpAfterAnError(t *testing.T) {
 		t.Errorf("the producer's cleanup ran %d times, want 1", cleanups)
 	}
 	if got == nil {
-		t.Fatal("Collect returned no response; a cancelled stream must hand back what arrived")
+		t.Fatal("Collect returned no response; a canceled stream must hand back what arrived")
 	}
 	if !got.Message.Partial {
 		t.Error("Message.Partial = false on a stream that failed")
@@ -164,7 +164,7 @@ func TestStreamCollectResult(t *testing.T) {
 }
 
 // TestStreamCollectResultFromStopped: an early exit is still a result, so a
-// cancelled or budgeted-out run hands back the conversation rather than
+// canceled or budgeted-out run hands back the conversation rather than
 // nothing (invariant 10).
 func TestStreamCollectResultFromStopped(t *testing.T) {
 	want := Result{Conversation: sampleConversation(), Pending: []ToolUse{{ID: "toolu_9", Name: "send_email"}}}

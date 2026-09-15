@@ -30,10 +30,10 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_tool_use.sse` / `live_tool_use_blocking.json` | A forced tool call, arguments streamed as fragments keyed by index. |
 | `live_thinking_tool_use.sse` + `_turn2` | Claude thinks, calls the tool, and the second turn replays the signed `reasoning.text` entry with the tool result. The second turn answering is the proof that goodall's replay is accepted. |
 | `live_encrypted_reasoning_tool_use.sse` + `_turn2`, `_turn3` | The same shape on an OpenAI model, whose entries are `reasoning.summary` and `reasoning.encrypted` in `openai-responses-v1` format. Three turns, because this model reasons on the turn that *answers* rather than the turn that calls the tool — see below. |
-| `live_image.sse` | A generated orange PNG the model is asked to name the colour of. |
+| `live_image.sse` | A generated orange PNG the model is asked to name the color of. |
 | `live_pdf.sse` | A generated one-page PDF, read through the `file-parser` plugin's `native` engine. |
 | `live_debug_echo.sse` | The same question with `debug.echo_upstream_body`, so the Anthropic-shaped body OpenRouter sent upstream is on disk. |
-| `live_error.json` | An unrecognised model id: HTTP 400, not 404. |
+| `live_error.json` | An unrecognized model id: HTTP 400, not 404. |
 | `live_openai_text.sse`, `live_openai_tool_use.sse`, `live_openai_reasoning.sse` | The OpenAI dialect against api.openai.com: text, a forced tool call, and a reasoning answer. |
 
 ## What the recordings confirmed, and what they corrected

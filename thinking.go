@@ -35,7 +35,7 @@ func (e Effort) String() string {
 }
 
 // Known reports whether this is one of the efforts goodall defines. A model
-// catalogue may list a rung that is not, and it is kept as it arrived.
+// catalog may list a rung that is not, and it is kept as it arrived.
 func (e Effort) Known() bool {
 	switch e {
 	case EffortDefault, EffortOff, EffortLow, EffortMedium, EffortHigh, EffortXHigh, EffortMax:

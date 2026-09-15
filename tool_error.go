@@ -56,7 +56,7 @@ func missingProblem(missing []string) string {
 }
 
 // parameterAt walks a JSON pointer from a decode error down the schema,
-// returning the dotted parameter name the model would recognise and the
+// returning the dotted parameter name the model would recognize and the
 // schema at that name, which is nil when the pointer names something the
 // schema does not have.
 func parameterAt(s *Schema, ptr jsontext.Pointer) (string, *Schema) {

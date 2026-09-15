@@ -72,7 +72,7 @@ func TestDecodeErrorLeavesAnUnknownTypeForTheStatusToClassify(t *testing.T) {
 		t.Errorf("Kind = %q, want it left empty so the transport fills it from the status", got.Kind)
 	}
 	if got.Type != "teapot_error" {
-		t.Errorf("Type = %q, want the unrecognised type kept verbatim", got.Type)
+		t.Errorf("Type = %q, want the unrecognized type kept verbatim", got.Type)
 	}
 }
 
@@ -87,7 +87,7 @@ func TestDecodeErrorTakesTheRequestIDFromTheHeader(t *testing.T) {
 	}
 }
 
-func TestDecodeErrorDeclinesABodyItDoesNotRecognise(t *testing.T) {
+func TestDecodeErrorDeclinesABodyItDoesNotRecognize(t *testing.T) {
 	for _, body := range []string{
 		`<html>502 Bad Gateway</html>`,
 		`{"detail":"not anthropic's shape"}`,

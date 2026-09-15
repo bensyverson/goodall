@@ -36,7 +36,7 @@ type Options struct {
 // summary of what the turn cost.
 //
 // It returns when the input ends, when an interrupt arrives at the prompt, or
-// when ctx is cancelled. Stopping a run is not an error and does not end the
+// when ctx is canceled. Stopping a run is not an error and does not end the
 // loop: the partial answer stays in the thread and the next line continues
 // from it. The service is not shut down here — the caller owns it.
 func Loop(ctx context.Context, svc *chat.Service, in io.Reader, out io.Writer, opts Options) error {

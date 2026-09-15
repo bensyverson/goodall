@@ -34,10 +34,10 @@ func runUntil(t *testing.T, s goodall.Stream, at func(goodall.Event) bool) []goo
 	return out
 }
 
-// TestRunCancelledMidStream is invariant 10 at its hardest: the caller pulls
+// TestRunCanceledMidStream is invariant 10 at its hardest: the caller pulls
 // the plug while the model is still writing, and the run still ends in one
 // terminal event carrying everything that arrived.
-func TestRunCancelledMidStream(t *testing.T) {
+func TestRunCanceledMidStream(t *testing.T) {
 	a, _ := agentFor([]fake.Turn{
 		fake.Stalled(goodall.Text{Text: "half an answer"}, fake.Use("tu_1", "echo", `{"text":"hi"}`)),
 	}, echoTool(t))
@@ -57,8 +57,8 @@ func TestRunCancelledMidStream(t *testing.T) {
 	})
 
 	stopped := terminalStop(t, events)
-	if stopped.Cause != goodall.StopCauseCancelled {
-		t.Fatalf("stop cause = %q (%s), want cancelled", stopped.Cause, stopped.Message)
+	if stopped.Cause != goodall.StopCauseCanceled {
+		t.Fatalf("stop cause = %q (%s), want canceled", stopped.Cause, stopped.Message)
 	}
 	if stopped.Kind != goodall.KindUnknown {
 		t.Errorf("stop kind = %q, want unknown: a cancellation is not an API error", stopped.Kind)
@@ -88,14 +88,14 @@ func TestRunCancelledMidStream(t *testing.T) {
 	// No tool ran, so nothing announced one.
 	for _, ev := range events {
 		if ev.Type() == goodall.EventToolCallStart {
-			t.Error("a tool call was announced on a cancelled turn")
+			t.Error("a tool call was announced on a canceled turn")
 		}
 	}
 }
 
-// TestRunCancelledWhileToolsRun waits for the work that is already under way
+// TestRunCanceledWhileToolsRun waits for the work that is already under way
 // and keeps its real answers rather than throwing them away.
-func TestRunCancelledWhileToolsRun(t *testing.T) {
+func TestRunCanceledWhileToolsRun(t *testing.T) {
 	tool, err := goodall.NewTool("slow", "Finishes whatever happens.", func(ctx context.Context, in struct{}) (goodall.ToolResult, error) {
 		time.Sleep(2 * time.Millisecond)
 		return goodall.TextResult("finished anyway"), nil
@@ -119,8 +119,8 @@ func TestRunCancelledWhileToolsRun(t *testing.T) {
 	})
 
 	stopped := terminalStop(t, events)
-	if stopped.Cause != goodall.StopCauseCancelled {
-		t.Fatalf("stop cause = %q (%s), want cancelled", stopped.Cause, stopped.Message)
+	if stopped.Cause != goodall.StopCauseCanceled {
+		t.Fatalf("stop cause = %q (%s), want canceled", stopped.Cause, stopped.Message)
 	}
 	conv := stopped.Result.Conversation
 	results := toolResults(conv.At(conv.Len() - 1))
@@ -208,9 +208,9 @@ func TestRunPlainErrorIsUnknownKind(t *testing.T) {
 	}
 }
 
-// TestRunCancelledBeforeTheFirstTurn still ends in a terminal event, with the
+// TestRunCanceledBeforeTheFirstTurn still ends in a terminal event, with the
 // conversation the caller handed in plus the input.
-func TestRunCancelledBeforeTheFirstTurn(t *testing.T) {
+func TestRunCanceledBeforeTheFirstTurn(t *testing.T) {
 	a, p := agentFor([]fake.Turn{fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "unreached"})})
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -220,11 +220,11 @@ func TestRunCancelledBeforeTheFirstTurn(t *testing.T) {
 		t.Fatalf("the run stream yielded an error: %v", err)
 	}
 	stopped := terminalStop(t, events)
-	if stopped.Cause != goodall.StopCauseCancelled {
-		t.Errorf("stop cause = %q, want cancelled", stopped.Cause)
+	if stopped.Cause != goodall.StopCauseCanceled {
+		t.Errorf("stop cause = %q, want canceled", stopped.Cause)
 	}
 	if p.Calls() != 0 {
-		t.Errorf("the provider was called %d times on an already-cancelled run", p.Calls())
+		t.Errorf("the provider was called %d times on an already-canceled run", p.Calls())
 	}
 	if stopped.Result.Conversation.Len() != 1 {
 		t.Errorf("the conversation has %d messages, want the input", stopped.Result.Conversation.Len())

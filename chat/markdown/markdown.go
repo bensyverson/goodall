@@ -14,7 +14,7 @@
 // unordered and ordered lists with one level of nesting, block quotes,
 // thematic breaks, hard line breaks and http(s) autolinks. Raw HTML, tables,
 // footnotes, reference-style links, setext headings and indented code blocks
-// are not supported and render as escaped text. The exact behaviour of every
+// are not supported and render as escaped text. The exact behavior of every
 // construct is pinned by the fixture corpus under testdata.
 //
 // Two limits keep an adversarial input from costing more than it should:
@@ -36,7 +36,7 @@
 //		return b.String()
 //	}
 //
-// A renderer that emits raw HTML from the input takes on the sanitising job
+// A renderer that emits raw HTML from the input takes on the sanitizing job
 // this package does for you.
 package markdown
 
@@ -64,7 +64,7 @@ func New() Subset { return Subset{} }
 //
 // Output is deterministic: each block element is followed by a single
 // newline, so empty input produces the empty string and nothing else ever
-// ends without one. Line endings in the input are normalised first, so the
+// ends without one. Line endings in the input are normalized first, so the
 // same source renders identically whatever wrote it.
 func (Subset) RenderHTML(src string) string {
 	src = normalizeNewlines(src)

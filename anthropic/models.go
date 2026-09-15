@@ -61,7 +61,7 @@ type wireEffortCapability struct {
 // wireCapabilities is the part of the capability tree goodall models. The
 // tree carries more — batch, citations, code execution, context management —
 // and the members left out here are ignored rather than being an error: a
-// catalogue that grows a leaf must not stop a model being usable.
+// catalog that grows a leaf must not stop a model being usable.
 type wireCapabilities struct {
 	ImageInput        *wireSupported          `json:"image_input,omitzero"`
 	PDFInput          *wireSupported          `json:"pdf_input,omitzero"`
@@ -85,9 +85,9 @@ type wireModel struct {
 // and uses it to refuse, before the network call, a request carrying an input
 // the model is known to reject.
 //
-// The answer is memoised per identifier, so a process that runs many agents
+// The answer is memoized per identifier, so a process that runs many agents
 // against one model pays for one lookup; a failure is not, because a
-// catalogue that has not caught up with a new model will catch up. The result
+// catalog that has not caught up with a new model will catch up. The result
 // is shared between callers and must not be modified.
 //
 // An identifier Anthropic does not know is a *goodall.APIError with
@@ -125,9 +125,9 @@ func (c *Client) cacheModel(id string, info *goodall.ModelInfo) {
 	c.models[id] = info
 }
 
-// fetchModel reads one model from the catalogue endpoint. The lock is never
-// held across this call: a slow catalogue must not block a second model's
-// lookup, and a duplicate fetch costs less than a serialised one.
+// fetchModel reads one model from the catalog endpoint. The lock is never
+// held across this call: a slow catalog must not block a second model's
+// lookup, and a duplicate fetch costs less than a serialized one.
 func (c *Client) fetchModel(ctx context.Context, id string) (*goodall.ModelInfo, error) {
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodGet,
@@ -150,10 +150,10 @@ func (c *Client) fetchModel(ctx context.Context, id string) (*goodall.ModelInfo,
 	return neutralModel(&w), nil
 }
 
-// neutralModel maps the catalogue entry onto goodall's facts.
+// neutralModel maps the catalog entry onto goodall's facts.
 //
 // Tools and cache control are reported as supported without asking the
-// catalogue: every model the Messages API serves takes tool definitions and
+// catalog: every model the Messages API serves takes tool definitions and
 // cache_control breakpoints, and Anthropic publishes no leaf for either, so
 // the honest answer is the one every model gives. Pricing stays nil —
 // Anthropic publishes prices on its website, not on this endpoint, and a
@@ -170,7 +170,7 @@ func neutralModel(w *wireModel) *goodall.ModelInfo {
 		caps.PDFInput = c.PDFInput.support()
 		caps.StructuredOutput = c.StructuredOutputs.support()
 		caps.Thinking = thinkingSupport(c.Thinking)
-		caps.ThinkingStyle = catalogueThinkingStyle(c.Thinking)
+		caps.ThinkingStyle = catalogThinkingStyle(c.Thinking)
 		caps.ThinkingEfforts = supportedEfforts(c.Effort)
 	}
 	return &goodall.ModelInfo{
@@ -181,11 +181,11 @@ func neutralModel(w *wireModel) *goodall.ModelInfo {
 	}
 }
 
-// catalogueThinkingStyle reads which thinking form the model takes from the two
+// catalogThinkingStyle reads which thinking form the model takes from the two
 // types. Adaptive wins when both are offered, since it is the form goodall
 // prefers to send; a model offering neither, or a branch that was not
 // published, leaves the style unknown and the name heuristic in charge.
-func catalogueThinkingStyle(t *wireThinkingCapability) goodall.ThinkingStyle {
+func catalogThinkingStyle(t *wireThinkingCapability) goodall.ThinkingStyle {
 	if t == nil {
 		return goodall.ThinkingStyleUnknown
 	}

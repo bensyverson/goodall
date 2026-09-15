@@ -54,7 +54,7 @@ const (
 	// SortLatency prefers the endpoint that answers soonest.
 	SortLatency ProviderSort = "latency"
 	// SortExacto prefers the endpoint that best reproduces the model's
-	// reference behaviour.
+	// reference behavior.
 	SortExacto ProviderSort = "exacto"
 )
 

@@ -69,7 +69,7 @@ type Stream iter.Seq2[Event, error]
 //
 // It always returns a response, never nil. A stream that fails partway hands
 // back everything that arrived, with Message.Partial set, alongside the error
-// — a cancelled answer is still worth showing, and the usage reported so far
+// — a canceled answer is still worth showing, and the usage reported so far
 // is still worth billing. A stream that simply ends without MessageStop is a
 // *ProtocolError for the same reason: silence is not a finished message.
 func (s Stream) Collect() (*Response, error) {

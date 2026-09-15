@@ -17,7 +17,7 @@ import (
 
 // The strings a front end must never be handed. Each one is planted in the
 // thread the tests below build, and every assertion about redaction is "this
-// string is nowhere in the serialised view".
+// string is nowhere in the serialized view".
 const (
 	secretToolInput  = "SECRET-INPUT"
 	secretToolResult = "SECRET-RESULT"
@@ -148,7 +148,7 @@ func TestThreadViewKeepsWhatAFrontEndNeeds(t *testing.T) {
 
 // TestThreadViewWithholdsEverySecret is the criterion: nothing the back end
 // owns — tool input, tool results, inline media, thinking signatures,
-// provider bytes — reaches the serialised view.
+// provider bytes — reaches the serialized view.
 func TestThreadViewWithholdsEverySecret(t *testing.T) {
 	view := chat.NewThreadView(viewThread("thread-1"), displayedOptions)
 	encoded, err := json.Marshal(view)
@@ -161,7 +161,7 @@ func TestThreadViewWithholdsEverySecret(t *testing.T) {
 		base64.StdEncoding.EncodeToString([]byte(secretPixels)),
 	} {
 		if strings.Contains(string(encoded), secret) {
-			t.Errorf("the serialised view carries %q:\n%s", secret, encoded)
+			t.Errorf("the serialized view carries %q:\n%s", secret, encoded)
 		}
 	}
 }
@@ -262,7 +262,7 @@ func TestServiceViewRedactsTheAgentsSystemPrompt(t *testing.T) {
 	}
 	for _, secret := range []string{secretSystem, secretToolInput, "echo: " + secretToolInput} {
 		if strings.Contains(string(encoded), secret) {
-			t.Errorf("the serialised view carries %q:\n%s", secret, encoded)
+			t.Errorf("the serialized view carries %q:\n%s", secret, encoded)
 		}
 	}
 	if !strings.Contains(string(encoded), "all done") {

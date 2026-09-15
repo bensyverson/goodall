@@ -9,7 +9,7 @@ import (
 )
 
 // errRunTimeout is the cause a run's own timeout cancels its context with, so
-// the loop can tell its wall-clock budget from the caller cancelling.
+// the loop can tell its wall-clock budget from the caller canceling.
 var errRunTimeout = errors.New("goodall: the run's timeout elapsed")
 
 // errConsumerLeft is the internal signal that the consumer stopped reading.
@@ -29,7 +29,7 @@ type run struct {
 	cancel context.CancelFunc // ends the run's context, so a consumer who left stops the tools
 	conv   Conversation
 	tools  map[string]Tool
-	info   *ModelInfo // the catalogue's facts about the model, nil when there are none
+	info   *ModelInfo // the catalog's facts about the model, nil when there are none
 	usage  Usage
 	cost   Cost
 	last   *Response // the last completed turn, nil until one finishes
@@ -58,13 +58,13 @@ func (r *run) execute(ctx context.Context, input []Block) {
 	}
 
 	runCtx, cancel := r.withTimeout(ctx)
-	// Cancelling on the way out is what stops the provider's request when
+	// Canceling on the way out is what stops the provider's request when
 	// the consumer breaks out of the stream early; a tool still running at
-	// that moment is cancelled by runTools before it waits.
+	// that moment is canceled by runTools before it waits.
 	defer cancel()
 	r.ctx, r.cancel = runCtx, cancel
 
-	// One catalogue read serves the whole run: the facts about a model do
+	// One catalog read serves the whole run: the facts about a model do
 	// not change between turns, and a lookup on every turn would pay for
 	// the same answer again.
 	r.info = r.lookupModel(runCtx)
@@ -199,7 +199,7 @@ func (r *run) commitNewTurn() {
 
 // withTimeout derives the run's context. The wall-clock budget carries its own
 // cause so that a run which ran out of time is distinguishable from a caller
-// who cancelled, which the two StopCauses then report separately.
+// who canceled, which the two StopCauses then report separately.
 func (r *run) withTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
 	if d := r.agent.Budget.Timeout; d > 0 {
 		return context.WithTimeoutCause(ctx, d, errRunTimeout)
@@ -297,7 +297,7 @@ func unrunResults(msg Message, why string) []Block {
 
 // failTurn ends the run on a turn that did not finish: the partial assistant
 // message is kept, its complete tool calls get error results, and the
-// terminal event says whether the caller cancelled, the clock ran out or
+// terminal event says whether the caller canceled, the clock ran out or
 // something broke.
 func (r *run) failTurn(runCtx context.Context, resp *Response, err error) {
 	cause, kind, message := r.diagnose(runCtx, err)
@@ -311,7 +311,7 @@ func (r *run) failTurn(runCtx context.Context, resp *Response, err error) {
 // tell a person reading the terminal event.
 //
 // The context is asked first, because a provider whose stream simply stops on
-// a cancelled request reports nothing useful — and a run that ends silently
+// a canceled request reports nothing useful — and a run that ends silently
 // on cancellation was the predecessor's worst bug. A deadline on the caller's
 // own context counts as a timeout too: the cause really was a clock, and the
 // caller knows whose it was.
@@ -323,7 +323,7 @@ func (r *run) diagnose(runCtx context.Context, err error) (StopCause, ErrorKind,
 		case errors.Is(cause, context.DeadlineExceeded):
 			return StopCauseTimeout, KindUnknown, "the run passed the deadline on the caller's context"
 		default:
-			return StopCauseCancelled, KindUnknown, "the run was cancelled"
+			return StopCauseCanceled, KindUnknown, "the run was canceled"
 		}
 	}
 	if apiErr, ok := errors.AsType[*APIError](err); ok {
@@ -376,7 +376,7 @@ func (r *run) stop(cause StopCause, message string) {
 	r.emit(Stopped{Cause: cause, Message: message, Result: r.result()})
 }
 
-// fail ends a run that broke, was cancelled or ran out of time. The kind is
+// fail ends a run that broke, was canceled or ran out of time. The kind is
 // the provider's classification when there was one, so a caller can decide
 // whether trying again is worth anything.
 func (r *run) fail(cause StopCause, kind ErrorKind, message string) {

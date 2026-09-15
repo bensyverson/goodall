@@ -45,7 +45,7 @@ func TestExecuteReportsABadInput(t *testing.T) {
 		want  string
 	}{
 		{"unknown parameter", func(t *testing.T) Tool { return newWeatherTool(t, nil) },
-			jsontext.Value(`{"city":"Paris","colour":"red"}`), `unknown parameter "colour"`},
+			jsontext.Value(`{"city":"Paris","color":"red"}`), `unknown parameter "color"`},
 		{"unknown nested parameter", newAlertTool,
 			jsontext.Value(`{"query":"q","window":{"start":"s","stop":"e"}}`), `unknown parameter "window.stop"`},
 		// json/v2 keeps the offending literal only when it rejected the
@@ -90,7 +90,7 @@ func TestExecuteReportsABadInput(t *testing.T) {
 // TestErrorResultListsEveryParameterInSchemaOrder is the whole point of the
 // message: a model that fixes one parameter should not have to guess the rest.
 func TestErrorResultListsEveryParameterInSchemaOrder(t *testing.T) {
-	res, err := newWeatherTool(t, nil).Execute(t.Context(), jsontext.Value(`{"colour":"red"}`))
+	res, err := newWeatherTool(t, nil).Execute(t.Context(), jsontext.Value(`{"color":"red"}`))
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestErrorResultListsNestedAndArrayParameters(t *testing.T) {
 
 func TestErrorResultListingAppearsInEveryFailure(t *testing.T) {
 	tool := newWeatherTool(t, nil)
-	for _, input := range []jsontext.Value{nil, jsontext.Value(`{"colour":"red"}`), jsontext.Value(`{"city":3}`), jsontext.Value(`{"city":`), jsontext.Value(`[1,2]`)} {
+	for _, input := range []jsontext.Value{nil, jsontext.Value(`{"color":"red"}`), jsontext.Value(`{"city":3}`), jsontext.Value(`{"city":`), jsontext.Value(`[1,2]`)} {
 		res, err := tool.Execute(t.Context(), input)
 		if err != nil {
 			t.Fatalf("Execute(%q): %v", input, err)
@@ -152,7 +152,7 @@ func TestErrorResultSaysWhenThereAreNoParameters(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewTool: %v", err)
 	}
-	res, err := tool.Execute(t.Context(), jsontext.Value(`{"colour":"red"}`))
+	res, err := tool.Execute(t.Context(), jsontext.Value(`{"color":"red"}`))
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}

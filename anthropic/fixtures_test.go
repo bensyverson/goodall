@@ -25,9 +25,9 @@ import (
 // are worth asserting: a model that stopped reading its input would not
 // produce them.
 const (
-	recordedImageColour = "orange"
-	recordedPDFPhrase   = "Marmalade on the tortoise."
-	recordedToolCity    = "Paris"
+	recordedImageColor = "orange"
+	recordedPDFPhrase  = "Marmalade on the tortoise."
+	recordedToolCity   = "Paris"
 	// recordedThinkingTokens is the thinking_tokens the recorded thinking
 	// turn reported. Anthropic breaks the count out under
 	// output_tokens_details, and goodall.Usage has a field for it.
@@ -167,7 +167,7 @@ func TestTheRecordedMediaAnswersNameWhatWasAsked(t *testing.T) {
 		fixture string
 		want    string
 	}{
-		{"the generated PNG's colour", "live_image.sse", recordedImageColour},
+		{"the generated PNG's color", "live_image.sse", recordedImageColor},
 		{"the generated PDF's one line", "live_pdf.sse", recordedPDFPhrase},
 	}
 	for _, tt := range tests {

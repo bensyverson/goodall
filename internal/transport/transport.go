@@ -43,7 +43,7 @@ const (
 )
 
 // ErrorDecoder turns a provider's own error body into an [goodall.APIError].
-// It may return nil when the body is not one it recognises, in which case the
+// It may return nil when the body is not one it recognizes, in which case the
 // transport classifies the response from its status alone.
 //
 // A decoder need not fill every field: the transport supplies Provider,
@@ -94,7 +94,7 @@ type Client struct {
 	// MaxRetries is how many *extra* attempts a retryable failure earns,
 	// so the default of 2 allows three attempts in all. A negative value
 	// disables retries; zero means the default, since zero is what an
-	// uninitialised struct carries.
+	// uninitialized struct carries.
 	MaxRetries int
 	// BaseDelay is the backoff ceiling for the first retry, doubling with
 	// each one after it. Defaults to 500ms.
@@ -128,12 +128,12 @@ type Request struct {
 
 // Do sends req, retrying retryable failures with backoff, and returns the
 // first 2xx response with its body open and bound to ctx: a read after ctx is
-// cancelled reports ctx's error, cancelling ctx closes the body, and closing
+// canceled reports ctx's error, canceling ctx closes the body, and closing
 // it twice is harmless.
 //
 // A non-2xx response comes back as a *[goodall.APIError] and nothing else; a
 // failure before any response comes back as the transport's own error. Either
-// way the returned response is nil. A cancelled ctx wins over both, so a
+// way the returned response is nil. A canceled ctx wins over both, so a
 // caller that cancels sees ctx.Err() rather than the connection error the
 // cancellation caused.
 func (c *Client) Do(ctx context.Context, req Request) (*http.Response, error) {

@@ -50,7 +50,7 @@ const (
 //
 // Anthropic's is claude-sonnet-5, the model the live tests and the fixture
 // recorder use (internal/livemodel). OpenRouter's is the same model under the
-// name the OpenRouter catalogue listed it by on 2026-09-15, so that switching
+// name the OpenRouter catalog listed it by on 2026-09-15, so that switching
 // providers changes the route and not the correspondent. An example may not
 // import internal/livemodel, so these are deliberate copies.
 const (
@@ -119,7 +119,7 @@ func run() error {
 		System:   *system,
 		Tools:    []goodall.Tool{tool},
 		Thinking: thinkingFor(effort),
-		// Warnings are the ones worth a terminal: a model catalogue the
+		// Warnings are the ones worth a terminal: a model catalog the
 		// run could not read, which lets the run go ahead unchecked.
 		Logger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelWarn})),
 	}

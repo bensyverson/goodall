@@ -89,7 +89,7 @@ func (c *Client) random() float64 {
 }
 
 // wait sleeps for d, or returns ctx's error the moment ctx is done. A
-// zero or negative d still checks ctx, so a cancelled caller never gets one
+// zero or negative d still checks ctx, so a canceled caller never gets one
 // more attempt out of a delay that happened to round to nothing.
 func (c *Client) wait(ctx context.Context, d time.Duration) error {
 	if d <= 0 {

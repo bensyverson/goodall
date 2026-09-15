@@ -58,7 +58,7 @@ type providerSpec struct {
 	// key is the name of the .env entry holding the provider's API key.
 	key string
 	// defaultModel is the -model default: the newest model the live
-	// catalogue confirms, shared with that provider's live tests through
+	// catalog confirms, shared with that provider's live tests through
 	// internal/livemodel so the two cannot drift.
 	defaultModel string
 	// outDir is the -out default: the testdata directory of the package

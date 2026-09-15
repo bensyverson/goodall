@@ -87,7 +87,7 @@ func (r *activeRun) attach(sub *subscriber) ([]goodall.Event, bool) {
 	return backlog, true
 }
 
-// detach removes a subscriber that left, which is what makes cancelling a
+// detach removes a subscriber that left, which is what makes canceling a
 // subscription free of consequence for the run.
 func (r *activeRun) detach(sub *subscriber) {
 	r.mu.Lock()
@@ -129,7 +129,7 @@ func (r *activeRun) end() {
 // next Get into the thread as it was.
 func (s *Service) drive(ctx context.Context, run *activeRun, thread *Thread, start func(context.Context) goodall.Stream) {
 	defer s.wg.Done()
-	// Cancelling on the way out closes the provider's request when the
+	// Canceling on the way out closes the provider's request when the
 	// stream ended for any other reason, and releases the context.
 	defer run.cancel()
 	// Closing the subscriptions is the last thing that happens, whatever
@@ -187,9 +187,9 @@ func (s *Service) unregister(run *activeRun) {
 // persist writes what the run produced: the conversation it built, and its
 // usage and cost added to the thread's running totals.
 //
-// It writes on a context that cannot be cancelled, because the run's own
-// context is already cancelled by the time a stopped or shut-down run gets
-// here, and a cancelled write would lose the answer the loop kept for exactly
+// It writes on a context that cannot be canceled, because the run's own
+// context is already canceled by the time a stopped or shut-down run gets
+// here, and a canceled write would lose the answer the loop kept for exactly
 // this reason. A version conflict — somebody else wrote the thread while the
 // run was in flight — is retried once against the thread as it now stands;
 // past that the service logs and gives up rather than writing in a loop, and

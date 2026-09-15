@@ -68,15 +68,15 @@ type Agent struct {
 // terminal event's Result.
 //
 // The stream never yields a non-nil error. Every ending — a finished answer,
-// a spent budget, a cancelled context, a provider failure, an agent that was
+// a spent budget, a canceled context, a provider failure, an agent that was
 // never configured — arrives as a terminal event carrying the conversation so
 // far and the usage so far (invariant 10), so a consumer has one shape to
 // handle and a failed run still hands back everything that arrived. Use
 // [Stream.CollectResult] to read that one value without ranging.
 //
-// Cancelling ctx stops the run: the request is aborted, tools already running
+// Canceling ctx stops the run: the request is aborted, tools already running
 // are waited for and keep their real results, the partial assistant message
-// is appended with Partial set, and the terminal event says Cancelled. A
+// is appended with Partial set, and the terminal event says Canceled. A
 // consumer that breaks out of the stream early gets the same unwinding
 // without the terminal event, and leaves nothing running behind it.
 func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stream {

@@ -22,7 +22,7 @@ import (
 // recordings in anthropic/testdata and OpenRouter's fixtures in
 // openrouter/testdata, replayed through an httptest server. Everything
 // between the agent and the socket is the shipping code: translation, the SSE
-// decoder, the accumulator, the tool loop, the catalogue lookup and the
+// decoder, the accumulator, the tool loop, the catalog lookup and the
 // pre-flight.
 //
 // They run offline and make no network call.
@@ -39,13 +39,13 @@ func providerFixture(t *testing.T, provider, name string) []byte {
 	return data
 }
 
-// replay is a provider's API, played back from recordings: the catalogue on
+// replay is a provider's API, played back from recordings: the catalog on
 // one route and one scripted answer per completion call on the other. It
 // records what it was sent, so a test can assert on the bytes the loop
 // produced as well as on the result it returned.
 type replay struct {
 	mu        sync.Mutex
-	catalogue []byte // the models body, served on every catalogue call
+	catalog   []byte // the models body, served on every catalog call
 	answers   [][]byte
 	mediaType string // the content type the answers are served as
 
@@ -53,11 +53,11 @@ type replay struct {
 	bodies  []string
 }
 
-// models serves the catalogue.
+// models serves the catalog.
 func (s *replay) models(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	s.lookups++
-	body := s.catalogue
+	body := s.catalog
 	s.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(body)
@@ -86,7 +86,7 @@ func (s *replay) complete(w http.ResponseWriter, r *http.Request) {
 }
 
 // turns is how many completion calls the loop made, and lookupCount how many
-// catalogue reads it cost.
+// catalog reads it cost.
 func (s *replay) turns() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -128,7 +128,7 @@ func weatherTool(t *testing.T) goodall.Tool {
 
 func TestTheLoopRunsTwoRecordedAnthropicTurns(t *testing.T) {
 	server := &replay{
-		catalogue: providerFixture(t, "anthropic", "model.json"),
+		catalog:   providerFixture(t, "anthropic", "model.json"),
 		mediaType: "text/event-stream",
 		answers: [][]byte{
 			providerFixture(t, "anthropic", "live_thinking_tool_use.sse"),
@@ -157,7 +157,7 @@ func TestTheLoopRunsTwoRecordedAnthropicTurns(t *testing.T) {
 		t.Fatalf("the loop sent %d turns, want 2", server.turns())
 	}
 	if server.lookupCount() != 1 {
-		t.Errorf("the catalogue was read %d times over two turns, want once", server.lookupCount())
+		t.Errorf("the catalog was read %d times over two turns, want once", server.lookupCount())
 	}
 	if result.StopReason != goodall.StopEndTurn {
 		t.Errorf("stop reason = %q, want end_turn", result.StopReason)
@@ -203,13 +203,13 @@ func TestTheLoopRunsTwoRecordedAnthropicTurns(t *testing.T) {
 	}
 }
 
-func TestTheCatalogueTheLoopFetchedShapesTheRequest(t *testing.T) {
+func TestTheCatalogTheLoopFetchedShapesTheRequest(t *testing.T) {
 	// claude-haiku-4-5 reads as a budget-thinking model by name, and the
-	// catalogue this server publishes says the model takes adaptive
+	// catalog this server publishes says the model takes adaptive
 	// thinking. The body proves which one the translation believed, and so
 	// proves the loop's lookup reached it.
 	server := &replay{
-		catalogue: providerFixture(t, "anthropic", "model.json"),
+		catalog:   providerFixture(t, "anthropic", "model.json"),
 		mediaType: "text/event-stream",
 		answers:   [][]byte{providerFixture(t, "anthropic", "live_text.sse")},
 	}
@@ -229,10 +229,10 @@ func TestTheCatalogueTheLoopFetchedShapesTheRequest(t *testing.T) {
 
 	body := server.body(t, 0)
 	if want := `"thinking":{"type":"adaptive","display":"summarized"}`; !strings.Contains(body, want) {
-		t.Errorf("the body does not carry %s, so the catalogue did not reach the translation:\n%s", want, body)
+		t.Errorf("the body does not carry %s, so the catalog did not reach the translation:\n%s", want, body)
 	}
 	if strings.Contains(body, "budget_tokens") {
-		t.Errorf("the body derived a thinking budget, though the catalogue says the model takes adaptive thinking:\n%s", body)
+		t.Errorf("the body derived a thinking budget, though the catalog says the model takes adaptive thinking:\n%s", body)
 	}
 }
 
@@ -251,7 +251,7 @@ data: [DONE]
 
 func TestTheLoopRunsTwoOpenRouterTurnsAndReportsTheCost(t *testing.T) {
 	server := &replay{
-		catalogue: providerFixture(t, "openrouter", "models.json"),
+		catalog:   providerFixture(t, "openrouter", "models.json"),
 		mediaType: "text/event-stream",
 		answers: [][]byte{
 			providerFixture(t, "openrouter", "stream-reasoning-tools.txt"),
@@ -277,7 +277,7 @@ func TestTheLoopRunsTwoOpenRouterTurnsAndReportsTheCost(t *testing.T) {
 		t.Fatalf("the loop sent %d turns, want 2", server.turns())
 	}
 	if server.lookupCount() != 1 {
-		t.Errorf("the catalogue was read %d times over two turns, want once", server.lookupCount())
+		t.Errorf("the catalog was read %d times over two turns, want once", server.lookupCount())
 	}
 	// The fixture calls the tool twice in one turn, so the results come
 	// back as one message carrying both.
@@ -307,11 +307,11 @@ func TestTheLoopRunsTwoOpenRouterTurnsAndReportsTheCost(t *testing.T) {
 	}
 }
 
-func TestTheLoopRefusesAnImageTheOpenRouterCatalogueRejects(t *testing.T) {
+func TestTheLoopRefusesAnImageTheOpenRouterCatalogRejects(t *testing.T) {
 	// ibm-granite/granite-4.2-8b publishes "text" as its only input
 	// modality, which is a refusal rather than a silence — so the image
 	// never leaves the process.
-	server := &replay{catalogue: providerFixture(t, "openrouter", "models.json"), mediaType: "text/event-stream"}
+	server := &replay{catalog: providerFixture(t, "openrouter", "models.json"), mediaType: "text/event-stream"}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /models", server.models)
 	mux.HandleFunc("POST /chat/completions", server.complete)
@@ -324,7 +324,7 @@ func TestTheLoopRefusesAnImageTheOpenRouterCatalogueRejects(t *testing.T) {
 	}
 
 	events := runEvents(t, agent, goodall.Conversation{},
-		goodall.Text{Text: "What colour is this?"},
+		goodall.Text{Text: "What color is this?"},
 		goodall.Image{Source: goodall.BytesSource("image/png", []byte{0x89, 'P', 'N', 'G'})},
 	)
 	stopped := terminalStop(t, events)

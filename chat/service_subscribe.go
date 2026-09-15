@@ -21,7 +21,7 @@ import (
 // subscription reads the thread with [Service.Get]. The same is true of a
 // thread the store does not hold.
 //
-// Subscribers are independent. Cancelling ctx detaches this one and does
+// Subscribers are independent. Canceling ctx detaches this one and does
 // nothing to the run or to anybody else's; so does breaking out of the range.
 // A subscriber that stops reading for long enough to fill its buffer is
 // dropped with [ErrSubscriberOverflow] rather than pacing the run — attaching

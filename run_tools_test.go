@@ -180,7 +180,7 @@ func TestRunEarlyBreakLeavesNothingRunning(t *testing.T) {
 }
 
 // TestRunEarlyBreakCancelsRunningTools is the case the test above cannot
-// reach: a consumer breaks out while a tool that honours its context is still
+// reach: a consumer breaks out while a tool that honors its context is still
 // running. The break must cancel the run's context before waiting for the
 // tool, or the consumer's break hangs on a tool that only ends when the
 // context does.
@@ -192,7 +192,7 @@ func TestRunEarlyBreakCancelsRunningTools(t *testing.T) {
 			return goodall.TextResult("quick"), nil
 		}
 		<-ctx.Done()
-		return goodall.TextResult("cancelled"), nil
+		return goodall.TextResult("canceled"), nil
 	})
 	if err != nil {
 		t.Fatal(err)

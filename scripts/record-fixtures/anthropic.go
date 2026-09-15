@@ -107,14 +107,14 @@ func anthropicExchanges(rec *recorder, key, model string) ([]exchange, error) {
 		},
 		{
 			name: "image",
-			what: "a generated PNG the model is asked to name the colour of",
+			what: "a generated PNG the model is asked to name the color of",
 			run: func(ctx context.Context) error {
 				_, err := rec.stream(ctx, client, "image", &goodall.Request{
 					Model:     model,
 					MaxTokens: recordedMaxTokens,
 					Messages: []goodall.Message{goodall.UserMessage(
 						goodall.Image{Source: goodall.BytesSource("image/png", png)},
-						goodall.Text{Text: "Answer with one word: what colour is this image?"},
+						goodall.Text{Text: "Answer with one word: what color is this image?"},
 					)},
 				})
 				return err

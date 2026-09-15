@@ -116,7 +116,7 @@ func deferredText(calls int) string {
 
 // unrunReason is the result text for a tool call the stop reason forbade. It
 // is written for the model, which reads it on any later turn, so it says that
-// the call did not happen and why rather than apologising.
+// the call did not happen and why rather than apologizing.
 func unrunReason(reason StopReason) string {
 	switch reason {
 	case StopMaxTokens:

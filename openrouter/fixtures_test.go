@@ -26,9 +26,9 @@ import (
 // are worth asserting: a model that stopped reading its input would not
 // produce them.
 const (
-	recordedImageColour = "orange"
-	recordedPDFPhrase   = "Marmalade on the tortoise."
-	recordedToolCity    = "Paris"
+	recordedImageColor = "orange"
+	recordedPDFPhrase  = "Marmalade on the tortoise."
+	recordedToolCity   = "Paris"
 )
 
 // openAIDialectPrefix marks the recordings made against api.openai.com rather
@@ -142,7 +142,7 @@ func TestEveryRecordedBlockingResponseDecodes(t *testing.T) {
 func TestEveryOpenRouterRecordingCarriesTheCostAndTheUpstreamStopReason(t *testing.T) {
 	// These are the two facts only a router reports: what the call cost in
 	// money, and the upstream model's own finish string beside OpenRouter's
-	// normalised one. A recording that lost either would leave goodall's
+	// normalized one. A recording that lost either would leave goodall's
 	// Cost and NativeStopReason untested against anything real.
 	for _, name := range recordedFixtures(t, "live_*.sse") {
 		if strings.HasPrefix(name, openAIDialectPrefix) {
@@ -310,7 +310,7 @@ func TestTheRecordedMediaAnswersNameWhatWasAsked(t *testing.T) {
 		fixture string
 		want    string
 	}{
-		{"the generated PNG's colour", "live_image.sse", recordedImageColour},
+		{"the generated PNG's color", "live_image.sse", recordedImageColor},
 		{"the generated PDF's one line", "live_pdf.sse", recordedPDFPhrase},
 	}
 	for _, tt := range tests {

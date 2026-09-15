@@ -80,7 +80,7 @@ func TestToolChoiceModeStringAndKnown(t *testing.T) {
 		t.Error("ToolChoiceAny is not Known")
 	}
 	if ToolChoiceMode("required").Known() {
-		t.Error("an unrecognised mode reports itself Known")
+		t.Error("an unrecognized mode reports itself Known")
 	}
 }
 

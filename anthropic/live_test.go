@@ -161,14 +161,14 @@ func TestLiveModelReportsImageAndPDFSupport(t *testing.T) {
 
 	info, err := client.Model(t.Context(), livemodel.Anthropic)
 	if err != nil {
-		t.Fatalf("the live catalogue lookup failed: %v", err)
+		t.Fatalf("the live catalog lookup failed: %v", err)
 	}
 	t.Logf("%s (%s): thinking=%s style=%s efforts=%v context=%d max_output=%d",
 		info.ID, info.DisplayName, info.Capabilities.Thinking, info.Capabilities.ThinkingStyle,
 		info.Capabilities.ThinkingEfforts, info.Capabilities.ContextWindow, info.Capabilities.MaxOutput)
 
 	if info.ID != livemodel.Anthropic {
-		t.Errorf("the catalogue answered for %q, want %q", info.ID, livemodel.Anthropic)
+		t.Errorf("the catalog answered for %q, want %q", info.ID, livemodel.Anthropic)
 	}
 	if info.Capabilities.ImageInput != goodall.Supported {
 		t.Errorf("image input = %s, want %s", info.Capabilities.ImageInput, goodall.Supported)

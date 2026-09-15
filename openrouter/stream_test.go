@@ -219,7 +219,7 @@ func TestStreamSurfacesUnknownChunkShape(t *testing.T) {
 		}
 	}
 	if unknown == nil {
-		t.Fatal("the unrecognised frame was dropped, want an UnknownEvent")
+		t.Fatal("the unrecognized frame was dropped, want an UnknownEvent")
 	}
 	if unknown.EventType == "" {
 		t.Error("UnknownEvent.EventType is empty, want a descriptive tag")
@@ -339,13 +339,13 @@ func TestStreamCancellationEndsWithContextError(t *testing.T) {
 		}
 	}
 	if err == nil {
-		t.Fatal("the cancelled stream ended without an error")
+		t.Fatal("the canceled stream ended without an error")
 	}
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("error = %v, want context.Canceled", err)
 	}
 	if !closed.Load() {
-		t.Error("the cancelled stream left the response body open")
+		t.Error("the canceled stream left the response body open")
 	}
 }
 

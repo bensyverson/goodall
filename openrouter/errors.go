@@ -50,7 +50,7 @@ const (
 // sentence for audio, file and tool use. It is a message heuristic because the
 // error carries no error_type: the metadata holds only a routing funnel and a
 // failed_routing_step, neither of which is documented as stable. The
-// neighbouring message "No endpoints found for <model>." says nothing about
+// neighboring message "No endpoints found for <model>." says nothing about
 // the modality and must stay a not-found, which is why the match runs to the
 // word "support".
 const modalityRefusalPrefix = "no endpoints found that support"

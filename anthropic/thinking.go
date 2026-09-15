@@ -38,7 +38,7 @@ const (
 //   - otherwise the first major.minor version in the name decides — 4.6 and
 //     above is styleAdaptive, anything below (Haiku 4.5, Opus 4.5 and every
 //     3.x) is styleBudget;
-//   - a name with no version in it is styleAdaptive, because an unrecognised
+//   - a name with no version in it is styleAdaptive, because an unrecognized
 //     name is far more likely to be newer than older.
 //
 // The version is read from hyphen-separated components, so both spellings
@@ -47,7 +47,7 @@ const (
 // (us.anthropic.claude-…, anthropic/claude-…) does not disturb it.
 //
 // It is a guess, and only the guess: where the request carries the
-// catalogue's answer, [styleFor] prefers it.
+// catalog's answer, [styleFor] prefers it.
 func thinkingStyleFor(model string) thinkingStyle {
 	name := strings.ToLower(model)
 	if strings.Contains(name, "fable") {
@@ -64,11 +64,11 @@ func thinkingStyleFor(model string) thinkingStyle {
 }
 
 // styleFor decides how a model takes its thinking settings, preferring the
-// catalogue's published fact to the name heuristic. The loop puts the
-// catalogue entry on the request; a caller who builds one by hand may too,
+// catalog's published fact to the name heuristic. The loop puts the
+// catalog entry on the request; a caller who builds one by hand may too,
 // and nil simply leaves the heuristic in charge.
 //
-// The catalogue reports which thinking *form* a model accepts and nothing
+// The catalog reports which thinking *form* a model accepts and nothing
 // about whether it may be turned off, so a name that reads as always-on keeps
 // saying so on top of a published "adaptive": Fable rejects an explicit
 // disabled, and the models endpoint has no leaf that says it.
@@ -153,9 +153,9 @@ func budgetTokens(percent, maxTokens int) (int, error) {
 // below.
 //
 // It takes the whole request because the translation needs three things from
-// it — the model's name, the thinking configuration and the catalogue entry
+// it — the model's name, the thinking configuration and the catalog entry
 // the loop attached — and stays a pure function of it: nothing here reads a
-// catalogue of its own.
+// catalog of its own.
 //
 // The zero configuration sends no thinking fields at all, so a consumer who
 // never thinks about thinking adds nothing to the cached prefix. On a

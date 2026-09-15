@@ -14,7 +14,7 @@ func renderInline(src string) string {
 // inliner scans the text of one block once, left to right.
 //
 // It carries the failure memos that keep that scan linear. Every closing
-// delimiter this package looks for is recognised from its own surroundings,
+// delimiter this package looks for is recognized from its own surroundings,
 // never from where the search began, so a search that reaches the end of the
 // text without finding one proves that no later opener of the same shape can
 // find one either. Without the memos an input like "*a *a *a ..." makes every

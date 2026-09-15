@@ -60,7 +60,7 @@ func sampleConversation() goodall.Conversation {
 }
 
 // mustJSON is a thread as JSON, which is how these tests compare two threads:
-// every field is exported and serialisable, so the bytes are the value.
+// every field is exported and serializable, so the bytes are the value.
 func mustJSON(t *testing.T, thread *chat.Thread) string {
 	t.Helper()
 	b, err := json.Marshal(thread)

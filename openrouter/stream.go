@@ -16,7 +16,7 @@ import (
 // is the only data line that is not JSON.
 const doneSentinel = "[DONE]"
 
-// Event tags for the frames goodall does not recognise. They travel on an
+// Event tags for the frames goodall does not recognize. They travel on an
 // [goodall.UnknownEvent] rather than being dropped, because OpenRouter adds
 // frame shapes without notice — the debug echo of the upstream body is one —
 // and a consumer that can see them can work out what arrived.
@@ -28,11 +28,11 @@ const (
 	eventMalformedChunk goodall.EventType = "openrouter.malformed_chunk"
 )
 
-// Stream sends the request and yields the events it produces, neutralised into
+// Stream sends the request and yields the events it produces, neutralized into
 // goodall's event vocabulary.
 //
 // The stream owns the HTTP response: ranging to the end, or breaking out
-// early, closes it, and cancelling ctx ends the stream with ctx's error. A
+// early, closes it, and canceling ctx ends the stream with ctx's error. A
 // request that cannot be translated is the stream's first and only yield, so
 // a caller never has to check for an error before ranging.
 func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Stream {
@@ -82,7 +82,7 @@ func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Strea
 		}
 		// A stream that simply stopped yields nothing more: Collect
 		// reports the missing message_stop as a *ProtocolError, which
-		// is the one place that judgement belongs.
+		// is the one place that judgment belongs.
 	}
 }
 
@@ -224,7 +224,7 @@ func (n *neutralizer) accounting(chunk *chatChunk) []goodall.Event {
 	return append(events, goodall.MessageDelta{Usage: usage, Cost: cost})
 }
 
-// unknownEvent wraps a frame goodall does not recognise.
+// unknownEvent wraps a frame goodall does not recognize.
 func unknownEvent(tag goodall.EventType, raw []byte) goodall.Event {
 	return goodall.UnknownEvent{EventType: tag, Raw: jsontext.Value(raw)}
 }

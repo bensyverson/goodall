@@ -190,7 +190,7 @@ func TestWireToBlock(t *testing.T) {
 			want: goodall.RedactedThinking{Data: "encrypted"},
 		},
 		{
-			name: "an unrecognised block keeps its bytes",
+			name: "an unrecognized block keeps its bytes",
 			wire: `{"type":"web_search_tool_result","tool_use_id":"srv_1","content":[]}`,
 			want: goodall.Unknown{Type: "web_search_tool_result", Raw: jsontext.Value(`{"type":"web_search_tool_result","tool_use_id":"srv_1","content":[]}`)},
 		},

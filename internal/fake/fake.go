@@ -40,10 +40,10 @@ type Turn struct {
 	// ErrAfter caps how many of Events are yielded before Err. Zero means
 	// all of them, so a turn that just fails at the end needs only Err.
 	ErrAfter int
-	// BlockUntilCancelled parks after the events until the context is
-	// cancelled, then yields the context's error. It is how a stream that
+	// BlockUntilCanceled parks after the events until the context is
+	// canceled, then yields the context's error. It is how a stream that
 	// stalls mid-message is scripted.
-	BlockUntilCancelled bool
+	BlockUntilCanceled bool
 }
 
 // Answer scripts a complete turn: a message carrying the blocks, in order,
@@ -61,13 +61,13 @@ func Answer(reason goodall.StopReason, blocks ...goodall.Block) Turn {
 }
 
 // Stalled scripts a turn that delivers the blocks complete and then hangs
-// until the context is cancelled: the message never reaches message_delta or
-// message_stop. It is how a run is cancelled or timed out mid-stream with
+// until the context is canceled: the message never reaches message_delta or
+// message_stop. It is how a run is canceled or timed out mid-stream with
 // complete tool calls already in the partial message.
 func Stalled(blocks ...goodall.Block) Turn {
 	events := []goodall.Event{goodall.MessageStart{ID: MessageID, Model: Model}}
 	events = append(events, blockEvents(blocks)...)
-	return Turn{Events: events, BlockUntilCancelled: true}
+	return Turn{Events: events, BlockUntilCanceled: true}
 }
 
 // Broken scripts a turn that delivers the blocks complete and then fails with
@@ -217,7 +217,7 @@ func (p *Provider) Stream(ctx context.Context, req *goodall.Request) goodall.Str
 			yield(nil, turn.Err)
 			return
 		}
-		if turn.BlockUntilCancelled {
+		if turn.BlockUntilCanceled {
 			<-ctx.Done()
 			yield(nil, ctx.Err())
 		}

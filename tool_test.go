@@ -217,7 +217,7 @@ func TestExecuteDoesNotCallRunOnABadInput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewTool: %v", err)
 	}
-	if _, err := tool.Execute(t.Context(), jsontext.Value(`{"city":"Paris","colour":"red"}`)); err != nil {
+	if _, err := tool.Execute(t.Context(), jsontext.Value(`{"city":"Paris","color":"red"}`)); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 	if called {

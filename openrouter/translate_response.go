@@ -136,7 +136,7 @@ func toolCallInput(call toolCall) (jsontext.Value, error) {
 	return value, nil
 }
 
-// stopReason maps OpenRouter's normalised finish reason onto goodall's. A
+// stopReason maps OpenRouter's normalized finish reason onto goodall's. A
 // value goodall does not define travels on verbatim rather than being
 // flattened into a catch-all; the upstream model's own string arrives
 // separately as the response's NativeStopReason.

@@ -216,7 +216,7 @@ func TestThinkingErrors(t *testing.T) {
 	})
 }
 
-// styleWith is the style chosen for a model whose catalogue entry reports the
+// styleWith is the style chosen for a model whose catalog entry reports the
 // given thinking style, which is the fact the name heuristic yields to.
 func styleWith(model string, published goodall.ThinkingStyle) thinkingStyle {
 	info := &goodall.ModelInfo{
@@ -227,22 +227,22 @@ func styleWith(model string, published goodall.ThinkingStyle) thinkingStyle {
 	return styleFor(model, info)
 }
 
-func TestTheCatalogueOverridesTheNameHeuristic(t *testing.T) {
+func TestTheCatalogOverridesTheNameHeuristic(t *testing.T) {
 	cases := []struct {
 		name      string
 		model     string
 		published goodall.ThinkingStyle
 		want      thinkingStyle
 	}{
-		{"a catalogue adaptive beats a name that reads as budget", "claude-haiku-4-5", goodall.ThinkingAdaptive, styleAdaptive},
-		{"a catalogue budget beats a name that reads as adaptive", "claude-opus-4-6", goodall.ThinkingBudget, styleBudget},
+		{"a catalog adaptive beats a name that reads as budget", "claude-haiku-4-5", goodall.ThinkingAdaptive, styleAdaptive},
+		{"a catalog budget beats a name that reads as adaptive", "claude-opus-4-6", goodall.ThinkingBudget, styleBudget},
 		{"a style nobody published leaves the heuristic in charge", "claude-haiku-4-5", goodall.ThinkingStyleUnknown, styleBudget},
 		{"a style goodall does not define leaves the heuristic in charge", "claude-opus-4-6", goodall.ThinkingStyle("telepathy"), styleAdaptive},
-		// The catalogue says which *form* the model takes, never that it
+		// The catalog says which *form* the model takes, never that it
 		// refuses to be turned off, so a name that says always-on keeps
-		// saying it on top of a catalogue "adaptive".
-		{"a catalogue adaptive does not turn fable off", "claude-fable-5-1", goodall.ThinkingAdaptive, styleAlwaysOn},
-		{"a catalogue budget still overrides fable", "claude-fable-5-1", goodall.ThinkingBudget, styleBudget},
+		// saying it on top of a catalog "adaptive".
+		{"a catalog adaptive does not turn fable off", "claude-fable-5-1", goodall.ThinkingAdaptive, styleAlwaysOn},
+		{"a catalog budget still overrides fable", "claude-fable-5-1", goodall.ThinkingBudget, styleBudget},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -252,12 +252,12 @@ func TestTheCatalogueOverridesTheNameHeuristic(t *testing.T) {
 		})
 	}
 	if got := styleFor("claude-haiku-4-5", nil); got != styleBudget {
-		t.Errorf("styleFor with no catalogue entry = %q, want the heuristic's %q", got, styleBudget)
+		t.Errorf("styleFor with no catalog entry = %q, want the heuristic's %q", got, styleBudget)
 	}
 }
 
-func TestTheCatalogueStyleReachesTheWire(t *testing.T) {
-	// The whole point of the field: a 4.5 model the catalogue says takes
+func TestTheCatalogStyleReachesTheWire(t *testing.T) {
+	// The whole point of the field: a 4.5 model the catalog says takes
 	// adaptive thinking is sent adaptive thinking, not a derived budget.
 	body := bodyJSON(t, &goodall.Request{
 		Model:     "claude-haiku-4-5",

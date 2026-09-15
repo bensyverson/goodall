@@ -20,7 +20,7 @@ import (
 //
 // A jsontext.Value member such as Thinking.Raw comes back byte-for-byte as
 // long as it was compact, which provider wire bytes are: the encoder strips
-// insignificant whitespace and normalises escape sequences in strings, but it
+// insignificant whitespace and normalizes escape sequences in strings, but it
 // preserves member order, numbers verbatim, and every member. Verified on
 // go1.27.0.
 
@@ -96,7 +96,7 @@ func (u Unknown) MarshalJSONTo(enc *jsontext.Encoder) error {
 var blockUnmarshalers = json.WithUnmarshalers(json.UnmarshalFromFunc(unmarshalBlock))
 
 // unmarshalBlock reads one block and picks its concrete type from the "type"
-// member. An unrecognised or missing tag yields an Unknown holding the
+// member. An unrecognized or missing tag yields an Unknown holding the
 // original bytes rather than an error: invariant 6 says unknown values are
 // surfaced, never dropped.
 func unmarshalBlock(dec *jsontext.Decoder, b *Block) error {

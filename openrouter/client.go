@@ -22,11 +22,11 @@ const DefaultBaseURL = "https://openrouter.ai/api/v1"
 const (
 	// pathChatCompletions is the completion endpoint, streamed or not.
 	pathChatCompletions = "/chat/completions"
-	// pathModels is the catalogue. OpenRouter publishes no per-model
-	// endpoint that returns a catalogue entry: /models/{id} is a 404 and
+	// pathModels is the catalog. OpenRouter publishes no per-model
+	// endpoint that returns a catalog entry: /models/{id} is a 404 and
 	// /models/{id}/endpoints returns a different shape with no
 	// supported_parameters, top_provider or reasoning. So a lookup reads
-	// the catalogue and finds the id, which the client's memo makes a
+	// the catalog and finds the id, which the client's memo makes a
 	// once-per-client cost for every model at once.
 	pathModels = "/models"
 )
@@ -44,9 +44,9 @@ type Client struct {
 	dialect     Dialect
 	attribution Attribution
 
-	// models memoises the catalogue. One fetch reads every model, so it is
+	// models memoizes the catalog. One fetch reads every model, so it is
 	// stored per identifier and answers for all of them; a model the
-	// catalogue did not list is not stored, because OpenRouter adds models
+	// catalog did not list is not stored, because OpenRouter adds models
 	// continuously and a miss is worth asking about again.
 	modelsMu sync.Mutex
 	models   map[string]*goodall.ModelInfo

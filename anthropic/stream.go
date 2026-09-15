@@ -14,7 +14,7 @@ import (
 // provider path goodall.Provider requires.
 //
 // The stream owns the HTTP response: ranging to the end, breaking out early
-// and cancelling ctx all close the body. It yields at most one error, which
+// and canceling ctx all close the body. It yields at most one error, which
 // ends it — a translation failure before the call, the transport's
 // *goodall.APIError for a failing status, an error event mid-stream, or the
 // context's own error.
@@ -40,7 +40,7 @@ func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Strea
 
 		for raw, err := range sse.Events(resp.Body) {
 			if err != nil {
-				// A cancelled read reports the context's error, but
+				// A canceled read reports the context's error, but
 				// a framing error that raced the cancellation would
 				// not; the caller cares which one happened.
 				if ctxErr := ctx.Err(); ctxErr != nil {
@@ -121,7 +121,7 @@ func decodeStreamEvent(raw sse.Event, header http.Header) ([]goodall.Event, *goo
 			return nil, nil, malformed(raw, err)
 		}
 		// NativeStopReason stays empty: Anthropic's wire string is the
-		// StopReason, not a router's normalisation of someone else's.
+		// StopReason, not a router's normalization of someone else's.
 		return []goodall.Event{goodall.MessageDelta{
 			StopReason:   w.Delta.StopReason,
 			StopSequence: w.Delta.StopSequence,
@@ -134,7 +134,7 @@ func decodeStreamEvent(raw sse.Event, header http.Header) ([]goodall.Event, *goo
 	case streamPing:
 		// A keep-alive. It is a documented event carrying nothing about
 		// the message, so it is skipped rather than surfaced as unknown:
-		// an UnknownEvent means "goodall did not recognise this", and a
+		// an UnknownEvent means "goodall did not recognize this", and a
 		// consumer would learn nothing from one every few seconds.
 		return nil, nil, nil
 
@@ -143,7 +143,7 @@ func decodeStreamEvent(raw sse.Event, header http.Header) ([]goodall.Event, *goo
 
 	default:
 		// Anthropic adds event types without notice and the docs require
-		// them to be tolerated, so an unrecognised one travels whole.
+		// them to be tolerated, so an unrecognized one travels whole.
 		return []goodall.Event{goodall.UnknownEvent{
 			EventType: goodall.EventType(raw.Type),
 			Raw:       rawValue(raw.Data),
@@ -187,7 +187,7 @@ func malformed(raw sse.Event, err error) error {
 }
 
 // rawValue keeps an event's bytes for an UnknownEvent. Anything that is not a
-// JSON value is quoted into one, because every event must stay serialisable
+// JSON value is quoted into one, because every event must stay serializable
 // (invariant 4) and an event carrying invalid bytes would fail to marshal at
 // whatever boundary it reached.
 func rawValue(data string) jsontext.Value {

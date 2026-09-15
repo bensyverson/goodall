@@ -11,7 +11,7 @@ import (
 	"github.com/bensyverson/goodall"
 )
 
-// stubTool is a tool definition with no behaviour: translation only reads the
+// stubTool is a tool definition with no behavior: translation only reads the
 // name, the description and the schema.
 type stubTool struct {
 	name        string

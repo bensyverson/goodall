@@ -40,11 +40,11 @@ type Request struct {
 	// Metadata is the provider's per-request metadata, such as an end-user
 	// identifier for abuse monitoring.
 	Metadata map[string]string
-	// ModelInfo is what the provider's catalogue says about Model, which
+	// ModelInfo is what the provider's catalog says about Model, which
 	// the loop fetches once per run and puts here so a translation can
 	// read a fact rather than guess it from the model's name. A direct
 	// consumer may fill it in by hand; nil means nobody consulted the
-	// catalogue, never "the model can do nothing".
+	// catalog, never "the model can do nothing".
 	ModelInfo *ModelInfo
 	// Extensions carries provider-specific options. A provider accepts
 	// only its own extension type and rejects another provider's before

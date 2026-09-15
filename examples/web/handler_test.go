@@ -178,8 +178,8 @@ func TestStopEndsTheRunWithAStoppedEvent(t *testing.T) {
 		t.Fatalf("stopping a running thread answered %d, want 204: %s", resp.StatusCode, body)
 	}
 	frames := stream.until("stopped")
-	if last := frames[len(frames)-1]; !strings.Contains(last.Data, "cancelled") {
-		t.Errorf("the terminal frame does not say the run was cancelled: %s", last.Data)
+	if last := frames[len(frames)-1]; !strings.Contains(last.Data, "canceled") {
+		t.Errorf("the terminal frame does not say the run was canceled: %s", last.Data)
 	}
 	if rest := stream.rest(); len(rest) != 0 {
 		t.Errorf("the stream carried %s after its terminal event", names(rest))

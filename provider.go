@@ -12,7 +12,7 @@ import "context"
 type Provider interface {
 	// Stream sends the request and yields the events it produces. The
 	// stream owns the HTTP response: ranging to the end, or breaking out
-	// early, closes it. Cancelling ctx ends the stream.
+	// early, closes it. Canceling ctx ends the stream.
 	Stream(ctx context.Context, req *Request) Stream
 }
 
@@ -29,7 +29,7 @@ type Completer interface {
 // the network call, with a *CapabilityError naming the fact.
 //
 // The agent calls Model once at the start of every run, so an implementation
-// should memoise what it read rather than fetching it each time; both
+// should memoize what it read rather than fetching it each time; both
 // built-in providers do, per identifier and for successes only.
 type ModelLister interface {
 	// Model describes one model by its provider identifier. The value it

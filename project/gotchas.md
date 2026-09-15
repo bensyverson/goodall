@@ -24,7 +24,7 @@ Writing a test case for BOM-stripping with `"﻿" + "data: ..."` fails the build
 
 ## 2026-09-14 Inside `synctest.Test`, derive contexts from `context.Background()`, not `t.Context()`
 
-`synctest.Test` waits for every bubbled goroutine to exit before it returns, and `t.Context()` is only cancelled when the test function returns; a goroutine parked on that context (the transport's body watcher, anything selecting on `ctx.Done()`) deadlocks the bubble. A nil `Done` channel is the mirror trap: a `select` over one is not durably blocked, so the bubble never goes idle and fake time never advances. Found by the transport leaf (`internal/transport/retry_test.go` shows the working pattern).
+`synctest.Test` waits for every bubbled goroutine to exit before it returns, and `t.Context()` is only canceled when the test function returns; a goroutine parked on that context (the transport's body watcher, anything selecting on `ctx.Done()`) deadlocks the bubble. A nil `Done` channel is the mirror trap: a `select` over one is not durably blocked, so the bubble never goes idle and fake time never advances. Found by the transport leaf (`internal/transport/retry_test.go` shows the working pattern).
 
 ## 2026-09-14 A second `json.WithUnmarshalers` replaces the first instead of adding to it
 

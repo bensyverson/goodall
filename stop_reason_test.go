@@ -42,7 +42,7 @@ func TestStopReasonKnown(t *testing.T) {
 }
 
 // TestStopReasonUnknownSurvivesJSON is invariant 6: a stop reason goodall does
-// not recognise reaches the consumer verbatim rather than being dropped or
+// not recognize reaches the consumer verbatim rather than being dropped or
 // folded into a catch-all.
 func TestStopReasonUnknownSurvivesJSON(t *testing.T) {
 	type envelope struct {
@@ -57,7 +57,7 @@ func TestStopReasonUnknownSurvivesJSON(t *testing.T) {
 		t.Fatalf("decoded stop reason = %q, want %q", string(got.Stop), "banana")
 	}
 	if got.Stop.Known() {
-		t.Error("an unrecognised stop reason reports Known() = true")
+		t.Error("an unrecognized stop reason reports Known() = true")
 	}
 	back, err := json.Marshal(got)
 	if err != nil {

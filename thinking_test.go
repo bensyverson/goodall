@@ -112,7 +112,7 @@ func TestThinkingUnknownEffortSurvivesJSON(t *testing.T) {
 		t.Fatalf("decoded effort = %q, want %q", string(got.Effort), "ludicrous")
 	}
 	if got.Effort.Known() {
-		t.Error("an unrecognised effort reports Known() = true")
+		t.Error("an unrecognized effort reports Known() = true")
 	}
 	back, err := json.Marshal(got)
 	if err != nil {

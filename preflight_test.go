@@ -113,7 +113,7 @@ func TestCheckCapabilitiesWithNoModelInfoChecksNothing(t *testing.T) {
 	req := textRequest()
 	req.Messages = append(req.Messages, UserMessage(Image{Source: BytesSource("image/png", []byte{1})}))
 	if err := checkCapabilities(req); err != nil {
-		t.Fatalf("a request with no catalogue entry was refused: %v", err)
+		t.Fatalf("a request with no catalog entry was refused: %v", err)
 	}
 }
 
@@ -215,7 +215,7 @@ func TestRunProceedsWhenSupportIsUnknown(t *testing.T) {
 	}
 }
 
-func TestRunFetchesTheCatalogueOnceAndPutsItOnEveryRequest(t *testing.T) {
+func TestRunFetchesTheCatalogOnceAndPutsItOnEveryRequest(t *testing.T) {
 	p := &listingProvider{info: &ModelInfo{ID: "mystery", Provider: "testprovider"}, turns: 2}
 	agent := &Agent{Provider: p, Model: "mystery", Tools: []Tool{&stubTool{name: "echo"}}}
 
@@ -223,20 +223,20 @@ func TestRunFetchesTheCatalogueOnceAndPutsItOnEveryRequest(t *testing.T) {
 		t.Fatalf("the run stream yielded an error: %v", err)
 	}
 	if p.lookups != 1 {
-		t.Errorf("the catalogue was read %d times, want once for the whole run", p.lookups)
+		t.Errorf("the catalog was read %d times, want once for the whole run", p.lookups)
 	}
 	if p.streams != 2 {
 		t.Fatalf("the provider streamed %d times, want 2", p.streams)
 	}
 	for i, req := range p.seen {
 		if req.ModelInfo != p.info {
-			t.Errorf("request %d carries ModelInfo %v, want the catalogue entry the run fetched", i, req.ModelInfo)
+			t.Errorf("request %d carries ModelInfo %v, want the catalog entry the run fetched", i, req.ModelInfo)
 		}
 	}
 }
 
-func TestRunProceedsWhenTheCatalogueCannotBeRead(t *testing.T) {
-	// A catalogue can lag the API, so a model it has never heard of is a
+func TestRunProceedsWhenTheCatalogCannotBeRead(t *testing.T) {
+	// A catalog can lag the API, so a model it has never heard of is a
 	// warning and a run with no capability facts, not a failed run.
 	var logged bytes.Buffer
 	p := &listingProvider{err: &APIError{Provider: "testprovider", Kind: KindNotFound, Message: "no such model"}}
@@ -265,7 +265,7 @@ func TestRunProceedsWhenTheCatalogueCannotBeRead(t *testing.T) {
 }
 
 func TestRunWithoutAModelListerSkipsTheCheck(t *testing.T) {
-	// A provider that publishes no catalogue gets no pre-flight at all,
+	// A provider that publishes no catalog gets no pre-flight at all,
 	// rather than a refusal it never asked for.
 	p := &textProvider{}
 	agent := &Agent{Provider: p, Model: "mystery"}
@@ -339,7 +339,7 @@ func (p *textProvider) Stream(ctx context.Context, req *Request) Stream {
 	}
 }
 
-// listingProvider is a textProvider that also publishes a catalogue, which is
+// listingProvider is a textProvider that also publishes a catalog, which is
 // what turns the pre-flight on.
 type listingProvider struct {
 	textProvider

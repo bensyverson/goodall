@@ -1,4 +1,4 @@
-// The models catalogue: the wire shape of GET /models and its mapping onto
+// The models catalog: the wire shape of GET /models and its mapping onto
 // goodall's tri-state capabilities and exact per-token prices.
 
 package openrouter
@@ -42,16 +42,16 @@ const (
 	paramStructuredOutputs parameter = "structured_outputs"
 )
 
-// catalogue is the body of GET /models.
-type catalogue struct {
-	Data       []catalogueModel `json:"data,omitzero"`
-	TotalCount int              `json:"total_count,omitzero"`
+// catalog is the body of GET /models.
+type catalog struct {
+	Data       []catalogModel `json:"data,omitzero"`
+	TotalCount int            `json:"total_count,omitzero"`
 }
 
-// catalogueModel is one entry. Members goodall has no use for — the
+// catalogModel is one entry. Members goodall has no use for — the
 // description, the benchmarks, the default parameters — are left out; json/v2
 // ignores what a struct does not name.
-type catalogueModel struct {
+type catalogModel struct {
 	ID                  string          `json:"id,omitzero"`
 	CanonicalSlug       string          `json:"canonical_slug,omitzero"`
 	Name                string          `json:"name,omitzero"`
@@ -103,32 +103,32 @@ type modelReasoning struct {
 
 // Model describes one model by its OpenRouter identifier.
 //
-// OpenRouter publishes no per-model catalogue endpoint — /models/{id} is a 404
+// OpenRouter publishes no per-model catalog endpoint — /models/{id} is a 404
 // and /models/{id}/endpoints returns a routing view with none of the facts
-// below — so a lookup reads the whole catalogue and finds the id. The client
-// memoises what it read, and since one fetch carries every model, the first
+// below — so a lookup reads the whole catalog and finds the id. The client
+// memoizes what it read, and since one fetch carries every model, the first
 // lookup answers for all of them; the agent asks at the start of every run,
 // so that is what keeps a run's pre-flight free.
 //
-// A model the catalogue does not list is a *[goodall.APIError] with
-// [goodall.KindNotFound], and is not memoised: OpenRouter adds models
+// A model the catalog does not list is a *[goodall.APIError] with
+// [goodall.KindNotFound], and is not memoized: OpenRouter adds models
 // continuously, so a miss is worth asking about again. The result is shared
 // between callers and must not be modified.
 func (c *Client) Model(ctx context.Context, id string) (*goodall.ModelInfo, error) {
 	if info, ok := c.cachedModel(id); ok {
 		return info, nil
 	}
-	read, err := c.fetchCatalogue(ctx)
+	read, err := c.fetchCatalog(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.cacheCatalogue(read, id)
+	return c.cacheCatalog(read, id)
 }
 
-// catalogueRead is one read of GET /models: the entries, and the facts about
+// catalogRead is one read of GET /models: the entries, and the facts about
 // the response that a "no such model" error names.
-type catalogueRead struct {
-	list      catalogue
+type catalogRead struct {
+	list      catalog
 	status    int
 	requestID string
 }
@@ -141,11 +141,11 @@ func (c *Client) cachedModel(id string) (*goodall.ModelInfo, bool) {
 	return info, ok
 }
 
-// cacheCatalogue stores every entry of a freshly read catalogue, under both
+// cacheCatalog stores every entry of a freshly read catalog, under both
 // the id and the canonical slug a caller may name it by, and returns the one
-// that was asked for. An id the catalogue does not carry is a not-found,
+// that was asked for. An id the catalog does not carry is a not-found,
 // which is not stored.
-func (c *Client) cacheCatalogue(read *catalogueRead, id string) (*goodall.ModelInfo, error) {
+func (c *Client) cacheCatalog(read *catalogRead, id string) (*goodall.ModelInfo, error) {
 	c.modelsMu.Lock()
 	defer c.modelsMu.Unlock()
 	if c.models == nil {
@@ -167,16 +167,16 @@ func (c *Client) cacheCatalogue(read *catalogueRead, id string) (*goodall.ModelI
 			Provider:  ProviderName,
 			Kind:      goodall.KindNotFound,
 			Status:    read.status,
-			Message:   fmt.Sprintf("the catalogue lists no model %q", id),
+			Message:   fmt.Sprintf("the catalog lists no model %q", id),
 			RequestID: read.requestID,
 		}
 	}
 	return found, nil
 }
 
-// fetchCatalogue reads GET /models. The lock is never held across the call:
-// a slow catalogue must not block a lookup that the memo could have answered.
-func (c *Client) fetchCatalogue(ctx context.Context) (*catalogueRead, error) {
+// fetchCatalog reads GET /models. The lock is never held across the call:
+// a slow catalog must not block a lookup that the memo could have answered.
+func (c *Client) fetchCatalog(ctx context.Context) (*catalogRead, error) {
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodGet,
 		URL:    c.baseURL + pathModels,
@@ -191,25 +191,25 @@ func (c *Client) fetchCatalogue(ctx context.Context) (*catalogueRead, error) {
 	if err != nil {
 		return nil, err
 	}
-	read := &catalogueRead{status: resp.StatusCode, requestID: requestID(resp.Header)}
+	read := &catalogRead{status: resp.StatusCode, requestID: requestID(resp.Header)}
 	if err := json.Unmarshal(raw, &read.list); err != nil {
 		if apiErr := decodeError(0, resp.Header, raw); apiErr != nil {
 			return nil, apiErr
 		}
-		return nil, fmt.Errorf("openrouter: decoding the models catalogue: %w", err)
+		return nil, fmt.Errorf("openrouter: decoding the models catalog: %w", err)
 	}
 	return read, nil
 }
 
-// modelInfo maps one catalogue entry onto the neutral description.
+// modelInfo maps one catalog entry onto the neutral description.
 //
-// A list the catalogue did not publish leaves the capabilities it would have
+// A list the catalog did not publish leaves the capabilities it would have
 // answered at [goodall.SupportUnknown], never Unsupported: unknown means try,
-// and a catalogue goodall cannot read must not block a call that would have
-// worked. CacheControl stays unknown for every model, because the catalogue
+// and a catalog goodall cannot read must not block a call that would have
+// worked. CacheControl stays unknown for every model, because the catalog
 // says nothing about prompt-cache breakpoints — only the price list hints at
 // them, and a price is not a promise.
-func modelInfo(entry *catalogueModel) *goodall.ModelInfo {
+func modelInfo(entry *catalogModel) *goodall.ModelInfo {
 	caps := goodall.Capabilities{ContextWindow: entry.ContextLength}
 	if arch := entry.Architecture; arch != nil && len(arch.InputModalities) > 0 {
 		caps.ImageInput = supportFor(arch.InputModalities, modalityImage)
@@ -247,7 +247,7 @@ func supportFor[T comparable](list []T, wanted ...T) goodall.Support {
 	return goodall.Unsupported
 }
 
-// efforts maps the catalogue's effort rungs onto goodall's. The two ladders
+// efforts maps the catalog's effort rungs onto goodall's. The two ladders
 // share their words except that OpenRouter spells "off" as "none"; a rung
 // goodall does not define travels on verbatim, since the ladder keeps growing.
 func efforts(published []goodall.Effort) []goodall.Effort {
@@ -264,7 +264,7 @@ func efforts(published []goodall.Effort) []goodall.Effort {
 // wireEffortNone is how the wire spells [goodall.EffortOff].
 const wireEffortNone goodall.Effort = "none"
 
-// pricing parses the published decimal strings exactly. A price the catalogue
+// pricing parses the published decimal strings exactly. A price the catalog
 // omits reads as zero, which for a cache price means the model has no separate
 // one; a model with no price list at all yields nil, because "no published
 // price" is not the same fact as "free".

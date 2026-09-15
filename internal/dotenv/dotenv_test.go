@@ -177,7 +177,7 @@ func TestLookupReportsAnEmptyValueAsMissing(t *testing.T) {
 	}
 }
 
-func TestRepoEnvFileHonoursTheOverride(t *testing.T) {
+func TestRepoEnvFileHonorsTheOverride(t *testing.T) {
 	want := filepath.Join(t.TempDir(), "elsewhere.env")
 	t.Setenv(EnvFileVar, want)
 

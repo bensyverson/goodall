@@ -92,7 +92,7 @@ func TestASecondSendOnABusyThreadIsRefused(t *testing.T) {
 	}
 
 	// Let the first turn arrive before stopping it, so the run really is
-	// mid-answer rather than cancelled before it asked anything.
+	// mid-answer rather than canceled before it asked anything.
 	subscribe(t, svc, thread.ID).until(goodall.EventBlockStop)
 	if err := svc.Stop(thread.ID); err != nil {
 		t.Fatalf("Stop: %v", err)
@@ -229,7 +229,7 @@ func TestResolveOnAThreadThatIsNotWaitingFails(t *testing.T) {
 	}
 }
 
-// TestShutdownDrains is what lets a server stop: every run is cancelled, and
+// TestShutdownDrains is what lets a server stop: every run is canceled, and
 // Shutdown returns only once what they produced is in the store.
 func TestShutdownDrains(t *testing.T) {
 	agent, _ := agentFor([]fake.Turn{fake.Stalled(goodall.Text{Text: "half an answer"})})

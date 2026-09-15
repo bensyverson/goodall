@@ -48,10 +48,10 @@ type Client struct {
 	betas   []Beta
 	http    transport.Client
 
-	// models memoises the catalogue, per identifier. The agent asks for
+	// models memoizes the catalog, per identifier. The agent asks for
 	// the model at the start of every run, and a model's facts do not
 	// change between them, so the lookup is paid for once per client.
-	// Only successes are kept: a catalogue can lag the API, so "no such
+	// Only successes are kept: a catalog can lag the API, so "no such
 	// model" is an answer that may stop being true.
 	modelsMu sync.Mutex
 	models   map[string]*goodall.ModelInfo
@@ -216,7 +216,7 @@ func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.R
 const maxResponseBody = 64 << 20 // 64 MiB
 
 // readBody reads a whole response body. The body is bound to the call's
-// context by the transport, so a cancelled read reports the context's error
+// context by the transport, so a canceled read reports the context's error
 // rather than the shrapnel the cancellation produced downstream.
 func readBody(resp *http.Response) ([]byte, error) {
 	return io.ReadAll(io.LimitReader(resp.Body, maxResponseBody))

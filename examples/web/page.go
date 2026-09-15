@@ -6,7 +6,7 @@ import (
 )
 
 // pageHTML is the whole front end: one file, plain JavaScript, no external
-// assets, embedded in the binary so the example is a single artefact to copy
+// assets, embedded in the binary so the example is a single artifact to copy
 // and run.
 //
 //go:embed page.html

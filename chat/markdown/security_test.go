@@ -201,7 +201,7 @@ func TestDeepNestingDoesNotOverflow(t *testing.T) {
 	assertNoRawMarkup(t, got)
 }
 
-// TestLargeInputFinishes guards against quadratic behaviour. The bound is
+// TestLargeInputFinishes guards against quadratic behavior. The bound is
 // deliberately loose so that it fails on an algorithm that degrades rather
 // than on a slow or loaded machine, and the input is large enough that the
 // loose bound still catches a degradation: with the failure memos in

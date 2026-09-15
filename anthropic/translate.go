@@ -324,7 +324,7 @@ func translateMetadata(md map[string]string) (*wireMetadata, error) {
 // translateResponse turns a decoded message into the neutral response. Cost
 // stays at its zero value — Anthropic reports tokens and no money — and so
 // does NativeStopReason, because Anthropic's stop string is the StopReason
-// rather than a router's normalisation of one.
+// rather than a router's normalization of one.
 func translateResponse(w *wireResponse) *goodall.Response {
 	role := w.Role
 	if role == "" {

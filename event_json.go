@@ -11,7 +11,7 @@ import (
 // and whose remaining members are the event's fields in declaration order,
 // with zero-valued members left out. It is the format the chat layer writes to
 // a front end over SSE or NDJSON, so it is goodall's own — providers
-// neutralise onto it and never see it again.
+// neutralize onto it and never see it again.
 //
 // Marshalling needs no options: each event type carries a MarshalJSONTo that
 // writes its tag, mirroring the block model, so a []Event or a struct holding
@@ -143,7 +143,7 @@ func (e *Events) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 }
 
 // UnmarshalEvent decodes one event from the JSON object a provider or the chat
-// layer wrote. A type goodall does not recognise yields an UnknownEvent
+// layer wrote. A type goodall does not recognize yields an UnknownEvent
 // holding the original bytes rather than an error, so a front end that reads
 // its own stream back never loses an event (invariant 6).
 func UnmarshalEvent(data []byte) (Event, error) {

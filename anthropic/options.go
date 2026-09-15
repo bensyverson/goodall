@@ -11,7 +11,7 @@ import (
 // so one has to be chosen: this is large enough for a tool-using turn with
 // thinking and within the output limit of every current Claude model.
 //
-// The catalogue's max_output deliberately does not override it. Anthropic
+// The catalog's max_output deliberately does not override it. Anthropic
 // refuses a non-streaming request whose max_tokens implies more than ten
 // minutes of generation, so sending a model's 64k or 128k ceiling would break
 // Complete on the very models that publish the largest one. A caller who

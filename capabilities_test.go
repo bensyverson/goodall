@@ -43,7 +43,7 @@ func TestSupportString(t *testing.T) {
 }
 
 // TestSupportTextRoundTrip: unknown is the zero value and any text goodall does
-// not recognise decodes to it, because invariant 11 says unknown means try.
+// not recognize decodes to it, because invariant 11 says unknown means try.
 func TestSupportTextRoundTrip(t *testing.T) {
 	for _, s := range []Support{SupportUnknown, Supported, Unsupported} {
 		text, err := s.MarshalText()
@@ -219,7 +219,7 @@ func TestModelInfoJSON(t *testing.T) {
 	}
 }
 
-// TestModelInfoThinkingStyleAndDisplayName: the catalogue's word on which
+// TestModelInfoThinkingStyleAndDisplayName: the catalog's word on which
 // thinking form a model takes, and its human name, survive a round trip and
 // are omitted when the provider published neither.
 func TestModelInfoThinkingStyleAndDisplayName(t *testing.T) {
@@ -257,7 +257,7 @@ func TestModelInfoThinkingStyleAndDisplayName(t *testing.T) {
 	}
 }
 
-// TestModelInfoUnknownPricingIsNil: a catalogue entry without prices must stay
+// TestModelInfoUnknownPricingIsNil: a catalog entry without prices must stay
 // distinguishable from one that prices everything at zero.
 func TestModelInfoUnknownPricingIsNil(t *testing.T) {
 	var info ModelInfo

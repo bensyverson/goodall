@@ -310,7 +310,7 @@ func TestDoUnbuildableRequest(t *testing.T) {
 	}
 }
 
-func TestDoCancelledContextBeforeSend(t *testing.T) {
+func TestDoCanceledContextBeforeSend(t *testing.T) {
 	s := &scripted{steps: []reply{{status: 200, body: "ok"}}}
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()

@@ -7,7 +7,7 @@ package goodall
 //
 // The loop acts on the reason: StopToolUse runs the tools, StopPauseTurn
 // resends the request unchanged, and every other reason — including one it
-// does not recognise — ends the turn.
+// does not recognize — ends the turn.
 type StopReason string
 
 const (

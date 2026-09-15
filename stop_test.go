@@ -4,7 +4,7 @@ import "testing"
 
 // TestClassifyStop is the stop table: every reason the loop can meet, and what
 // it does next. It is an in-package test because the table is internal to the
-// loop; the behaviour it decides is asserted end to end in run_stop_test.go.
+// loop; the behavior it decides is asserted end to end in run_stop_test.go.
 func TestClassifyStop(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -56,7 +56,7 @@ func TestClassifyStop(t *testing.T) {
 			Message: "the model declined to answer",
 		},
 	}, {
-		name:   "an unrecognised reason stops the run",
+		name:   "an unrecognized reason stops the run",
 		reason: StopReason("content_filter"),
 		want: turnOutcome{
 			Action:  actionStop,

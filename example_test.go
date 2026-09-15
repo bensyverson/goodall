@@ -10,7 +10,7 @@ import (
 	"github.com/bensyverson/goodall/anthropic"
 )
 
-// The customiser's quick start: an agent with a tool, run to completion while
+// The customizer's quick start: an agent with a tool, run to completion while
 // its events are printed as they arrive. It is the README's first example and
 // compiles with the suite; it is not run, because it needs a key.
 func ExampleAgent_Run() {

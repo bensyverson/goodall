@@ -14,7 +14,7 @@ import (
 // a tool result, an image, a PDF and an error envelope — plus the two things
 // only a router has: the upstream body OpenRouter sent on to Anthropic, and
 // the same reasoning round trip through an OpenAI model, whose
-// reasoning_details are encrypted or summarised rather than signed text.
+// reasoning_details are encrypted or summarized rather than signed text.
 //
 // Every exchange here runs against the Claude model unless its name says
 // otherwise, because that is the pairing the offline tests compare with the
@@ -22,7 +22,7 @@ import (
 
 // openRouterUnknownModel is a model identifier OpenRouter does not route,
 // which is the cheapest way to get a real error envelope: it is refused
-// before any tokens are generated. OpenRouter answers an unrecognised id with
+// before any tokens are generated. OpenRouter answers an unrecognized id with
 // HTTP 400 and "… is not a valid model ID", not with a 404.
 const openRouterUnknownModel = "anthropic/claude-no-such-model"
 
@@ -161,7 +161,7 @@ func chatCompletionExchanges(rec *recorder, client *openrouter.Client, model, re
 		},
 		{
 			name: "encrypted_reasoning_tool_use",
-			what: "the same round trip on an OpenAI reasoning model through OpenRouter, whose reasoning_details are encrypted or summarised rather than signed text",
+			what: "the same round trip on an OpenAI reasoning model through OpenRouter, whose reasoning_details are encrypted or summarized rather than signed text",
 			run: func(ctx context.Context) error {
 				// Recorded at high effort, not low: at low this
 				// model answered the same question with
@@ -174,14 +174,14 @@ func chatCompletionExchanges(rec *recorder, client *openrouter.Client, model, re
 		},
 		{
 			name: "image",
-			what: "a generated PNG the model is asked to name the colour of",
+			what: "a generated PNG the model is asked to name the color of",
 			run: func(ctx context.Context) error {
 				_, err := rec.stream(ctx, client, "image", &goodall.Request{
 					Model:     model,
 					MaxTokens: recordedMaxTokens,
 					Messages: []goodall.Message{goodall.UserMessage(
 						goodall.Image{Source: goodall.BytesSource("image/png", png)},
-						goodall.Text{Text: "Answer with one word: what colour is this image?"},
+						goodall.Text{Text: "Answer with one word: what color is this image?"},
 					)},
 				})
 				return err

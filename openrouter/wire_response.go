@@ -26,7 +26,7 @@ type chatResponse struct {
 }
 
 // choice is one completion. NativeFinishReason is the upstream model's own
-// stop string, which OpenRouter reports alongside its normalised one.
+// stop string, which OpenRouter reports alongside its normalized one.
 type choice struct {
 	Index              int         `json:"index,omitzero"`
 	FinishReason       string      `json:"finish_reason,omitzero"`

@@ -10,7 +10,7 @@ import (
 )
 
 // errorType is the "type" member of Anthropic's error object. The API has one
-// vocabulary for every path — the Messages endpoint, the catalogue, a
+// vocabulary for every path — the Messages endpoint, the catalog, a
 // mid-stream failure — so this table is the whole of it.
 type errorType string
 

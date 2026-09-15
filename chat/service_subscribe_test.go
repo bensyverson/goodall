@@ -158,8 +158,8 @@ func TestStopMidRunKeepsThePartialAnswer(t *testing.T) {
 	if !ok {
 		t.Fatalf("the run ended in %T, want Stopped", terminal(t, events))
 	}
-	if stopped.Cause != goodall.StopCauseCancelled {
-		t.Errorf("the run stopped because %q (%s), want cancelled", stopped.Cause, stopped.Message)
+	if stopped.Cause != goodall.StopCauseCanceled {
+		t.Errorf("the run stopped because %q (%s), want canceled", stopped.Cause, stopped.Message)
 	}
 
 	stored := waitForVersion(t, svc, thread.ID, 2)

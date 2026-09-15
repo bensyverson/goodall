@@ -94,7 +94,7 @@ func TestDecodeErrorPrefersRequestIDHeader(t *testing.T) {
 
 func TestDecodeErrorIgnoresABodyWithNoError(t *testing.T) {
 	if apiErr := decodeError(http.StatusBadGateway, http.Header{}, []byte(`<html>gateway</html>`)); apiErr != nil {
-		t.Errorf("decodeError claimed a body it does not recognise: %+v", apiErr)
+		t.Errorf("decodeError claimed a body it does not recognize: %+v", apiErr)
 	}
 }
 
@@ -127,7 +127,7 @@ func TestModalityRefusalsAreUnsupportedInput(t *testing.T) {
 	}
 }
 
-// A model with no live endpoints at all is a neighbouring message that must
+// A model with no live endpoints at all is a neighboring message that must
 // stay not-found: it says nothing about the modality.
 func TestMissingModelStaysNotFound(t *testing.T) {
 	body := []byte(`{"error":{"message":"No endpoints found for mistralai/mistral-7b-instruct.","code":404}}`)

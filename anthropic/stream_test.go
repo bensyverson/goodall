@@ -367,7 +367,7 @@ func TestBreakingOutEarlyClosesTheBody(t *testing.T) {
 	}
 }
 
-func TestCancellingTheContextEndsTheStreamWithItsError(t *testing.T) {
+func TestCancelingTheContextEndsTheStreamWithItsError(t *testing.T) {
 	release := make(chan struct{})
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()

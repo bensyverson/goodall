@@ -110,7 +110,7 @@ func allDigits(s string) bool {
 	return true
 }
 
-// newDecimal canonicalises unscaled × 10⁻ˢᶜᵃˡᵉ: trailing fractional zeros go,
+// newDecimal canonicalizes unscaled × 10⁻ˢᶜᵃˡᵉ: trailing fractional zeros go,
 // a negative scale is multiplied out, and zero is the zero value however it
 // was spelled. Canonical form is the invariant behind ==.
 func newDecimal(unscaled *big.Int, scale int) Decimal {

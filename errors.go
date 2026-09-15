@@ -142,7 +142,7 @@ func (e *APIError) Retryable() bool { return e.Kind.Retryable() }
 
 // CapabilityError is a request a model is known not to accept — an image for a
 // text-only model, a tool for a model without tool support. It is raised
-// before the network call when a catalogue said so, and after one when the
+// before the network call when a catalog said so, and after one when the
 // provider's refusal named the same fact. It is always used as a pointer, so
 // errors.AsType[*goodall.CapabilityError](err) extracts it.
 type CapabilityError struct {

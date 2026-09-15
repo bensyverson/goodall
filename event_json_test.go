@@ -12,7 +12,7 @@ import (
 
 // eventCase pairs an event value with the exact bytes goodall must produce for
 // it. Both directions are asserted, so the table is the specification of the
-// event wire shape the chat layer serialises to a front end.
+// event wire shape the chat layer serializes to a front end.
 type eventCase struct {
 	name  string
 	event Event
@@ -175,11 +175,11 @@ func eventCases() []eventCase {
 		{
 			name: "stopped on cancellation",
 			event: Stopped{
-				Cause:   StopCauseCancelled,
-				Message: "the caller cancelled the run",
+				Cause:   StopCauseCanceled,
+				Message: "the caller canceled the run",
 				Result:  Result{Conversation: sampleConversation()},
 			},
-			want: `{"type":"stopped","cause":"cancelled","message":"the caller cancelled the run","result":{"conversation":` +
+			want: `{"type":"stopped","cause":"canceled","message":"the caller canceled the run","result":{"conversation":` +
 				sampleConversationJSON + `}}`,
 		},
 		{
@@ -285,10 +285,10 @@ func TestEventsMarshalAsPlainSlice(t *testing.T) {
 	}
 }
 
-// TestUnknownEventFromUnrecognisedType is the guard for "unknown event types
+// TestUnknownEventFromUnrecognizedType is the guard for "unknown event types
 // are surfaced, never dropped": a tag the library does not know becomes an
 // UnknownEvent carrying the provider's tag and the original bytes.
-func TestUnknownEventFromUnrecognisedType(t *testing.T) {
+func TestUnknownEventFromUnrecognizedType(t *testing.T) {
 	const in = `{"type":"citations_delta","index":0,"delta":{"citation":{"cited_text":"x"}}}`
 	got, err := UnmarshalEvent([]byte(in))
 	if err != nil {
@@ -377,6 +377,6 @@ func TestEventTypeClassification(t *testing.T) {
 		})
 	}
 	if EventType("citations_delta").Known() {
-		t.Error("an unrecognised type reports itself Known")
+		t.Error("an unrecognized type reports itself Known")
 	}
 }

@@ -3,7 +3,7 @@ package goodall
 import "encoding/json/jsontext"
 
 // EventType is the tag that identifies an event on the wire. Providers
-// neutralise their own event vocabularies onto these, and the agent loop adds
+// neutralize their own event vocabularies onto these, and the agent loop adds
 // the six that describe a run; anything a provider sends that does not map
 // onto one arrives as an UnknownEvent rather than being dropped.
 type EventType string
@@ -27,7 +27,7 @@ const (
 	EventMessageDelta EventType = "message_delta"
 	// EventMessageStop closes the assistant message.
 	EventMessageStop EventType = "message_stop"
-	// EventUnknown is a provider event goodall does not recognise.
+	// EventUnknown is a provider event goodall does not recognize.
 	EventUnknown EventType = "unknown"
 
 	// EventTurnStart opens one model call of a run.
@@ -73,7 +73,7 @@ func (t EventType) FromLoop() bool {
 // progressed. The interface is sealed: only the types in this package
 // implement it, so a type switch over an Event is exhaustive once it handles
 // UnknownEvent. Events are values, so a Stream yields MessageStart{…} rather
-// than &MessageStart{…}, and every one is JSON-serialisable (invariant 4).
+// than &MessageStart{…}, and every one is JSON-serializable (invariant 4).
 type Event interface {
 	// Type is the event's wire tag, so a consumer can log or route an
 	// event without a full type switch.
@@ -159,7 +159,7 @@ type BlockStop struct {
 // MessageDelta carries the stop reason and the message's usage. Usage is
 // cumulative for the message, not an increment, so a later MessageDelta
 // replaces an earlier one rather than adding to it. NativeStopReason is the
-// upstream model's own stop string when a router normalised it into
+// upstream model's own stop string when a router normalized it into
 // StopReason (OpenRouter's native_finish_reason); a provider whose wire
 // string is the StopReason leaves it empty.
 type MessageDelta struct {
@@ -169,7 +169,7 @@ type MessageDelta struct {
 	// otherwise.
 	StopSequence string `json:"stop_sequence,omitzero"`
 	// NativeStopReason is the upstream model's own stop string when a
-	// router normalised it into StopReason; empty when the provider's
+	// router normalized it into StopReason; empty when the provider's
 	// wire string is already StopReason.
 	NativeStopReason string `json:"native_stop_reason,omitzero"`
 	// Usage is the message's cumulative usage so far, replacing rather
@@ -184,7 +184,7 @@ type MessageDelta struct {
 type MessageStop struct{}
 
 // UnknownEvent is a provider event this version of goodall does not
-// recognise. It keeps the provider's own tag and bytes so a consumer can see
+// recognize. It keeps the provider's own tag and bytes so a consumer can see
 // what arrived, because both providers add event types without notice and the
 // Anthropic docs require unknown ones to be tolerated.
 //
@@ -242,8 +242,8 @@ type Done struct {
 type StopCause string
 
 const (
-	// StopCauseCancelled is the caller's context being cancelled.
-	StopCauseCancelled StopCause = "cancelled"
+	// StopCauseCanceled is the caller's context being canceled.
+	StopCauseCanceled StopCause = "canceled"
 	// StopCauseTurnLimit is the run's turn budget being spent.
 	StopCauseTurnLimit StopCause = "turn_limit"
 	// StopCauseTokenLimit is the run's token budget being spent.
@@ -262,7 +262,7 @@ const (
 	StopCauseMaxTokens StopCause = "max_tokens"
 	// StopCauseError is a failure: the message and the kind say which.
 	StopCauseError StopCause = "error"
-	// StopCauseUnknownStop is a stop reason goodall does not recognise,
+	// StopCauseUnknownStop is a stop reason goodall does not recognize,
 	// which ends the run rather than being guessed at.
 	StopCauseUnknownStop StopCause = "unknown_stop"
 )
@@ -273,7 +273,7 @@ func (c StopCause) String() string { return string(c) }
 // Known reports whether this is one of the causes goodall defines.
 func (c StopCause) Known() bool {
 	switch c {
-	case StopCauseCancelled, StopCauseTurnLimit, StopCauseTokenLimit, StopCauseTimeout,
+	case StopCauseCanceled, StopCauseTurnLimit, StopCauseTokenLimit, StopCauseTimeout,
 		StopCauseHook, StopCauseDeferred, StopCauseRefusal, StopCauseMaxTokens,
 		StopCauseError, StopCauseUnknownStop:
 		return true
@@ -283,8 +283,8 @@ func (c StopCause) Known() bool {
 
 // Stopped is the terminal event of a run that ended early. It is not itself an
 // error: a failure travels as Message plus Kind (invariant 4), so the event
-// stays JSON-serialisable and a front end renders the same shape whether the
-// run was cancelled, budgeted out or broken.
+// stays JSON-serializable and a front end renders the same shape whether the
+// run was canceled, budgeted out or broken.
 type Stopped struct {
 	// Cause is why the run ended early.
 	Cause StopCause `json:"cause,omitzero"`

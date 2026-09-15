@@ -28,7 +28,7 @@ func start(c *Client, ctx context.Context) <-chan outcome {
 	return done
 }
 
-func TestRetryAfterSecondsHonouredExactly(t *testing.T) {
+func TestRetryAfterSecondsHonoredExactly(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -62,7 +62,7 @@ func TestRetryAfterSecondsHonouredExactly(t *testing.T) {
 	})
 }
 
-func TestRetryAfterHTTPDateHonoured(t *testing.T) {
+func TestRetryAfterHTTPDateHonored(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

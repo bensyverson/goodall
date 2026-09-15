@@ -3,7 +3,7 @@ package goodall
 // Support is a tri-state fact about a model: goodall either knows a model
 // takes something, knows it does not, or has not been told. The zero value is
 // SupportUnknown, and unknown means try — a capability check only refuses a
-// request the model is known to reject, so a catalogue goodall cannot read
+// request the model is known to reject, so a catalog goodall cannot read
 // never blocks a call that would have worked.
 type Support int
 
@@ -29,14 +29,14 @@ func (s Support) String() string {
 	}
 }
 
-// MarshalText writes the state as its name, so a serialised ModelInfo is
+// MarshalText writes the state as its name, so a serialized ModelInfo is
 // readable rather than a column of integers.
 func (s Support) MarshalText() ([]byte, error) {
 	return []byte(s.String()), nil
 }
 
-// UnmarshalText reads a state name. Text goodall does not recognise decodes to
-// SupportUnknown without an error, because a catalogue that grows a new word
+// UnmarshalText reads a state name. Text goodall does not recognize decodes to
+// SupportUnknown without an error, because a catalog that grows a new word
 // should leave the model usable.
 func (s *Support) UnmarshalText(text []byte) error {
 	switch string(text) {
@@ -122,7 +122,7 @@ type Capabilities struct {
 
 // ThinkingStyle is which form of extended thinking a model takes: the
 // effort-driven adaptive form or the older explicit token budget. It is a
-// fact from the catalogue, kept separate from Thinking (whether the model
+// fact from the catalog, kept separate from Thinking (whether the model
 // thinks at all) because a provider translates the same ThinkingConfig
 // differently for each form.
 type ThinkingStyle string
@@ -168,7 +168,7 @@ func (c Capabilities) Get(name Capability) Support {
 }
 
 // ModelInfo is what a provider knows about one model. A provider fills it
-// from its catalogue endpoint and memoises it; the agent reads it once at the
+// from its catalog endpoint and memoizes it; the agent reads it once at the
 // start of a run, puts it on every Request as ModelInfo, and uses it to
 // refuse — before the network call — a request carrying an input the model
 // rejects.

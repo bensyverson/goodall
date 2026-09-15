@@ -14,7 +14,7 @@ package livemodel
 // Anthropic is the model the Anthropic live tests and
 // scripts/record-fixtures use by default.
 //
-// It is claude-sonnet-5 because that is the newest model the live catalogue
+// It is claude-sonnet-5 because that is the newest model the live catalog
 // confirms: GET /v1/models/claude-sonnet-5 on 2026-09-15 answered "Claude
 // Sonnet 5", adaptive thinking, the effort ladder from low to max, a
 // 1,000,000-token context and a 128,000-token output limit
@@ -29,7 +29,7 @@ const Anthropic = "claude-sonnet-5"
 // recordings run against, named the way OpenRouter names it.
 //
 // It is anthropic/claude-opus-5 because that is the newest Claude in the
-// OpenRouter catalogue that advertises tool_choice. GET
+// OpenRouter catalog that advertises tool_choice. GET
 // https://openrouter.ai/api/v1/models on 2026-09-15 listed 446 models, of
 // which the three newest Claudes were anthropic/claude-fable-5.1 (created
 // 2026-08-31), anthropic/claude-opus-5 (2026-07-24) and
@@ -49,7 +49,7 @@ const OpenRouterClaude = "anthropic/claude-opus-5"
 // reasoning_details entry takes.
 //
 // It is openai/gpt-6-astra because that is the newest OpenAI model the same
-// catalogue read lists (created 2026-09-03) whose reasoning object is present:
+// catalog read lists (created 2026-09-03) whose reasoning object is present:
 // mandatory reasoning, the effort ladder from low to max, tools and
 // tool_choice, text, image and file input, and a 1,050,000-token context.
 const OpenRouterOpenAI = "openai/gpt-6-astra"

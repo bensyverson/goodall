@@ -119,7 +119,7 @@ func blockCases() []blockCase {
 			want: `{"type":"redacted_thinking","data":"EroB","raw":{"type":"redacted_thinking","data":"EroB"}}`,
 		},
 		{
-			name: "an unrecognised block keeps its bytes",
+			name: "an unrecognized block keeps its bytes",
 			block: Unknown{
 				Type: "server_tool_use",
 				Raw:  jsontext.Value(`{"type":"server_tool_use","id":"srvtoolu_1","name":"web_search","input":{"query":"go"}}`),
@@ -184,10 +184,10 @@ func TestBlocksMarshalAsPlainSlice(t *testing.T) {
 	}
 }
 
-// TestUnknownBlockFromUnrecognisedType is the guard for "unknown values are
+// TestUnknownBlockFromUnrecognizedType is the guard for "unknown values are
 // surfaced, never dropped": a type tag the library does not know becomes an
 // Unknown carrying the original bytes.
-func TestUnknownBlockFromUnrecognisedType(t *testing.T) {
+func TestUnknownBlockFromUnrecognizedType(t *testing.T) {
 	const in = `[{"type":"container_upload","file_id":"f1"}]`
 	var got Blocks
 	if err := json.Unmarshal([]byte(in), &got); err != nil {

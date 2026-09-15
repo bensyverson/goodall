@@ -55,7 +55,7 @@ const (
 type printer struct {
 	out io.Writer
 	// atLineStart is whether the last thing written ended a line, which is
-	// what lets a labelled line interrupt a half-written answer cleanly.
+	// what lets a labeled line interrupt a half-written answer cleanly.
 	atLineStart bool
 	// thinking is the indexes of the blocks that are thinking blocks, so a
 	// delta is rendered by what its block is rather than by what arrived
@@ -101,7 +101,7 @@ func (p *printer) event(ev goodall.Event) {
 		p.newline()
 	case goodall.Stopped:
 		p.newline()
-		if e.Cause == goodall.StopCauseCancelled {
+		if e.Cause == goodall.StopCauseCanceled {
 			p.line("%s %s", stoppedLabel, cutShort)
 			return
 		}

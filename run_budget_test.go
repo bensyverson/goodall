@@ -155,7 +155,7 @@ func TestRunTimeout(t *testing.T) {
 }
 
 // TestRunCallerCancellationBeatsTheTimeout keeps the two clocks apart: a
-// caller who cancels gets Cancelled even when a timeout is also set.
+// caller who cancels gets Canceled even when a timeout is also set.
 func TestRunCallerCancellationBeatsTheTimeout(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		a, _ := agentFor([]fake.Turn{fake.Stalled(goodall.Text{Text: "thinking"})})
@@ -172,8 +172,8 @@ func TestRunCallerCancellationBeatsTheTimeout(t *testing.T) {
 		if err != nil {
 			t.Fatalf("the run stream yielded an error: %v", err)
 		}
-		if got := terminalStop(t, events).Cause; got != goodall.StopCauseCancelled {
-			t.Errorf("stop cause = %q, want cancelled", got)
+		if got := terminalStop(t, events).Cause; got != goodall.StopCauseCanceled {
+			t.Errorf("stop cause = %q, want canceled", got)
 		}
 	})
 }

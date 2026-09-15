@@ -196,7 +196,7 @@ func TestTranslateResponseWithNoChoicesIsAnError(t *testing.T) {
 	body := `{"error":{"code":429,"message":"rate limited","metadata":{"error_type":"rate_limit_exceeded"}}}`
 	wire := decodeResponse(t, body)
 	if wire.Error == nil {
-		t.Fatalf("the wire struct did not recognise the top-level error object")
+		t.Fatalf("the wire struct did not recognize the top-level error object")
 	}
 	if wire.Error.Message != "rate limited" {
 		t.Errorf("error message = %q", wire.Error.Message)
@@ -209,12 +209,12 @@ func TestTranslateResponseWithNoChoicesIsAnError(t *testing.T) {
 	}
 }
 
-func TestTranslateResponseRecognisesAPerChoiceError(t *testing.T) {
+func TestTranslateResponseRecognizesAPerChoiceError(t *testing.T) {
 	body := `{"choices":[{"index":0,"finish_reason":"error","message":{"role":"assistant"},
 	  "error":{"code":502,"message":"upstream died","metadata":{"provider_name":"acme"}}}]}`
 	wire := decodeResponse(t, body)
 	if len(wire.Choices) != 1 || wire.Choices[0].Error == nil {
-		t.Fatalf("the wire struct did not recognise the per-choice error object")
+		t.Fatalf("the wire struct did not recognize the per-choice error object")
 	}
 	if wire.Choices[0].Error.Metadata.ProviderName != "acme" {
 		t.Errorf("provider name = %q", wire.Choices[0].Error.Metadata.ProviderName)
@@ -321,7 +321,7 @@ func TestStreamChunkStructsAdmitTheWireShapes(t *testing.T) {
 		t.Fatalf("Unmarshal: %v", err)
 	}
 	if errChunk.Error == nil || errChunk.Error.Message != "boom" {
-		t.Errorf("a mid-stream error chunk was not recognised: %+v", errChunk.Error)
+		t.Errorf("a mid-stream error chunk was not recognized: %+v", errChunk.Error)
 	}
 }
 

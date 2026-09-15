@@ -18,7 +18,7 @@ thinking signatures, which are not secrets.
 **Hand-authored** files have no prefix. They are written from the documented
 event and body shapes in `project/2026-09-14-research-findings.md` section 1
 and cover the cases a recording cannot reach: an overload mid-stream, an event
-type goodall does not model, and a model whose catalogue leaves capability
+type goodall does not model, and a model whose catalog leaves capability
 leaves absent.
 
 | File | Source | What it is |
@@ -29,7 +29,7 @@ leaves absent.
 | `live_tool_use_blocking.json` | recorded | The same forced tool call through `Complete`. |
 | `live_thinking_tool_use.sse` | recorded | Adaptive thinking at effort low with summarized display, producing a signed thinking block and a tool call. |
 | `live_thinking_tool_use_turn2.sse` | recorded | The next turn, sent with that thinking block replayed and the tool result appended. The answer, rather than an error, is the proof that goodall's replay is accepted. |
-| `live_image.sse` | recorded | A generated 8×8 PNG the model was asked to name the colour of. |
+| `live_image.sse` | recorded | A generated 8×8 PNG the model was asked to name the color of. |
 | `live_pdf.sse` | recorded | A generated one-page PDF the model was asked to quote. |
 | `live_error.json` | recorded | A real 404 envelope, from a model identifier Anthropic does not serve. |
 | `thinking_tool_use.sse` | authored | A full stream: a thinking block with a signature, a text block, a tool call streamed as `input_json_delta` fragments, a `ping`, then `message_delta` and `message_stop`. |
@@ -50,7 +50,7 @@ nothing to do with the accumulator. The pair is therefore authored and edited
 together, and the recorded siblings (`live_text*`, `live_tool_use*`) are
 compared on stop reason, model and block count instead.
 
-The catalogue tree's shape — `capabilities.{image_input,pdf_input,structured_outputs}`,
+The catalog tree's shape — `capabilities.{image_input,pdf_input,structured_outputs}`,
 `capabilities.thinking.{supported,types.{adaptive,enabled}}` and
 `capabilities.effort.{supported,low..max}`, each a `{"supported": bool}` leaf —
 was confirmed against a live `GET /v1/models/claude-sonnet-4-5-20250929` on

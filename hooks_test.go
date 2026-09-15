@@ -409,13 +409,13 @@ func TestBeforeToolCallModifyKeepsTheModelsCall(t *testing.T) {
 		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "done"}),
 	}, rec.tool(t))
 	a.Hooks.BeforeToolCall = func(ctx context.Context, use goodall.ToolUse) (goodall.Decision, error) {
-		return goodall.Modify(jsontext.Value(`{"text":"sanitised"}`)), nil
+		return goodall.Modify(jsontext.Value(`{"text":"sanitized"}`)), nil
 	}
 
 	events := runEvents(t, a, goodall.Conversation{}, goodall.Text{Text: "say hi"})
 	result := terminalDone(t, events).Result
 
-	if got := rec.seen(); len(got) != 1 || got[0] != "sanitised" {
+	if got := rec.seen(); len(got) != 1 || got[0] != "sanitized" {
 		t.Errorf("the tool saw %q, want the hook's input", got)
 	}
 	uses := result.Conversation.At(1).ToolUses()
@@ -424,12 +424,12 @@ func TestBeforeToolCallModifyKeepsTheModelsCall(t *testing.T) {
 	}
 	for _, ev := range events {
 		if start, ok := ev.(goodall.ToolCallStart); ok {
-			if string(start.ToolUse.Input) != `{"text":"sanitised"}` {
+			if string(start.ToolUse.Input) != `{"text":"sanitized"}` {
 				t.Errorf("ToolCallStart carried %s, want the input that is really running", start.ToolUse.Input)
 			}
 		}
 	}
-	if got := toolResults(result.Conversation.At(2))[0].Text(); got != "echo: sanitised" {
+	if got := toolResults(result.Conversation.At(2))[0].Text(); got != "echo: sanitized" {
 		t.Errorf("the result says %q, want the modified call's answer", got)
 	}
 }

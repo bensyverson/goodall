@@ -232,7 +232,7 @@ func (u wireUnknown) MarshalJSONTo(enc *jsontext.Encoder) error {
 var blockUnmarshalers = json.WithUnmarshalers(json.UnmarshalFromFunc(unmarshalWireBlock))
 
 // unmarshalWireBlock reads one block and picks its concrete type from the
-// "type" member, keeping the bytes of anything it does not recognise.
+// "type" member, keeping the bytes of anything it does not recognize.
 func unmarshalWireBlock(dec *jsontext.Decoder, b *wireBlock) error {
 	raw, err := dec.ReadValue()
 	if err != nil {

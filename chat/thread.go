@@ -29,7 +29,7 @@ import (
 
 // Thread is one chat: its history, what it has cost so far, and the version
 // that makes concurrent writes safe. It is plain data — every field is
-// exported and JSON-serialisable — so a store can keep it as a document, a
+// exported and JSON-serializable — so a store can keep it as a document, a
 // row, or anything else that round-trips JSON.
 //
 // Usage and Cost are the totals over every run the thread has carried, not the

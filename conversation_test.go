@@ -126,7 +126,7 @@ func TestConversationAccessorsReturnCopies(t *testing.T) {
 }
 
 // TestConversationAll checks the iterator yields every message in order and
-// honours an early break.
+// honors an early break.
 func TestConversationAll(t *testing.T) {
 	c := Conversation{}.Append(
 		UserMessage(Text{Text: "a"}),

@@ -69,7 +69,7 @@ func TestAnAbsentCapabilityLeafIsUnknownNotUnsupported(t *testing.T) {
 		t.Fatalf("Model: %v", err)
 	}
 	if got.Capabilities.StructuredOutput != goodall.SupportUnknown {
-		t.Errorf("StructuredOutput = %v, want unknown: the catalogue said nothing", got.Capabilities.StructuredOutput)
+		t.Errorf("StructuredOutput = %v, want unknown: the catalog said nothing", got.Capabilities.StructuredOutput)
 	}
 	if got.Capabilities.AudioInput != goodall.SupportUnknown {
 		t.Errorf("AudioInput = %v, want unknown: Anthropic publishes no such leaf", got.Capabilities.AudioInput)
@@ -182,7 +182,7 @@ func TestModelIsFetchedOncePerIdentifier(t *testing.T) {
 }
 
 func TestAFailedLookupIsNotRemembered(t *testing.T) {
-	// A catalogue can lag the API, so "no such model" is an answer that may
+	// A catalog can lag the API, so "no such model" is an answer that may
 	// stop being true; only successes are worth keeping.
 	var calls int
 	body := fixture(t, "model.json")

@@ -32,7 +32,7 @@ OpenRouter also serves `/responses` (GA, stateless) and an Anthropic-shaped `/me
 
 ## 2026-09-14 Client-side rate limiting and concurrency caps
 
-Retries honour `Retry-After`; a token-bucket limiter is not built in because Anthropic's limits are token-based and a naive semaphore does not model them. Consumers can wrap the injected HTTP client. Revive if a consumer needs a shared limiter across many threads.
+Retries honor `Retry-After`; a token-bucket limiter is not built in because Anthropic's limits are token-based and a naive semaphore does not model them. Consumers can wrap the injected HTTP client. Revive if a consumer needs a shared limiter across many threads.
 
 ## 2026-09-14 Full CommonMark rendering
 
@@ -40,7 +40,7 @@ The chat layer ships a zero-dependency subset. `yuin/goldmark/v2` (zero dependen
 
 ## 2026-09-14 Conversation compaction
 
-Preserved thinking allows only "summary as a fresh first message" client-side, or server-side compaction on Anthropic. Not needed until threads outgrow the 1M context. Revive as a hook-driven summariser plus the Anthropic `compact` beta when a consumer hits context limits.
+Preserved thinking allows only "summary as a fresh first message" client-side, or server-side compaction on Anthropic. Not needed until threads outgrow the 1M context. Revive as a hook-driven summarizer plus the Anthropic `compact` beta when a consumer hits context limits.
 
 ## 2026-09-14 Audio input
 

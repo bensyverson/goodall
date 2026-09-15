@@ -9,7 +9,7 @@ import (
 
 // accBlock is one content block being assembled. It keeps the block as the
 // provider opened it, so the id and name of a tool call, the payload of a
-// redacted thinking block and the bytes of an unrecognised one survive
+// redacted thinking block and the bytes of an unrecognized one survive
 // without a second representation of each.
 type accBlock struct {
 	start    Block // the block as BlockStart gave it
@@ -197,7 +197,7 @@ func mismatch(t EventType, index int, b *accBlock) error {
 }
 
 // finish builds the completed block. Raw is the provider's own finished block,
-// which only the two thinking kinds and an unrecognised block can carry; a
+// which only the two thinking kinds and an unrecognized block can carry; a
 // text block has nowhere to put it, and rebuilding one from its text is exact.
 func (b *accBlock) finish(index int, raw jsontext.Value) (Block, error) {
 	switch v := b.start.(type) {
@@ -223,7 +223,7 @@ func (b *accBlock) finish(index int, raw jsontext.Value) (Block, error) {
 			// and its input still has to be an object.
 			in = []byte("{}")
 		}
-		// Compact validates as it normalises: a provider streams the
+		// Compact validates as it normalizes: a provider streams the
 		// fragments with whatever whitespace it likes and the blocking
 		// path compacts, so the two paths must agree byte for byte.
 		value := jsontext.Value(bytes.Clone(in))

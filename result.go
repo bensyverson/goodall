@@ -19,7 +19,7 @@ type Response struct {
 	// otherwise.
 	StopSequence string `json:"stop_sequence,omitzero"`
 	// NativeStopReason is the upstream model's own stop string when a
-	// router normalised it into StopReason, for diagnostics; empty when
+	// router normalized it into StopReason, for diagnostics; empty when
 	// StopReason is already the wire string.
 	NativeStopReason string `json:"native_stop_reason,omitzero"`
 	// Usage counts the tokens this call consumed.

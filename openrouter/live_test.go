@@ -175,7 +175,7 @@ func TestLiveModelReportsImageAndPDFSupportAndAPrice(t *testing.T) {
 
 	info, err := client.Model(t.Context(), livemodel.OpenRouterClaude)
 	if err != nil {
-		t.Fatalf("the live catalogue lookup failed: %v", err)
+		t.Fatalf("the live catalog lookup failed: %v", err)
 	}
 	t.Logf("%s: image=%s pdf=%s tools=%s thinking=%s efforts=%v context=%d max_output=%d",
 		info.ID, info.Capabilities.ImageInput, info.Capabilities.PDFInput, info.Capabilities.Tools,
@@ -183,7 +183,7 @@ func TestLiveModelReportsImageAndPDFSupportAndAPrice(t *testing.T) {
 		info.Capabilities.ContextWindow, info.Capabilities.MaxOutput)
 
 	if info.ID != livemodel.OpenRouterClaude {
-		t.Errorf("the catalogue answered for %q, want %q", info.ID, livemodel.OpenRouterClaude)
+		t.Errorf("the catalog answered for %q, want %q", info.ID, livemodel.OpenRouterClaude)
 	}
 	if info.Capabilities.ImageInput != goodall.Supported {
 		t.Errorf("image input = %s, want %s", info.Capabilities.ImageInput, goodall.Supported)
@@ -200,7 +200,7 @@ func TestLiveModelReportsImageAndPDFSupportAndAPrice(t *testing.T) {
 	// decimals: a price of "0.000005" rounded through a float64 could not be
 	// printed back.
 	if info.Pricing == nil {
-		t.Fatal("the catalogue entry carried no pricing")
+		t.Fatal("the catalog entry carried no pricing")
 	}
 	t.Logf("pricing: input=%s output=%s cache_read=%s %s",
 		info.Pricing.Input, info.Pricing.Output, info.Pricing.CacheRead, info.Pricing.Currency)

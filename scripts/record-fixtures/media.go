@@ -15,25 +15,25 @@ import (
 // to read as code than as a blob, and a reader can see exactly what the model
 // was shown. Both are shared by every provider's exchanges.
 
-// imageColour fills the generated PNG: a saturated orange, far enough from
-// red and yellow that "what colour is this?" has one right answer, which is
+// imageColor fills the generated PNG: a saturated orange, far enough from
+// red and yellow that "what color is this?" has one right answer, which is
 // what lets the offline test assert on the recorded reply.
-var imageColour = color.NRGBA{R: 0xF2, G: 0x7A, B: 0x0C, A: 0xFF}
+var imageColor = color.NRGBA{R: 0xF2, G: 0x7A, B: 0x0C, A: 0xFF}
 
 // pdfPhrase is the one line of text in the generated PDF. It is a phrase no
 // model would produce unprompted, so a response quoting it proves the PDF was
 // read rather than guessed at.
 const pdfPhrase = "Marmalade on the tortoise."
 
-// tinyPNG is a small solid-colour image, a few pixels square. It is the
-// smallest input that makes "what colour is this?" a question with one right
+// tinyPNG is a small solid-color image, a few pixels square. It is the
+// smallest input that makes "what color is this?" a question with one right
 // answer.
 func tinyPNG() ([]byte, error) {
 	const side = 8
 	img := image.NewNRGBA(image.Rect(0, 0, side, side))
 	for y := range side {
 		for x := range side {
-			img.SetNRGBA(x, y, imageColour)
+			img.SetNRGBA(x, y, imageColor)
 		}
 	}
 	var buf bytes.Buffer

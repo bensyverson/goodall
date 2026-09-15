@@ -62,7 +62,7 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 	}
 	// The channel is buffered for every call, so no tool can block on
 	// sending its result; waiting here only waits for work already begun,
-	// which is what keeps a cancelled run from leaving tools behind.
+	// which is what keeps a canceled run from leaving tools behind.
 	defer wg.Wait()
 
 	results := make([]Block, len(calls))
