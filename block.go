@@ -81,8 +81,12 @@ type ToolResult struct {
 
 // Thinking is a reasoning block. Text is what a UI displays and may be empty
 // when the provider omits it. Raw is the provider's block exactly as
-// received: providers re-emit it untouched, because a thinking signature
-// binds the block to the conversation prefix that produced it.
+// received, for providers whose block carries more than goodall models
+// (OpenRouter's reasoning_details, with its id, format and index); those
+// providers re-emit it untouched, because a thinking signature binds the
+// block to the conversation prefix that produced it. It is empty on
+// Anthropic, where Text and Signature are the whole block and rebuilding it
+// reproduces the bytes exactly.
 type Thinking struct {
 	Text      string         `json:"text,omitzero"`
 	Signature string         `json:"signature,omitzero"`
