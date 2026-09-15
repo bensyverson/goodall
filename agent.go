@@ -40,7 +40,8 @@ type Agent struct {
 	// Cache decides where prompt-cache breakpoints are placed.
 	Cache CachePolicy
 	// MaxTokens caps the tokens generated in one turn. Zero leaves the
-	// choice to the provider, which substitutes the model's maximum.
+	// choice to the provider, which substitutes its own named default
+	// where its API requires the parameter — anthropic.DefaultMaxTokens.
 	MaxTokens int
 	// Budget bounds the whole run: turns, tokens and wall clock. The zero
 	// Budget still limits turns, to DefaultMaxTurns.

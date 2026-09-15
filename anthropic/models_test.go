@@ -154,3 +154,56 @@ func TestModelEscapesTheIdentifierInThePath(t *testing.T) {
 		t.Errorf("escaped path = %q, want the identifier escaped into one segment", req.URL.EscapedPath())
 	}
 }
+
+func TestModelIsFetchedOncePerIdentifier(t *testing.T) {
+	// The agent asks for the model at the start of every run, so a client
+	// that re-fetched would pay for the same answer on every run.
+	c, seen := serveFixture(t, "model.json", "application/json")
+	first, err := c.Model(t.Context(), "claude-opus-4-5-20251101")
+	if err != nil {
+		t.Fatalf("Model: %v", err)
+	}
+	second, err := c.Model(t.Context(), "claude-opus-4-5-20251101")
+	if err != nil {
+		t.Fatalf("Model again: %v", err)
+	}
+	if seen.count() != 1 {
+		t.Errorf("the client made %d requests for one model, want 1", seen.count())
+	}
+	if first != second {
+		t.Errorf("the two lookups returned different values, %p and %p", first, second)
+	}
+	if _, err := c.Model(t.Context(), "claude-sonnet-5"); err != nil {
+		t.Fatalf("a second identifier: %v", err)
+	}
+	if seen.count() != 2 {
+		t.Errorf("the client made %d requests for two models, want 2", seen.count())
+	}
+}
+
+func TestAFailedLookupIsNotRemembered(t *testing.T) {
+	// A catalogue can lag the API, so "no such model" is an answer that may
+	// stop being true; only successes are worth keeping.
+	var calls int
+	body := fixture(t, "model.json")
+	c, _ := serve(t, func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls == 1 {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(fixture(t, "live_error.json"))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(body)
+	})
+	if _, err := c.Model(t.Context(), "claude-opus-4-5-20251101"); err == nil {
+		t.Fatal("the first lookup succeeded, though the server refused it")
+	}
+	if _, err := c.Model(t.Context(), "claude-opus-4-5-20251101"); err != nil {
+		t.Fatalf("the second lookup failed, so the refusal was cached: %v", err)
+	}
+	if calls != 2 {
+		t.Errorf("the server saw %d requests, want 2", calls)
+	}
+}

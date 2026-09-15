@@ -46,9 +46,8 @@ const (
 // is not mistaken for a minor version. A vendor prefix
 // (us.anthropic.claude-…, anthropic/claude-…) does not disturb it.
 //
-// It is a guess, and a guess is only here until the catalogue answers: the
-// models endpoint reports thinking.types and effort as typed capabilities, so
-// ModelInfo overrides this once it is wired in.
+// It is a guess, and only the guess: where the request carries the
+// catalogue's answer, [styleFor] prefers it.
 func thinkingStyleFor(model string) thinkingStyle {
 	name := strings.ToLower(model)
 	if strings.Contains(name, "fable") {
@@ -62,6 +61,32 @@ func thinkingStyleFor(model string) thinkingStyle {
 		return styleAdaptive
 	}
 	return styleBudget
+}
+
+// styleFor decides how a model takes its thinking settings, preferring the
+// catalogue's published fact to the name heuristic. The loop puts the
+// catalogue entry on the request; a caller who builds one by hand may too,
+// and nil simply leaves the heuristic in charge.
+//
+// The catalogue reports which thinking *form* a model accepts and nothing
+// about whether it may be turned off, so a name that reads as always-on keeps
+// saying so on top of a published "adaptive": Fable rejects an explicit
+// disabled, and the models endpoint has no leaf that says it.
+func styleFor(model string, info *goodall.ModelInfo) thinkingStyle {
+	heuristic := thinkingStyleFor(model)
+	if info == nil {
+		return heuristic
+	}
+	switch info.Capabilities.ThinkingStyle {
+	case goodall.ThinkingAdaptive:
+		if heuristic == styleAlwaysOn {
+			return styleAlwaysOn
+		}
+		return styleAdaptive
+	case goodall.ThinkingBudget:
+		return styleBudget
+	}
+	return heuristic
 }
 
 // modelVersion reads the first major.minor version out of a hyphenated model
@@ -121,20 +146,27 @@ func budgetTokens(percent, maxTokens int) (int, error) {
 	return min(max(budget, minThinkingBudget), maxTokens-1), nil
 }
 
-// thinkingFor translates the neutral thinking configuration for one model.
-// It returns the thinking object and the output_config that carries the
-// effort rung; either may be nil, and both are nil when the request asks for
-// nothing.
+// thinkingFor translates a request's thinking configuration. It returns the
+// thinking object and the output_config that carries the effort rung; either
+// may be nil, and both are nil when the request asks for nothing. maxTokens
+// is the value the request will carry, which a derived budget must stay
+// below.
+//
+// It takes the whole request because the translation needs three things from
+// it — the model's name, the thinking configuration and the catalogue entry
+// the loop attached — and stays a pure function of it: nothing here reads a
+// catalogue of its own.
 //
 // The zero configuration sends no thinking fields at all, so a consumer who
 // never thinks about thinking adds nothing to the cached prefix. On a
 // budget-only model the display setting has no wire form and is dropped: that
 // generation returns thinking text whenever thinking is on.
-func thinkingFor(model string, cfg goodall.ThinkingConfig, maxTokens int) (*wireThinkingConfig, *wireOutputConfig, error) {
+func thinkingFor(req *goodall.Request, maxTokens int) (*wireThinkingConfig, *wireOutputConfig, error) {
+	model, cfg := req.Model, req.Thinking
 	if cfg.Effort == goodall.EffortDefault && cfg.Display == goodall.DisplayDefault {
 		return nil, nil, nil
 	}
-	style := thinkingStyleFor(model)
+	style := styleFor(model, req.ModelInfo)
 
 	if cfg.Effort == goodall.EffortOff {
 		if style == styleAlwaysOn {

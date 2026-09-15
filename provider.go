@@ -27,7 +27,13 @@ type Completer interface {
 // ModelLister is the optional capability lookup. A provider that implements
 // it lets the agent refuse a request the model is known not to accept before
 // the network call, with a *CapabilityError naming the fact.
+//
+// The agent calls Model once at the start of every run, so an implementation
+// should memoise what it read rather than fetching it each time; both
+// built-in providers do, per identifier and for successes only.
 type ModelLister interface {
-	// Model describes one model by its provider identifier.
+	// Model describes one model by its provider identifier. The value it
+	// returns may be shared between callers, so a caller must not modify
+	// it.
 	Model(ctx context.Context, id string) (*ModelInfo, error)
 }

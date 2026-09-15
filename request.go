@@ -26,7 +26,9 @@ type Request struct {
 	// ToolChoice constrains which of those tools the model may call.
 	ToolChoice ToolChoice
 	// MaxTokens caps the tokens generated in the turn. Anthropic requires
-	// it, so a provider substitutes the model's maximum when it is zero.
+	// the member and publishes no default, so a provider that needs one
+	// substitutes its own named default — anthropic.DefaultMaxTokens —
+	// when this is zero.
 	MaxTokens int
 	// Thinking is how hard the model should think and how much of that
 	// thinking comes back.
@@ -38,6 +40,12 @@ type Request struct {
 	// Metadata is the provider's per-request metadata, such as an end-user
 	// identifier for abuse monitoring.
 	Metadata map[string]string
+	// ModelInfo is what the provider's catalogue says about Model, which
+	// the loop fetches once per run and puts here so a translation can
+	// read a fact rather than guess it from the model's name. A direct
+	// consumer may fill it in by hand; nil means nobody consulted the
+	// catalogue, never "the model can do nothing".
+	ModelInfo *ModelInfo
 	// Extensions carries provider-specific options. A provider accepts
 	// only its own extension type and rejects another provider's before
 	// sending, so a request built for one provider fails loudly on

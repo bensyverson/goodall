@@ -29,6 +29,7 @@ type run struct {
 	cancel context.CancelFunc // ends the run's context, so a consumer who left stops the tools
 	conv   Conversation
 	tools  map[string]Tool
+	info   *ModelInfo // the catalogue's facts about the model, nil when there are none
 	usage  Usage
 	cost   Cost
 	last   *Response // the last completed turn, nil until one finishes
@@ -63,6 +64,11 @@ func (r *run) execute(ctx context.Context, input []Block) {
 	defer cancel()
 	r.ctx, r.cancel = runCtx, cancel
 
+	// One catalogue read serves the whole run: the facts about a model do
+	// not change between turns, and a lookup on every turn would pay for
+	// the same answer again.
+	r.info = r.lookupModel(runCtx)
+
 	for {
 		if limit := r.agent.Budget.Turns(); r.turn >= limit {
 			r.stop(StopCauseTurnLimit, "the run used its budget of "+strconv.Itoa(limit)+" turns")
@@ -95,6 +101,14 @@ func (r *run) execute(ctx context.Context, input []Block) {
 		}
 		r.commitNewTurn()
 		req.Messages = r.conv.Messages()
+
+		// The check runs after the hook has had the request, so what it
+		// measures is what would be sent, and before the send, so an
+		// input the model is known to reject costs no round trip.
+		if capErr := checkCapabilities(req); capErr != nil {
+			r.fail(StopCauseError, KindUnsupportedInput, capErr.Error())
+			return
+		}
 
 		resp, err := r.streamTurn(runCtx, req)
 		if err != nil {
@@ -203,6 +217,7 @@ func (r *run) withTimeout(ctx context.Context) (context.Context, context.CancelF
 func (r *run) request() *Request {
 	req := &Request{
 		Model:     r.agent.Model,
+		ModelInfo: r.info,
 		Tools:     r.agent.Tools,
 		MaxTokens: r.agent.MaxTokens,
 		Thinking:  r.agent.Thinking,

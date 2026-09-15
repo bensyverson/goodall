@@ -105,13 +105,78 @@ type modelReasoning struct {
 //
 // OpenRouter publishes no per-model catalogue endpoint — /models/{id} is a 404
 // and /models/{id}/endpoints returns a routing view with none of the facts
-// below — so a lookup reads the whole catalogue and finds the id. The agent
-// caches a [goodall.ModelInfo] per model, which makes that a once-per-model
-// cost.
+// below — so a lookup reads the whole catalogue and finds the id. The client
+// memoises what it read, and since one fetch carries every model, the first
+// lookup answers for all of them; the agent asks at the start of every run,
+// so that is what keeps a run's pre-flight free.
 //
 // A model the catalogue does not list is a *[goodall.APIError] with
-// [goodall.KindNotFound].
+// [goodall.KindNotFound], and is not memoised: OpenRouter adds models
+// continuously, so a miss is worth asking about again. The result is shared
+// between callers and must not be modified.
 func (c *Client) Model(ctx context.Context, id string) (*goodall.ModelInfo, error) {
+	if info, ok := c.cachedModel(id); ok {
+		return info, nil
+	}
+	read, err := c.fetchCatalogue(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.cacheCatalogue(read, id)
+}
+
+// catalogueRead is one read of GET /models: the entries, and the facts about
+// the response that a "no such model" error names.
+type catalogueRead struct {
+	list      catalogue
+	status    int
+	requestID string
+}
+
+// cachedModel reads the memo.
+func (c *Client) cachedModel(id string) (*goodall.ModelInfo, bool) {
+	c.modelsMu.Lock()
+	defer c.modelsMu.Unlock()
+	info, ok := c.models[id]
+	return info, ok
+}
+
+// cacheCatalogue stores every entry of a freshly read catalogue, under both
+// the id and the canonical slug a caller may name it by, and returns the one
+// that was asked for. An id the catalogue does not carry is a not-found,
+// which is not stored.
+func (c *Client) cacheCatalogue(read *catalogueRead, id string) (*goodall.ModelInfo, error) {
+	c.modelsMu.Lock()
+	defer c.modelsMu.Unlock()
+	if c.models == nil {
+		c.models = make(map[string]*goodall.ModelInfo, len(read.list.Data))
+	}
+	var found *goodall.ModelInfo
+	for _, entry := range read.list.Data {
+		info := modelInfo(&entry)
+		c.models[entry.ID] = info
+		if entry.CanonicalSlug != "" && entry.CanonicalSlug != entry.ID {
+			c.models[entry.CanonicalSlug] = info
+		}
+		if entry.ID == id || entry.CanonicalSlug == id {
+			found = info
+		}
+	}
+	if found == nil {
+		return nil, &goodall.APIError{
+			Provider:  ProviderName,
+			Kind:      goodall.KindNotFound,
+			Status:    read.status,
+			Message:   fmt.Sprintf("the catalogue lists no model %q", id),
+			RequestID: read.requestID,
+		}
+	}
+	return found, nil
+}
+
+// fetchCatalogue reads GET /models. The lock is never held across the call:
+// a slow catalogue must not block a lookup that the memo could have answered.
+func (c *Client) fetchCatalogue(ctx context.Context) (*catalogueRead, error) {
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodGet,
 		URL:    c.baseURL + pathModels,
@@ -126,25 +191,14 @@ func (c *Client) Model(ctx context.Context, id string) (*goodall.ModelInfo, erro
 	if err != nil {
 		return nil, err
 	}
-	var list catalogue
-	if err := json.Unmarshal(raw, &list); err != nil {
+	read := &catalogueRead{status: resp.StatusCode, requestID: requestID(resp.Header)}
+	if err := json.Unmarshal(raw, &read.list); err != nil {
 		if apiErr := decodeError(0, resp.Header, raw); apiErr != nil {
 			return nil, apiErr
 		}
 		return nil, fmt.Errorf("openrouter: decoding the models catalogue: %w", err)
 	}
-	for _, entry := range list.Data {
-		if entry.ID == id || entry.CanonicalSlug == id {
-			return modelInfo(&entry), nil
-		}
-	}
-	return nil, &goodall.APIError{
-		Provider:  ProviderName,
-		Kind:      goodall.KindNotFound,
-		Status:    resp.StatusCode,
-		Message:   fmt.Sprintf("the catalogue lists no model %q", id),
-		RequestID: requestID(resp.Header),
-	}
+	return read, nil
 }
 
 // modelInfo maps one catalogue entry onto the neutral description.

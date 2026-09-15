@@ -45,3 +45,7 @@ Reading a JSON object member by member with `jsontext.Decoder` — `tok, _ := de
 ## 2026-09-15 In encoding/json/v2 a nil slice marshals as `[]`, so a round trip turns `nil` into an empty slice
 
 Unlike v1, json/v2 writes a nil slice as an empty array unless the field asks for `format:emitnull`, so `Blocks(nil)` comes back from a decode as `Blocks{}` and `reflect.DeepEqual` fails on a difference nothing in the payload records. It bit the wire writers' round-trip test through a `TurnEnd` whose `Response.Message` had no content — the failure names the two `goodall.Blocks` values in a wall of `%#v` and reads like an encoder bug rather than a fixture one. Any fixture compared with `DeepEqual` across an encode should carry non-nil slices, or the comparison should be over the JSON.
+
+## 2026-09-15 A hand-written SSE fixture needs a blank line after `data: [DONE]`
+
+An authored OpenRouter stream that ends `data: [DONE]\n` instead of `data: [DONE]\n\n` decodes as a stream that never terminated: the framer dispatches an event only on the blank line, so the terminal frame is never delivered and the run fails with "the stream ended before message_stop, so the message is incomplete" — an error that points at the accumulator rather than at the missing newline. Every recorded fixture ends in `\n\n`; check the tail bytes (`tail -c 30 file | xxd`) before blaming the decoder.

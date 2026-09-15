@@ -63,7 +63,7 @@ func translateRequest(req *goodall.Request) (*wireRequest, []Beta, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	thinking, output, err := thinkingFor(req.Model, req.Thinking, maxTokens)
+	thinking, output, err := thinkingFor(req, maxTokens)
 	if err != nil {
 		return nil, nil, err
 	}

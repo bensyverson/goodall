@@ -167,9 +167,11 @@ func (c Capabilities) Get(name Capability) Support {
 	return SupportUnknown
 }
 
-// ModelInfo is what a provider knows about one model. A provider fills it from
-// its catalogue endpoint; the agent caches it per model and uses it to refuse,
-// before the network call, a request carrying an input the model rejects.
+// ModelInfo is what a provider knows about one model. A provider fills it
+// from its catalogue endpoint and memoises it; the agent reads it once at the
+// start of a run, puts it on every Request as ModelInfo, and uses it to
+// refuse — before the network call — a request carrying an input the model
+// rejects.
 type ModelInfo struct {
 	// ID is the model identifier as the provider spells it.
 	ID string `json:"id,omitzero"`

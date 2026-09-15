@@ -81,14 +81,54 @@ type wireModel struct {
 }
 
 // Model describes one model by its Anthropic identifier, which is what
-// goodall.ModelLister asks for. The agent caches the answer and uses it to
-// refuse, before the network call, a request carrying an input the model is
-// known to reject.
+// goodall.ModelLister asks for. The agent reads it at the start of every run
+// and uses it to refuse, before the network call, a request carrying an input
+// the model is known to reject.
+//
+// The answer is memoised per identifier, so a process that runs many agents
+// against one model pays for one lookup; a failure is not, because a
+// catalogue that has not caught up with a new model will catch up. The result
+// is shared between callers and must not be modified.
 //
 // An identifier Anthropic does not know is a *goodall.APIError with
 // KindNotFound, not an empty result: "no such model" is an answer worth
 // acting on.
 func (c *Client) Model(ctx context.Context, id string) (*goodall.ModelInfo, error) {
+	if info, ok := c.cachedModel(id); ok {
+		return info, nil
+	}
+	info, err := c.fetchModel(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	c.cacheModel(id, info)
+	return info, nil
+}
+
+// cachedModel reads the memo.
+func (c *Client) cachedModel(id string) (*goodall.ModelInfo, bool) {
+	c.modelsMu.Lock()
+	defer c.modelsMu.Unlock()
+	info, ok := c.models[id]
+	return info, ok
+}
+
+// cacheModel writes the memo. Two callers that raced for the same model both
+// fetched it and both write; the entries describe the same model, so the
+// second simply replaces the first.
+func (c *Client) cacheModel(id string, info *goodall.ModelInfo) {
+	c.modelsMu.Lock()
+	defer c.modelsMu.Unlock()
+	if c.models == nil {
+		c.models = make(map[string]*goodall.ModelInfo)
+	}
+	c.models[id] = info
+}
+
+// fetchModel reads one model from the catalogue endpoint. The lock is never
+// held across this call: a slow catalogue must not block a second model's
+// lookup, and a duplicate fetch costs less than a serialised one.
+func (c *Client) fetchModel(ctx context.Context, id string) (*goodall.ModelInfo, error) {
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodGet,
 		URL:    c.endpoint(modelsPath + "/" + url.PathEscape(id)),

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/internal/transport"
@@ -46,6 +47,14 @@ type Client struct {
 	baseURL string
 	betas   []Beta
 	http    transport.Client
+
+	// models memoises the catalogue, per identifier. The agent asks for
+	// the model at the start of every run, and a model's facts do not
+	// change between them, so the lookup is paid for once per client.
+	// Only successes are kept: a catalogue can lag the API, so "no such
+	// model" is an answer that may stop being true.
+	modelsMu sync.Mutex
+	models   map[string]*goodall.ModelInfo
 }
 
 // Compile-time proof that the client fills all three provider seams.
