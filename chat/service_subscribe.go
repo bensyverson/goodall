@@ -54,7 +54,9 @@ type Run struct {
 	// [ErrSubscriberOverflow] if the reader fell too far behind. The
 	// terminal event is delivered only after the thread has been
 	// persisted and freed, so a reader may stop at it and send again at
-	// once.
+	// once. Leaving it unread is fine too, which is what an HTTP handler
+	// that answers only the id does: the subscription is dropped when its
+	// bounded buffer fills, and nothing leaks.
 	Events goodall.Stream
 }
 

@@ -146,10 +146,10 @@ func TestWriteSSEEndsADroppedSubscriptionWithAnErrorFrame(t *testing.T) {
 		t.Fatalf("WriteSSE wrote %d frames, want the delta and the error:\n%s", len(frames), buf.String())
 	}
 	last := frames[1]
-	if last.Type != "error" {
-		t.Errorf("the failure frame is named %q, want %q", last.Type, "error")
+	if last.Type != "stream_error" {
+		t.Errorf("the failure frame is named %q, want %q", last.Type, "stream_error")
 	}
-	want := `{"type":"error","message":"` + chat.ErrSubscriberOverflow.Error() + `","code":"subscriber_overflow"}`
+	want := `{"type":"stream_error","message":"` + chat.ErrSubscriberOverflow.Error() + `","code":"subscriber_overflow"}`
 	if last.Data != want {
 		t.Errorf("the failure frame carries\n\t%s\nwant\n\t%s", last.Data, want)
 	}
@@ -170,7 +170,7 @@ func TestWireWritersCodeAnUnexpectedFailureGenerically(t *testing.T) {
 	if err := json.Unmarshal(bytes.TrimSpace(buf.Bytes()), &frame); err != nil {
 		t.Fatalf("decoding the error frame %q: %v", buf.String(), err)
 	}
-	if frame.Type != "error" || frame.Message != "boom" || frame.Code != chat.WireErrorStream {
+	if frame.Type != "stream_error" || frame.Message != "boom" || frame.Code != chat.WireErrorStream {
 		t.Errorf("the error frame is %+v, want a generic stream error", frame)
 	}
 }

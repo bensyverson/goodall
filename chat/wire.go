@@ -15,7 +15,12 @@ import (
 // Stopped events, and this is the other thing that can happen to a *stream* —
 // the subscription was dropped, or the producer broke its contract. It shares
 // the events' "type" member so a front end meets every frame in one switch.
-const EventError goodall.EventType = "error"
+//
+// It is "stream_error" rather than "error" because a browser's EventSource
+// already delivers its own connection failures to a listener named "error";
+// a frame under that name would land in the same handler as a dropped
+// connection, and every front end would have to tell the two apart by hand.
+const EventError goodall.EventType = "stream_error"
 
 // WireErrorCode classifies an error frame in terms a front end can act on,
 // beside the message, which is prose and may change.
@@ -34,7 +39,7 @@ const (
 
 // WireError is the last frame of a stream that ended in an error. It is a
 // value, not an error type: it exists to be marshalled to a front end, which
-// reads it as {"type":"error","message":…,"code":…}.
+// reads it as {"type":"stream_error","message":…,"code":…}.
 type WireError struct {
 	// Type is always [EventError].
 	Type goodall.EventType `json:"type"`
@@ -49,7 +54,7 @@ type WireError struct {
 // terminated by a blank line. It is what an HTTP handler wires a run stream or
 // a [Service.Subscribe] stream to.
 //
-// A stream that ends in an error becomes one final frame named "error",
+// A stream that ends in an error becomes one final frame named "stream_error",
 // carrying a [WireError], and WriteSSE returns nil: the failure was delivered,
 // which is the writer's whole job. The error it does return is a failure to
 // write — the client's connection has gone — and the stream is unwound on the
@@ -70,7 +75,7 @@ func WriteSSE(w io.Writer, events goodall.Stream) error {
 // log, a `fetch` that streams the body itself.
 //
 // It ends, flushes and fails on exactly the same terms as [WriteSSE]: a stream
-// error becomes one final {"type":"error",…} line and a nil return, and only a
+// error becomes one final {"type":"stream_error",…} line and a nil return, and only a
 // failure to write is reported.
 func WriteNDJSON(w io.Writer, events goodall.Stream) error {
 	return writeStream(w, writeNDJSONFrame, events)

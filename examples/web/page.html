@@ -340,10 +340,10 @@ function openEvents() {
   for (const name of EVENTS) {
     source.addEventListener(name, e => { sawEvent = true; apply(JSON.parse(e.data)); });
   }
-  // An EventSource delivers its own connection failures as "error" too, and
-  // the chat layer's error frame is named "error" as well: a frame has data,
-  // a connection failure does not.
-  source.addEventListener("error", e => e.data ? streamError(JSON.parse(e.data)) : disconnected());
+  // The chat layer's own failure frame is "stream_error"; the EventSource's
+  // connection failures arrive under its built-in "error" name.
+  source.addEventListener("stream_error", e => streamError(JSON.parse(e.data)));
+  source.addEventListener("error", disconnected);
 }
 
 function closeEvents() {
