@@ -1,0 +1,36 @@
+# Secrets / local config — provider API keys for live tests live in .env, never in the tree
+.env
+local/
+
+# Go build artifacts
+*.exe
+*.test
+*.out
+coverage.*
+/bin/
+vendor/
+/.gocache/
+/.gotmp/
+# `go build ./...` drops one binary per main package into the repo root, named
+# after its directory. List each main package here as it is added so a binary
+# is never committed by accident. Regenerate the list with:
+#   go list -f '{{if eq .Name "main"}}/{{.Dir}}{{end}}' ./... | sed 's|.*/|/|'
+
+# job: cache and its sidecars (-shm, -wal, .lock, .pre-adopt) are disposable, rebuilt from .jobs/log
+.jobs.db*
+# This machine's replica id, identity and focus
+.jobs/local.json
+
+# Claude Code: agent worktrees and per-machine settings (transient, machine-local)
+.claude/worktrees/
+.claude/settings.local.json
+.claude/.cc-writes/
+
+# timetattle local time-tracking marker (machine-generated, per-clone)
+.timetattle-project.json
+
+# woodcase writes its activity log at the git root when run from any subdirectory
+.woodcase/
+
+# macOS
+.DS_Store
