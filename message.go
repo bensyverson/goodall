@@ -18,9 +18,14 @@ const (
 // assistant turn that was interrupted before the model finished, so a
 // consumer can render it as cut off rather than complete.
 type Message struct {
-	Role    Role   `json:"role"`
+	// Role is who the turn is from.
+	Role Role `json:"role"`
+	// Content is the turn's blocks.
 	Content Blocks `json:"content"`
-	Partial bool   `json:"partial,omitzero"`
+	// Partial marks an assistant turn that was interrupted before the
+	// model finished, so a consumer can render it as cut off rather than
+	// complete.
+	Partial bool `json:"partial,omitzero"`
 }
 
 // UserMessage is a turn from the person, or the carrier for tool results.

@@ -85,9 +85,13 @@ type Event interface {
 // at the start, which on Anthropic is the input side of the ledger; the
 // output counts arrive on MessageDelta.
 type MessageStart struct {
-	ID    string `json:"id,omitzero"`
+	// ID is the provider's identifier for the message.
+	ID string `json:"id,omitzero"`
+	// Model is the model that is answering.
 	Model string `json:"model,omitzero"`
-	Usage Usage  `json:"usage,omitzero"`
+	// Usage is what the provider knows at the start, the input side of
+	// the ledger on Anthropic; the output counts arrive on MessageDelta.
+	Usage Usage `json:"usage,omitzero"`
 }
 
 // BlockStart opens a content block at Index. Block is the block as far as the
@@ -95,29 +99,37 @@ type MessageStart struct {
 // ToolUse with its id and name but no input, a RedactedThinking that is
 // already complete, or an Unknown carrying the provider's bytes.
 type BlockStart struct {
-	Index int   `json:"index,omitzero"`
+	// Index is the block's position in the message.
+	Index int `json:"index,omitzero"`
+	// Block is the block as far as the provider knows it at the opening.
 	Block Block `json:"block,omitzero"`
 }
 
 // TextDelta adds text to the open text block at Index.
 type TextDelta struct {
-	Index int    `json:"index,omitzero"`
-	Text  string `json:"text,omitzero"`
+	// Index is the block index this delta belongs to.
+	Index int `json:"index,omitzero"`
+	// Text is the fragment appended to the block.
+	Text string `json:"text,omitzero"`
 }
 
 // ThinkingDelta adds text to the open thinking block at Index. It arrives
 // empty when the request asked for thinking to be omitted, which still opens
 // and closes a block, because the block itself must be replayed.
 type ThinkingDelta struct {
-	Index int    `json:"index,omitzero"`
-	Text  string `json:"text,omitzero"`
+	// Index is the block index this delta belongs to.
+	Index int `json:"index,omitzero"`
+	// Text is the fragment appended to the block.
+	Text string `json:"text,omitzero"`
 }
 
 // SignatureDelta carries the signature of the open thinking block at Index.
 // The signature binds the block to the conversation prefix that produced it,
 // so it is never regenerated, only replayed.
 type SignatureDelta struct {
-	Index     int    `json:"index,omitzero"`
+	// Index is the block index this delta belongs to.
+	Index int `json:"index,omitzero"`
+	// Signature is the fragment appended to the block's signature.
 	Signature string `json:"signature,omitzero"`
 }
 
@@ -125,7 +137,9 @@ type SignatureDelta struct {
 // fragments are pieces of a JSON document, not JSON values in their own
 // right, so they are concatenated and parsed only once the block closes.
 type ToolInputDelta struct {
-	Index       int    `json:"index,omitzero"`
+	// Index is the block index this delta belongs to.
+	Index int `json:"index,omitzero"`
+	// PartialJSON is the fragment appended to the tool call's input.
 	PartialJSON string `json:"partial_json,omitzero"`
 }
 
@@ -135,8 +149,11 @@ type ToolInputDelta struct {
 // verbatim. Anthropic rebuilds a thinking block from its text and signature
 // and leaves Raw empty.
 type BlockStop struct {
-	Index int            `json:"index,omitzero"`
-	Raw   jsontext.Value `json:"raw,omitzero"`
+	// Index is the block being closed.
+	Index int `json:"index,omitzero"`
+	// Raw is the provider's finished block, set only when the neutral
+	// fields cannot rebuild it.
+	Raw jsontext.Value `json:"raw,omitzero"`
 }
 
 // MessageDelta carries the stop reason and the message's usage. Usage is
@@ -146,11 +163,20 @@ type BlockStop struct {
 // StopReason (OpenRouter's native_finish_reason); a provider whose wire
 // string is the StopReason leaves it empty.
 type MessageDelta struct {
-	StopReason       StopReason `json:"stop_reason,omitzero"`
-	StopSequence     string     `json:"stop_sequence,omitzero"`
-	NativeStopReason string     `json:"native_stop_reason,omitzero"`
-	Usage            Usage      `json:"usage,omitzero"`
-	Cost             Cost       `json:"cost,omitzero"`
+	// StopReason is why the model stopped generating.
+	StopReason StopReason `json:"stop_reason,omitzero"`
+	// StopSequence is the stop sequence that ended the turn, empty
+	// otherwise.
+	StopSequence string `json:"stop_sequence,omitzero"`
+	// NativeStopReason is the upstream model's own stop string when a
+	// router normalised it into StopReason; empty when the provider's
+	// wire string is already StopReason.
+	NativeStopReason string `json:"native_stop_reason,omitzero"`
+	// Usage is the message's cumulative usage so far, replacing rather
+	// than adding to any earlier MessageDelta.
+	Usage Usage `json:"usage,omitzero"`
+	// Cost is what the call has cost so far, when the provider says so.
+	Cost Cost `json:"cost,omitzero"`
 }
 
 // MessageStop closes the assistant message. It is the only event that makes a
@@ -166,37 +192,47 @@ type MessageStop struct{}
 // with the provider's tag beside it: an event travels to a front end, never
 // back to a provider, so the front end's switch never meets a surprise tag.
 type UnknownEvent struct {
-	EventType EventType      `json:"event_type,omitzero"`
-	Raw       jsontext.Value `json:"raw,omitzero"`
+	// EventType is the provider's own tag for the event.
+	EventType EventType `json:"event_type,omitzero"`
+	// Raw is the provider's bytes for the event.
+	Raw jsontext.Value `json:"raw,omitzero"`
 }
 
 // TurnStart opens one model call of a run. Turns are numbered from one.
 type TurnStart struct {
+	// Turn is the turn number, counted from one.
 	Turn int `json:"turn,omitzero"`
 }
 
 // ToolCallStart reports that the loop is about to run a tool, after any hook
 // has allowed it.
 type ToolCallStart struct {
+	// ToolUse is the call the loop is about to make.
 	ToolUse ToolUse `json:"tool_use"`
 }
 
 // ToolCallEnd reports a tool's result, including the error results that a
 // failed or refused call produces: every tool_use gets a tool_result.
 type ToolCallEnd struct {
-	ToolUse ToolUse    `json:"tool_use"`
-	Result  ToolResult `json:"result"`
+	// ToolUse is the call this result answers.
+	ToolUse ToolUse `json:"tool_use"`
+	// Result is the tool's result, including an error result for a call
+	// the loop declined to run.
+	Result ToolResult `json:"result"`
 }
 
 // TurnEnd closes one model call of a run and carries the whole response, so a
 // consumer that ignores the deltas can still render turn by turn.
 type TurnEnd struct {
-	Turn     int      `json:"turn,omitzero"`
+	// Turn is the turn number, counted from one.
+	Turn int `json:"turn,omitzero"`
+	// Response is the whole model response for the turn.
 	Response Response `json:"response"`
 }
 
 // Done is the terminal event of a run that reached a natural end.
 type Done struct {
+	// Result is what the run produced.
 	Result Result `json:"result"`
 }
 
@@ -250,10 +286,17 @@ func (c StopCause) Known() bool {
 // stays JSON-serialisable and a front end renders the same shape whether the
 // run was cancelled, budgeted out or broken.
 type Stopped struct {
-	Cause   StopCause `json:"cause,omitzero"`
-	Message string    `json:"message,omitzero"`
-	Kind    ErrorKind `json:"kind,omitzero"`
-	Result  Result    `json:"result"`
+	// Cause is why the run ended early.
+	Cause StopCause `json:"cause,omitzero"`
+	// Message says in prose why the run ended, on every early ending: a
+	// budget, a hook, a refusal, a cancellation or a failure.
+	Message string `json:"message,omitzero"`
+	// Kind classifies a failure or a cancellation, so a caller can decide
+	// whether trying again is worth anything; it is empty for an ending
+	// the loop chose, such as a budget, a hook or a refusal.
+	Kind ErrorKind `json:"kind,omitzero"`
+	// Result is what the run produced before it stopped.
+	Result Result `json:"result"`
 }
 
 // Type reports the event's wire tag.

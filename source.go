@@ -16,11 +16,17 @@ const (
 // URL and FileID is set, chosen by Type; use the constructors rather than
 // filling the struct by hand. Data marshals as base64.
 type Source struct {
-	Type      SourceType `json:"type"`
-	MediaType string     `json:"media_type,omitzero"`
-	Data      []byte     `json:"data,omitzero"`
-	URL       string     `json:"url,omitzero"`
-	FileID    string     `json:"file_id,omitzero"`
+	// Type chooses which of Data, URL and FileID is set.
+	Type SourceType `json:"type"`
+	// MediaType is the IANA media type of the bytes, such as "image/png"
+	// or "application/pdf".
+	MediaType string `json:"media_type,omitzero"`
+	// Data is the bytes, set when Type is SourceBytes.
+	Data []byte `json:"data,omitzero"`
+	// URL is the address to fetch from, set when Type is SourceURL.
+	URL string `json:"url,omitzero"`
+	// FileID names the uploaded file, set when Type is SourceFile.
+	FileID string `json:"file_id,omitzero"`
 }
 
 // BytesSource carries the bytes inline under the given IANA media type, such

@@ -42,5 +42,7 @@ const (
 // hold it as a pointer: nil is no marker, and a zero CacheControl is a
 // marker with the provider's default lifetime.
 type CacheControl struct {
+	// TTL is how long the breakpoint's prefix stays warm; the zero value
+	// leaves the choice to the provider.
 	TTL CacheTTL `json:"ttl,omitzero"`
 }

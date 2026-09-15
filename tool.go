@@ -23,9 +23,17 @@ import (
 // an error result so that every tool_use still gets a tool_result. The loop
 // fills in the result's ToolUseID.
 type Tool interface {
+	// Name is the name the model calls the tool by.
 	Name() string
+	// Description is the prose the model decides whether and when to
+	// call the tool with.
 	Description() string
+	// Schema is the tool's input schema, as shown to the model.
 	Schema() *Schema
+	// Execute runs the tool against the model's argument object,
+	// returning a ToolResult for the model to see or an error for a
+	// failure of the tool itself; the loop turns either into a
+	// tool_result and fills in the ToolUseID.
 	Execute(ctx context.Context, input jsontext.Value) (ToolResult, error)
 }
 

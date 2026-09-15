@@ -40,43 +40,68 @@ type Blocks []Block
 
 // Text is a run of plain text.
 type Text struct {
-	Text  string        `json:"text"`
+	// Text is the run of text.
+	Text string `json:"text"`
+	// Cache marks this block as a cache breakpoint under CacheManual; nil
+	// means no marker.
 	Cache *CacheControl `json:"cache,omitzero"`
 }
 
 // Image is an image for the model to look at.
 type Image struct {
-	Source Source        `json:"source"`
-	Cache  *CacheControl `json:"cache,omitzero"`
+	// Source is where the image's bytes come from.
+	Source Source `json:"source"`
+	// Cache marks this block as a cache breakpoint under CacheManual; nil
+	// means no marker.
+	Cache *CacheControl `json:"cache,omitzero"`
 }
 
 // Document is a document for the model to read, such as a PDF. Title and
 // Context are optional hints that help the model cite it.
 type Document struct {
-	Source  Source        `json:"source"`
-	Title   string        `json:"title,omitzero"`
-	Context string        `json:"context,omitzero"`
-	Cache   *CacheControl `json:"cache,omitzero"`
+	// Source is where the document's bytes come from.
+	Source Source `json:"source"`
+	// Title is an optional hint that helps the model cite the document.
+	Title string `json:"title,omitzero"`
+	// Context is optional prose describing the document, which helps the
+	// model cite it.
+	Context string `json:"context,omitzero"`
+	// Cache marks this block as a cache breakpoint under CacheManual; nil
+	// means no marker.
+	Cache *CacheControl `json:"cache,omitzero"`
 }
 
 // ToolUse is the model's request to call a tool. Input is the argument object
 // exactly as the model produced it, left unparsed so the tool decodes it into
 // its own type.
 type ToolUse struct {
-	ID    string         `json:"id"`
-	Name  string         `json:"name"`
+	// ID is the provider's identifier for this call, echoed back on the
+	// matching ToolResult.
+	ID string `json:"id"`
+	// Name is the tool being called, matching a Tool.Name in the request.
+	Name string `json:"name"`
+	// Input is the argument object exactly as the model produced it,
+	// unparsed.
 	Input jsontext.Value `json:"input,omitzero"`
-	Cache *CacheControl  `json:"cache,omitzero"`
+	// Cache marks this block as a cache breakpoint under CacheManual; nil
+	// means no marker.
+	Cache *CacheControl `json:"cache,omitzero"`
 }
 
 // ToolResult is the outcome of a tool call. It travels in a user message, as
 // on Anthropic; providers whose wire format has a separate tool role
 // translate it. Content holds Text, Image and Document blocks.
 type ToolResult struct {
-	ToolUseID string        `json:"tool_use_id"`
-	IsError   bool          `json:"is_error,omitzero"`
-	Content   Blocks        `json:"content"`
-	Cache     *CacheControl `json:"cache,omitzero"`
+	// ToolUseID names the ToolUse this result answers.
+	ToolUseID string `json:"tool_use_id"`
+	// IsError marks a result the model should treat as a failure, so it
+	// can correct itself rather than reading the content as an answer.
+	IsError bool `json:"is_error,omitzero"`
+	// Content is the result's payload: Text, Image and Document blocks.
+	Content Blocks `json:"content"`
+	// Cache marks this block as a cache breakpoint under CacheManual; nil
+	// means no marker.
+	Cache *CacheControl `json:"cache,omitzero"`
 }
 
 // Thinking is a reasoning block. Text is what a UI displays and may be empty
@@ -88,24 +113,37 @@ type ToolResult struct {
 // Anthropic, where Text and Signature are the whole block and rebuilding it
 // reproduces the bytes exactly.
 type Thinking struct {
-	Text      string         `json:"text,omitzero"`
-	Signature string         `json:"signature,omitzero"`
-	Raw       jsontext.Value `json:"raw,omitzero"`
+	// Text is what a UI displays, empty when the provider omits it.
+	Text string `json:"text,omitzero"`
+	// Signature binds the block to the conversation prefix that produced
+	// it, so it is replayed rather than regenerated.
+	Signature string `json:"signature,omitzero"`
+	// Raw is the provider's block exactly as received, re-emitted
+	// byte-exact for a provider whose block carries more than goodall
+	// models; it is empty on Anthropic, where Text and Signature rebuild
+	// the block exactly.
+	Raw jsontext.Value `json:"raw,omitzero"`
 }
 
 // RedactedThinking is a reasoning block the provider encrypted. Data is the
 // opaque payload, and Raw is the provider's block as received.
 type RedactedThinking struct {
-	Data string         `json:"data,omitzero"`
-	Raw  jsontext.Value `json:"raw,omitzero"`
+	// Data is the opaque, encrypted payload the provider returned.
+	Data string `json:"data,omitzero"`
+	// Raw is the provider's block as received.
+	Raw jsontext.Value `json:"raw,omitzero"`
 }
 
 // Unknown is a block whose type tag this version of goodall does not
 // recognise. It keeps the provider's bytes so the block survives a round trip
 // through storage and back to the provider unchanged.
 type Unknown struct {
-	Type BlockType      `json:"type"`
-	Raw  jsontext.Value `json:"raw,omitzero"`
+	// Type is the provider's own tag for the block, kept even though
+	// goodall does not recognise it.
+	Type BlockType `json:"type"`
+	// Raw is the provider's bytes for the block, kept so it survives a
+	// round trip unchanged.
+	Raw jsontext.Value `json:"raw,omitzero"`
 }
 
 func (Text) isBlock()             {}

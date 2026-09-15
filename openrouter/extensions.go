@@ -112,10 +112,14 @@ type ProviderRouting struct {
 // OpenRouter reads these as decimal strings, so they are written as strings
 // rather than as JSON numbers, which would round a price away.
 type MaxPrice struct {
-	Prompt     goodall.Decimal
+	// Prompt caps the price per million prompt tokens, in USD.
+	Prompt goodall.Decimal
+	// Completion caps the price per million completion tokens, in USD.
 	Completion goodall.Decimal
-	Request    goodall.Decimal
-	Image      goodall.Decimal
+	// Request caps the price per request, in USD.
+	Request goodall.Decimal
+	// Image caps the price per image, in USD.
+	Image goodall.Decimal
 }
 
 // MarshalJSONTo writes the caps that are set, in declaration order, as the
@@ -219,7 +223,9 @@ const (
 
 // Header is one HTTP header name and value.
 type Header struct {
-	Name  string
+	// Name is the HTTP header's name.
+	Name string
+	// Value is the HTTP header's value.
 	Value string
 }
 
