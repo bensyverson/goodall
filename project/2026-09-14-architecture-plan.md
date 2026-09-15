@@ -82,6 +82,8 @@ func NewTool[In any](name, description string, run func(context.Context, In) (To
 
 **Vocabulary types.** `StopReason` (`EndTurn`, `MaxTokens`, `StopSequence`, `ToolUse`, `PauseTurn`, `Refusal`, `Unknown`), `Effort` (`Default`, `Off`, `Low`, `Medium`, `High`, `XHigh`, `Max`), `ThinkingDisplay`, `CachePolicy` (`Auto`, `Manual`, `Off`), `Support` (`Unknown`, `Supported`, `Unsupported`), `Usage` (input, output, cache read, cache write, reasoning), `Cost` (amount, currency, `Reported bool`), `ModelInfo` with `Capabilities` (image input, PDF input, audio input, tools, thinking with supported efforts, cache control, structured output, context window, max output).
 
+> **Corrected 2026-09-14 (build session).** The thinking *configuration* is `ThinkingConfig{Effort, Display}`, not `Thinking`: that name belongs to the thinking *block*, and the two collided the moment both leaves merged. `Agent.Thinking` and `Request.Thinking` are of type `ThinkingConfig`.
+
 **Errors.** `*APIError{Provider, Status, Kind, Type, Message, RequestID, RetryAfter, Raw}` where `Kind` is a typed constant (`RateLimited`, `Overloaded`, `Unauthorized`, `InvalidRequest`, `ContextLength`, `UnsupportedInput`, `NotFound`, `Server`, `Unknown`) mapped from Anthropic's `error.type` and OpenRouter's `error.metadata.error_type`. `*CapabilityError` names the modality or feature the model is known not to accept. Retries with jittered backoff on rate-limit, overload and server errors honour `Retry-After` and stop after the first streamed byte; they are tested with `testing/synctest`.
 
 **The loop.**

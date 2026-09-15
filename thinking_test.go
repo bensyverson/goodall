@@ -71,14 +71,14 @@ func TestThinkingDisplayKnown(t *testing.T) {
 func TestThinkingJSON(t *testing.T) {
 	cases := []struct {
 		name string
-		in   Thinking
+		in   ThinkingConfig
 		want string
 	}{
-		{"zero", Thinking{}, `{}`},
-		{"effort only", Thinking{Effort: EffortHigh}, `{"effort":"high"}`},
-		{"display only", Thinking{Display: DisplaySummarized}, `{"display":"summarized"}`},
-		{"both", Thinking{Effort: EffortMax, Display: DisplayOmitted}, `{"effort":"max","display":"omitted"}`},
-		{"off", Thinking{Effort: EffortOff}, `{"effort":"off"}`},
+		{"zero", ThinkingConfig{}, `{}`},
+		{"effort only", ThinkingConfig{Effort: EffortHigh}, `{"effort":"high"}`},
+		{"display only", ThinkingConfig{Display: DisplaySummarized}, `{"display":"summarized"}`},
+		{"both", ThinkingConfig{Effort: EffortMax, Display: DisplayOmitted}, `{"effort":"max","display":"omitted"}`},
+		{"off", ThinkingConfig{Effort: EffortOff}, `{"effort":"off"}`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -89,7 +89,7 @@ func TestThinkingJSON(t *testing.T) {
 			if string(got) != c.want {
 				t.Fatalf("marshal = %s, want %s", got, c.want)
 			}
-			var back Thinking
+			var back ThinkingConfig
 			if err := json.Unmarshal(got, &back); err != nil {
 				t.Fatal(err)
 			}
@@ -104,7 +104,7 @@ func TestThinkingJSON(t *testing.T) {
 // not heard of readable rather than silently rewriting it to the default.
 func TestThinkingUnknownEffortSurvivesJSON(t *testing.T) {
 	const wire = `{"effort":"ludicrous"}`
-	var got Thinking
+	var got ThinkingConfig
 	if err := json.Unmarshal([]byte(wire), &got); err != nil {
 		t.Fatal(err)
 	}

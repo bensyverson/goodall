@@ -78,10 +78,10 @@ func (d ThinkingDisplay) Known() bool {
 	return false
 }
 
-// Thinking is the thinking configuration of a request. The zero value asks
+// ThinkingConfig is the thinking configuration of a request. The zero value asks
 // for nothing, so a consumer who never thinks about thinking sends no thinking
 // fields at all.
-type Thinking struct {
+type ThinkingConfig struct {
 	// Effort is how hard the model should think.
 	Effort Effort `json:"effort,omitzero"`
 	// Display is how much of that thinking comes back as readable text.
