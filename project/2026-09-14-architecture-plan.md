@@ -123,6 +123,8 @@ func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stre
 
 **Markdown.** `Renderer` interface with `RenderHTML(text) string`; the built-in subset renderer emits no raw HTML, escapes everything else, and allows only `http`, `https` and `data` image and link schemes. Consumers wanting full CommonMark plug in goldmark in a few lines; the README shows how.
 
+> **Corrected 2026-09-14 (build session).** The scheme rule above was too loose: `data:` is a link vector (`data:text/html`) and is only needed for inline images. The rule as built is: link `href` must be `http` or `https`; image `src` must be `http`, `https` or `data:image/…`; anything else renders as plain text. Relative and scheme-less URLs are rejected too, because model output never legitimately needs them and a chat front end cannot resolve them safely.
+
 ## Testing and tooling
 
 - `go test -race ./...` is the suite. A test in the root package walks the import graph and fails if the root or `internal/sse` imports anything outside the standard library, or if `goodall` imports a subpackage.
@@ -134,6 +136,8 @@ func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stre
 ## Build order
 
 Foundation first because everything types against it; then the two providers in parallel, since they touch disjoint packages; then the loop against a fake provider and both real ones; then the chat layer; then examples and the README. Each leaf below states its files so parallel agents do not collide.
+
+> **Carve note, 2026-09-14 (build session).** Three files moved between leaves so the foundation could fan out without cross-leaf compile dependencies: `request.go` (and a new `provider.go` for the `Provider`, `Completer` and `ModelLister` interfaces) went from the vocabulary leaf to the stream leaf, because `Request` references `Message` and `Tool`; `cache.go` was written on main before the fan-out because the block model and the vocabulary both need `CacheControl`; `Budget` lives in the loop leaf's `budget.go`. `Request.System` is `[]Text` rather than a string so a cache marker can sit on the static system block. The `job` notes on those leaves carry the same rulings.
 
 ```yaml
 tasks:
