@@ -1,0 +1,16 @@
+data: {"id":"gen-1789478297-5lsEoYFNT0UekYHpyBp7","object":"chat.completion.chunk","created":1789478297,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":null,"role":"assistant","tool_calls":[{"index":0,"id":"toolu_016wB7T2cLdcxRiVJD74h8DH","type":"function","function":{"name":"get_weather","arguments":""}}]},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1789478297-5lsEoYFNT0UekYHpyBp7","object":"chat.completion.chunk","created":1789478297,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":null,"role":"assistant","tool_calls":[{"index":0,"function":{"arguments":""}}]},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1789478297-5lsEoYFNT0UekYHpyBp7","object":"chat.completion.chunk","created":1789478297,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":null,"role":"assistant","tool_calls":[{"index":0,"function":{"arguments":"{\"city\": \"Paris"}}]},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478297-5lsEoYFNT0UekYHpyBp7","object":"chat.completion.chunk","created":1789478297,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":null,"role":"assistant","tool_calls":[{"index":0,"function":{"arguments":"\"}"}}]},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1789478297-5lsEoYFNT0UekYHpyBp7","object":"chat.completion.chunk","created":1789478297,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"tool_calls","native_finish_reason":"tool_use"}]}
+
+data: {"id":"gen-1789478297-5lsEoYFNT0UekYHpyBp7","object":"chat.completion.chunk","created":1789478297,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","service_tier":"default","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"tool_calls","native_finish_reason":"tool_use"}],"usage":{"prompt_tokens":576,"completion_tokens":34,"total_tokens":610,"cost":0.004383225,"is_byok":false,"prompt_tokens_details":{"cached_tokens":0,"cache_write_tokens":558,"audio_tokens":0,"video_tokens":0},"cost_details":{"upstream_inference_cost":0.0044275,"upstream_inference_prompt_cost":0.0035775,"upstream_inference_completions_cost":0.00085},"completion_tokens_details":{"reasoning_tokens":0,"image_tokens":0,"audio_tokens":0}}}
+
+data: [DONE]
+

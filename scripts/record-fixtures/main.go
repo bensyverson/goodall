@@ -12,14 +12,19 @@
 //
 // Usage:
 //
-//	go run ./scripts/record-fixtures -env /path/to/.env -out anthropic/testdata
-//	go run ./scripts/record-fixtures -only thinking_tool_use
-//	go run ./scripts/record-fixtures -list
+//	go run ./scripts/record-fixtures -env /path/to/.env
+//	go run ./scripts/record-fixtures -provider openrouter
+//	go run ./scripts/record-fixtures -provider openrouter -only thinking_tool_use
+//	go run ./scripts/record-fixtures -provider openai -list
+//
+// -out defaults to the chosen provider's own testdata directory, so a run that
+// names a provider and nothing else writes where that provider's tests read.
 //
 // Adding a provider is one new file in this package: define a providerSpec
-// with the provider's key, its default model and a function that builds its
-// exchanges against the recorder's http.Client, then add it to the providers
-// table below. Nothing else in this package is provider-specific.
+// with the provider's key, its default model, the testdata directory its
+// fixtures belong in and a function that builds its exchanges against the
+// recorder's http.Client, then add it to the providers table below. Nothing
+// else in this package is provider-specific.
 package main
 
 import (
@@ -56,6 +61,12 @@ type providerSpec struct {
 	// catalogue confirms, shared with that provider's live tests through
 	// internal/livemodel so the two cannot drift.
 	defaultModel string
+	// outDir is the -out default: the testdata directory of the package
+	// whose tests read these fixtures, relative to the repository root. It
+	// lives here rather than in the flag so that choosing a provider
+	// chooses the right directory, and a run with no -out cannot write one
+	// provider's recordings over another's.
+	outDir string
 	// exchanges builds the provider's recordings. It is given the
 	// recorder, which owns the recording http.Client and writes the
 	// files, the API key and the model to record against.
@@ -68,7 +79,20 @@ var providers = map[string]providerSpec{
 	"anthropic": {
 		key:          "ANTHROPIC_API_KEY",
 		defaultModel: livemodel.Anthropic,
+		outDir:       "anthropic/testdata",
 		exchanges:    anthropicExchanges,
+	},
+	"openrouter": {
+		key:          "OPENROUTER_API_KEY",
+		defaultModel: livemodel.OpenRouterClaude,
+		outDir:       "openrouter/testdata",
+		exchanges:    openRouterExchanges,
+	},
+	"openai": {
+		key:          "OPENAI_API_KEY",
+		defaultModel: livemodel.OpenAI,
+		outDir:       "openrouter/testdata",
+		exchanges:    openAIExchanges,
 	},
 }
 
@@ -83,7 +107,7 @@ func main() {
 func run() error {
 	provider := flag.String("provider", "anthropic", "which provider to record ("+strings.Join(providerNames(), ", ")+")")
 	env := flag.String("env", ".env", "the .env file holding the provider's API key, relative to the working directory")
-	out := flag.String("out", "anthropic/testdata", "the directory to write fixtures into")
+	out := flag.String("out", "", "the directory to write fixtures into (default: the chosen provider's own testdata directory)")
 	model := flag.String("model", "", "the model to record against (default: the provider's newest confirmed model)")
 	only := flag.String("only", "", "record just this one exchange, by name")
 	list := flag.Bool("list", false, "print the exchange names this provider records and exit")
@@ -95,6 +119,9 @@ func run() error {
 	}
 	if *model == "" {
 		*model = spec.defaultModel
+	}
+	if *out == "" {
+		*out = spec.outDir
 	}
 
 	// The key is looked up before anything else so a run with no key fails

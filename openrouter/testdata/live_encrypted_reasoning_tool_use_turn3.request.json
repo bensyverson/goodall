@@ -1,0 +1,99 @@
+{
+  "model": "openai/gpt-6-astra",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "A cyclist in Paris will ride 40 km at 24 km/h, starting at 14:00. Work out when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_4wfHzP0igr6JjfLXOZYLfipd",
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "arguments": "{\"city\":\"Paris\",\"unit\":\"celsius\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"city\":\"Paris\",\"temperature_c\":18,\"conditions\":\"light rain\"}",
+      "tool_call_id": "call_4wfHzP0igr6JjfLXOZYLfipd"
+    },
+    {
+      "role": "assistant",
+      "content": "- **Finish time:** 40 ÷ 24 = **1 hour 40 minutes**, so they’ll finish at **15:40 Paris time**, assuming a steady pace and no stops.\n- **Current Paris weather:** **18°C with light rain**.\n- **Rain during the ride:** They should **be prepared for rain**, but this lookup gives current conditions only—not an hourly forecast—so it can’t confirm rain during the **14:00–15:40** window.",
+      "reasoning_details": [
+        {
+          "type": "reasoning.summary",
+          "summary": "**Calculating ride conditions**\n\nI need to clarify the user's ride calculation. At a regular speed of 24 km/h, covering 40 km will take about 1 hour and 40 minutes, meaning they should arrive around 15:40 in Paris. Currently, it's lightly raining in Paris with a temperature of 18°C. They should be ready for rain, but I can't forecast whether it will rain during the ride. I'll recommend bringing waterproof gear and suggest checking the hourly forecast for more specificity.**Understanding weather limitations**\n\nThe lookup only gives me the current weather conditions, which means I can't confirm if it will rain during the user's ride from 14:00 to 15:40 without access to an hourly forecast. That's a bit frustrating because I want to provide the most accurate information possible. I'll need to suggest that the user check a reliable weather source for that specific time frame to get a clearer picture of what to expect.",
+          "format": "openai-responses-v1",
+          "index": 0
+        },
+        {
+          "type": "reasoning.encrypted",
+          "data": "gAAAAABqqUdjEicZpryBtku0BnEXF51wHdzQi8v93yvno47naq3ZPb_UQaB5XXgBo8suthcZImvDqf7dowyp32jjkmf5QEx8swQux9-CKNSdbdQYKFfBNF5UGiTK0-eLSNBsnJLaFOef9L8jQ3WjKSXmgpqJzUavXeFHS1f6LAiMbFgBd2yQdC-ECP7dMgg34yk33HAXjbmXLk59TO0zo20oUI9zEMIH0aPOUFSbpFHj2dmP07FcJJzsHoBoBPyseJnZq7DAET634PkIE5TiCx0QAc4uAtZbK_M8J4phj8ittPkNZIgtGkvpKzTsz1QjzhrgOzq1LghlYGgDskMUKDhabDPeFz1PA03TDjVmQtEXCujtetpbBnW-wnLb7XlIZPTQ6KfLsYusNbrGw-QlBX2PkpJwNM9UYRbGhACydjRVOy4T-tbF2ACIKeT4Pm9Z79sQ-IMI2Z0F7BbEeN8yYV1mhqfL2R1-yHSDMXcjfnC5SGWTqKj9TVFpfhCxa8tN6HrLlg7vgQhY3j1EZXviqb8JaPR12nWjVsmsS1J4I_gCxhPfWrmAGIgTh7wS9ZWbAQ18ff5x3w1rpU3cyjvtko3feQejAcasCz4gCg5yL-X4g4PVEBvKal6iURupW7t4VKPX2qx3lepnyV-ItmQNgHwPSSOPafpKe5Frhos5Zxxwye_O2B5n5ROdwonodqKkOPdV-osHtoOM21FVsGqw20iyi6XvQgV8x5txi4XSHvcmjZF3p11wqpVuz46an0Mo-jPNQCBUvFhmn2WqrCQ9f98mJ5PsGcesHMBGbuAJ1ChnGdLZsF3xM4B1uy6-7SmFGq7uQ_27DdDrRapyDc_C33pKidOGFX2zCJi_pWcSJ6OWvt8jHBu4wFGyzER0ePPgFXuSZuYuCgIfArQM5MMqJylnPcNps-MaYsTYWCg-XnRbrhrId9K6GLG1dH6Isr_m_jjXe5fuo5d-KwFWTQ1jMAYfbkOGNHKzHBjAgefQMmbQcSSUBaLv3QHPCC2BbFL0Y41S2NCIYor-qjvpny6LTWQH5xbZ2QKW3BDGn14GciYshscT_cwBMxt2RoBxbRjMWGxbMOG2JpU_ht_5v9C4pwH9NxVg_qnS1EQdlgcPFmrVC4nzrqZaueDZzuht8r3fXg3jpdehNd1EetvXmrU813V7l1ylRwG-4HciW4RrSdrcDUxu25Hjl0-BHuktpIiMEoV6C1KhPhLEGEvLG8wyp-8lZ8aqfExzZ6La1L0Y7MKrdGJ0Anlc9ltMalamsKLcJMZgE-baAkPYy7hbIRurj4KCyj9WoTkCK_FRxEEuilTFP-8LWePR3SrwfBDq-W0VURzI5sChEksk9ep6DP39qnKyUyJ7tV2fklipfGKzdQQx8Me_utP1wvPAL4ADl9pj7gnwyRNxeeu-tKdcwAP3uOcdO02c6m71NevoPlCPCA4GZ9Y18YdeaT-k5WlXMi3kq3H4-1Xr1iCqasYwxMXILP3a1Lim-hkrdBjcM8mkHGahxeHXIqsWItAPXGmnQOxBd9yErUWEBjbJ8EOsyN8mVbDWNjcgrJXZent53sUy31OKNojem1Bb2_upKGkXS73HifCDlXUGY4lsk2ZzE6U6v0GYTRNyXVsYX6T8yuBhfRFqYZqSb9Np1VFfTPp6rsTEY1VxpGYI-cN_FIy-GYuDOJggiDRGOtKARS8UTjiRcbGSTblu6s6mHeCF8U4iu7YiipsqkRS4yEEHMH9GNDx9sztQtVQKFMK8rrlEZ35k5N1punbhoZXF8tqtsxsd-l52FoFcGumjy3vnlPLIRVtGUzShBU1FGA45nCkpmkeyV57WRsV-SRcTv7zlud6og5HW3V8p1rBqNvdCH5ECX6lC5DPekz48DauEYpLEep_9fdPsRfJvr1d1F3I3eAhwm3oK_o-x1Ka0Yk5KVHM5RvRdUgkVjthVyGzpod68uDYOiIKXDrrmWj1arT6025Kpe48M69pr9G-X8qdlDVOfawLaq0ofCR0eQxb1n72NxAeokqWPzsOshgiqsjvsXwR4uCqvLEz3TE_UOnmhiM0ngH3hVAdDr7EExWSwUKFGHbBFKdOWPt5WM99rZzFEtk2PB6REeWLhmgC6i91vK8ZZtXlpRIYIwz7mr9jcGH0-AFF0SdxEJVNP7fqLy-EceN1oc-4eYuLyx9n3NGSXKCaFG5-rLJG3Tvz0s4sJhGhEIvk9fgAI-19nix-QQThjqER4smtQmE1GcVBg0jLvioHNnpbiqV0F6V3W58iaqxD3P8o7I8qZVivdV3cKL0uzVGbo2ybdXyk0sK5qZJ4mG-l5vMydYNkzvzzNdLoxZXoo4C5yGB8lRM0YZu8OjtMg5WPYERAe-auUD5vdEdwIzdektZdF1wVJX-MkHsImOm912QJjqmGKQwbJRjANeJhQLLks6eyXlx32f1NV-HvXTPQfwH45v21RSUZHUGgqRLF_IgZJb4qpTCqfYVjYYAAlYaVAvs6YPQknoe-eKZYFoq3Wy0Oxt5Fos2RG4wThk3ggTXJqmZxytYg05KOulBHVt9v3pPIAdfSdAuzrPbDIpcvpWErVdH4QahGgbIRsL2Q7Pa7qwlAnP8QDtGMWtIRUqDQAWuUmFhu3tMBoACmvRKdTS5W9OfSEgmbvvaEIXl7dYd6RfPTHjj2H_FmvStb-Kz9MDk1fsnUvHfAGA2CP.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWFzdHJhLTIwMjYwOTAzfG9wZW5haSJ9",
+          "format": "openai-responses-v1",
+          "id": "rs_026f1c67da527a25016aa9475cf0a487d1b99576657f0dd448",
+          "index": 1
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Answer in one short sentence: what if they set off an hour later?"
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Look up the current weather in a city.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "the city to look up, such as Paris"
+            },
+            "unit": {
+              "type": "string",
+              "description": "celsius or fahrenheit",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "max_tokens": 2048,
+  "stream": true,
+  "reasoning": {
+    "effort": "high"
+  },
+  "cache_control": {
+    "type": "ephemeral"
+  }
+}

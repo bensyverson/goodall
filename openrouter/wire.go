@@ -68,8 +68,10 @@ type chatRequest struct {
 	ToolChoice        *toolChoice      `json:"tool_choice,omitzero"`
 	ParallelToolCalls *bool            `json:"parallel_tool_calls,omitzero"`
 	MaxTokens         int              `json:"max_tokens,omitzero"`
+	MaxCompletion     int              `json:"max_completion_tokens,omitzero"`
 	Stop              []string         `json:"stop,omitzero"`
 	Stream            bool             `json:"stream"`
+	StreamOptions     *streamOptions   `json:"stream_options,omitzero"`
 	Reasoning         *reasoningConfig `json:"reasoning,omitzero"`
 	ReasoningEffort   string           `json:"reasoning_effort,omitzero"`
 	CacheControl      *cacheControl    `json:"cache_control,omitzero"`
@@ -80,6 +82,13 @@ type chatRequest struct {
 	Debug             *Debug           `json:"debug,omitzero"`
 	User              string           `json:"user,omitzero"`
 	Metadata          metadata         `json:"metadata,omitzero"`
+}
+
+// streamOptions is what a streamed request asks for beyond the tokens. Only
+// OpenAI's own servers need it: OpenRouter documents include_usage as a
+// deprecated no-op because it always reports usage.
+type streamOptions struct {
+	IncludeUsage bool `json:"include_usage"`
 }
 
 // chatMessage is one message in either direction. Request and response share

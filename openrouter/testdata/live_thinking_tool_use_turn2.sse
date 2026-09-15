@@ -1,0 +1,26 @@
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"**","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"Ride timing:** 40 km ÷ 24 km/h = 1.667 hours = 1 hour 40 minutes. Starting at 14:00, they finish at **15:40**.","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"\n\n**Weather in Paris:** 18 °C with light rain.\n\n**Should they expect rain?** Yes — it's currently raining lightly, so they should plan for w","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"et conditions for at least part of the 14:00–15:40 window. A light rain jacket and caution on slick corners would be wise. Note that","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":" this is a current snapshot rather than an hourly forecast, so I can't say whether the rain will ease off before 15:40 — worth checking a forecast clos","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"er to departure.","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"stop","native_finish_reason":"end_turn"}]}
+
+data: {"id":"gen-1789478305-6rGZ0HMhGnInDXoUQydo","object":"chat.completion.chunk","created":1789478305,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","service_tier":"default","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"stop","native_finish_reason":"end_turn"}],"usage":{"prompt_tokens":644,"completion_tokens":215,"total_tokens":859,"cost":0.009303525,"is_byok":false,"prompt_tokens_details":{"cached_tokens":0,"cache_write_tokens":642,"audio_tokens":0,"video_tokens":0},"cost_details":{"upstream_inference_cost":0.0093975,"upstream_inference_prompt_cost":0.0040225,"upstream_inference_completions_cost":0.005375},"completion_tokens_details":{"reasoning_tokens":0,"image_tokens":0,"audio_tokens":0}}}
+
+data: [DONE]
+

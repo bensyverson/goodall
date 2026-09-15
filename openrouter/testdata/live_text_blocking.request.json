@@ -1,0 +1,19 @@
+{
+  "model": "anthropic/claude-opus-5",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Answer in one short sentence: what is the capital of France?"
+        }
+      ]
+    }
+  ],
+  "max_tokens": 2048,
+  "stream": false,
+  "cache_control": {
+    "type": "ephemeral"
+  }
+}

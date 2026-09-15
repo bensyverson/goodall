@@ -1,0 +1,80 @@
+{
+  "model": "anthropic/claude-opus-5",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "A cyclist in Paris will ride 40 km at 24 km/h, starting at 14:00. Work out when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "toolu_016RrYdiUtaMAXkbjwh5Ae6C",
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "arguments": "{\"city\":\"Paris\",\"unit\":\"celsius\"}"
+          }
+        }
+      ],
+      "reasoning_details": [
+        {
+          "type": "reasoning.text",
+          "text": "40 divided by 24 gives 1.667 hours, or 1 hour 40 minutes, so it finishes at 15:40. Now let me check the weather.",
+          "format": "anthropic-claude-v1",
+          "index": 0,
+          "signature": "CAISyQIKrgEIERgCKkCmOQ/XwouJCa5pxgQksWN2F9VCtQNqiMxVHMk8KzFGsj2gOM0CBhm/gvZu5vS76xLoiOinM2jVGQipwTwgveteMg1jbGF1ZGUtb3B1cy01OAFCCHRoaW5raW5nWiQ0YzBmMDQ2Zi0yNWZkLTQ1ZmItYmZiMy1hMDhhOGUyNDljYTd6HnVwcm9mXzAxMUNmNUJ2Z1ZwanFUS1VES1FGemNzSqgBoYul1QYSDGlMqRkCvFePDe3aUxoMUqJIh6DxqOFyamFoIjBjN+U+qrkD9O+cJ0qhyQfAF0uJmGQREcvEShMGjjvSfhULqhE2IJOX/xFsnWdkjeYqSOdb1Wb26UuQMRvympgweShaLKO+14qRKdcHev9giG/4bBoeC3JHkNbelplpU+odzZb5sDxLQ1sAY+QYtle4NjyPmN7oPRCGrBgB"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "{\"city\":\"Paris\",\"temperature_c\":18,\"conditions\":\"light rain\"}",
+      "tool_call_id": "toolu_016RrYdiUtaMAXkbjwh5Ae6C"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Look up the current weather in a city.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "the city to look up, such as Paris"
+            },
+            "unit": {
+              "type": "string",
+              "description": "celsius or fahrenheit",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "max_tokens": 2048,
+  "stream": true,
+  "reasoning": {
+    "effort": "low"
+  },
+  "cache_control": {
+    "type": "ephemeral"
+  }
+}

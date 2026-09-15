@@ -3,8 +3,6 @@ package anthropic_test
 import (
 	"context"
 	json "encoding/json/v2"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/bensyverson/goodall"
@@ -42,7 +40,7 @@ func liveClient(t *testing.T) *anthropic.Client {
 	if testing.Short() {
 		t.Skip("skipping the live Anthropic calls: -short is set, so nothing was sent to the API")
 	}
-	path, err := envFilePath()
+	path, err := dotenv.RepoEnvFile()
 	if err != nil {
 		t.Skipf("skipping the live Anthropic calls: %v", err)
 	}
@@ -51,38 +49,6 @@ func liveClient(t *testing.T) *anthropic.Client {
 		t.Skipf("skipping the live Anthropic calls: no %s in %s, so no call was made", liveKeyName, path)
 	}
 	return anthropic.New(key)
-}
-
-// envFileVar overrides which .env the live tests read. It exists for the
-// places where the repository root has no .env of its own — a git worktree,
-// where the file is gitignored and so absent, or a CI checkout that mounts
-// its secrets elsewhere — so the live tests can be run there without a key
-// ever being copied into the tree. It holds a path, never a key.
-const envFileVar = "GOODALL_ENV_FILE"
-
-// envFilePath is the .env beside go.mod, or whatever envFileVar names. It is
-// found by walking up from the test's working directory rather than assumed
-// to be one level up, so the tests work from any package directory; where the
-// file is absent, the path named here is what the skip message tells the
-// reader to create.
-func envFilePath() (string, error) {
-	if override := os.Getenv(envFileVar); override != "" {
-		return override, nil
-	}
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return filepath.Join(dir, ".env"), nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", os.ErrNotExist
-		}
-		dir = parent
-	}
 }
 
 // liveWeatherTool is the tool the live round trip offers. Its handler is

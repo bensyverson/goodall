@@ -47,12 +47,35 @@ const (
 	ReasoningEffortField ReasoningStyle = "reasoning_effort"
 )
 
+// OutputCap is the member a dialect reads the output-token cap from. The zero
+// value is [CapMaxTokens], the name the original Chat Completions format
+// defined and the one every compatible server still understands.
+type OutputCap string
+
+const (
+	// CapMaxTokens is "max_tokens", the original member.
+	CapMaxTokens OutputCap = ""
+	// CapMaxCompletionTokens is "max_completion_tokens", which OpenAI's
+	// reasoning models take instead: api.openai.com refuses max_tokens on
+	// them outright (HTTP 400, "Unsupported parameter: 'max_tokens' is not
+	// supported with this model", observed 2026-09-15) rather than
+	// ignoring it, so the name is not interchangeable.
+	CapMaxCompletionTokens OutputCap = "max_completion_tokens"
+)
+
 // Quirks is what one dialect accepts. It is a struct rather than a map so the
 // set of questions is fixed, the answers are typed, and a new question is a
 // compile error in the table below rather than a silently missing key.
 type Quirks struct {
 	// Reasoning is how the thinking configuration is sent.
 	Reasoning ReasoningStyle
+	// OutputCap is the member the output-token cap travels in.
+	OutputCap OutputCap
+	// StreamUsage is whether a streamed request must ask for the usage
+	// report through stream_options.include_usage. A server that needs
+	// asking and is not asked streams no usage chunk at all, so the answer
+	// arrives with every token count at zero.
+	StreamUsage bool
 	// ReasoningDetails is whether reasoning_details entries come back and
 	// are re-sent verbatim on the next turn. They are the model-agnostic
 	// carrier of Anthropic signatures and OpenAI encrypted reasoning, so a
@@ -82,16 +105,18 @@ type Quirks struct {
 
 // Quirks is what this dialect accepts. The table:
 //
-//	                    OpenRouter  OpenAI  LMStudio  Generic
-//	Reasoning           object      effort  effort    none
-//	ReasoningDetails    yes         no      no        no
-//	CacheControl        yes         no      no        no
-//	Routing             yes         no      no        no
-//	Plugins             yes         no      no        no
-//	SessionID           yes         no      no        no
-//	Debug               yes         no      no        no
-//	Metadata            yes         yes     no        no
-//	UsageCost           yes         no      no        no
+//	                    OpenRouter  OpenAI            LMStudio    Generic
+//	Reasoning           object      effort            effort      none
+//	OutputCap           max_tokens  max_completion_…  max_tokens  max_tokens
+//	StreamUsage         no          yes               yes         no
+//	ReasoningDetails    yes         no                no          no
+//	CacheControl        yes         no                no          no
+//	Routing             yes         no                no          no
+//	Plugins             yes         no                no          no
+//	SessionID           yes         no                no          no
+//	Debug               yes         no                no          no
+//	Metadata            yes         yes               no          no
+//	UsageCost           yes         no                no          no
 func (d Dialect) Quirks() Quirks {
 	switch d {
 	case OpenRouter:
@@ -107,9 +132,14 @@ func (d Dialect) Quirks() Quirks {
 			UsageCost:        true,
 		}
 	case OpenAI:
-		return Quirks{Reasoning: ReasoningEffortField, Metadata: true}
+		return Quirks{
+			Reasoning:   ReasoningEffortField,
+			OutputCap:   CapMaxCompletionTokens,
+			StreamUsage: true,
+			Metadata:    true,
+		}
 	case LMStudio:
-		return Quirks{Reasoning: ReasoningEffortField}
+		return Quirks{Reasoning: ReasoningEffortField, StreamUsage: true}
 	default:
 		return Quirks{}
 	}

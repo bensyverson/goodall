@@ -1,0 +1,20 @@
+{
+  "model": "gpt-5.6-terra",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "A cyclist rides 40 km at 24 km/h, starting at 14:00. Answer in one short sentence: when do they finish?"
+        }
+      ]
+    }
+  ],
+  "max_completion_tokens": 2048,
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  },
+  "reasoning_effort": "low"
+}

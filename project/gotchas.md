@@ -49,3 +49,7 @@ Unlike v1, json/v2 writes a nil slice as an empty array unless the field asks fo
 ## 2026-09-15 A hand-written SSE fixture needs a blank line after `data: [DONE]`
 
 An authored OpenRouter stream that ends `data: [DONE]\n` instead of `data: [DONE]\n\n` decodes as a stream that never terminated: the framer dispatches an event only on the blank line, so the terminal frame is never delivered and the run fails with "the stream ended before message_stop, so the message is incomplete" — an error that points at the accumulator rather than at the missing newline. Every recorded fixture ends in `\n\n`; check the tail bytes (`tail -c 30 file | xxd`) before blaming the decoder.
+
+## 2026-09-15 Recording a provider fixture from a *refused* request leaves a JSON error body in a `.sse` file
+
+`scripts/record-fixtures` saved whatever came back, whether or not the call succeeded — the right call for a stream that broke halfway, the wrong one for an HTTP 400, whose body is a JSON error envelope. The run aborts and prints the error, but the file stays on disk, and the next `go test` reads it as a recording of an answer: the failure surfaces as `the stream ended before message_stop` on a fixture nobody remembers writing. Fixed at the source (`recorder.refused` discards a capture whose status is not 200), so this is only a warning to anyone who finds an old one: delete the fixture as well as re-running the recorder.

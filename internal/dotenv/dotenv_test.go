@@ -176,3 +176,61 @@ func TestLookupReportsAnEmptyValueAsMissing(t *testing.T) {
 		t.Error("Lookup reported an empty value as present; a blank key cannot authenticate a call")
 	}
 }
+
+func TestRepoEnvFileHonoursTheOverride(t *testing.T) {
+	want := filepath.Join(t.TempDir(), "elsewhere.env")
+	t.Setenv(EnvFileVar, want)
+
+	got, err := RepoEnvFile()
+	if err != nil {
+		t.Fatalf("RepoEnvFile with %s set: %v", EnvFileVar, err)
+	}
+	if got != want {
+		t.Errorf("RepoEnvFile = %q, want the overridden path %q", got, want)
+	}
+}
+
+func TestRepoEnvFileWalksUpToTheModuleRoot(t *testing.T) {
+	t.Setenv(EnvFileVar, "")
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.test\n"), 0o600); err != nil {
+		t.Fatalf("writing the fake module root: %v", err)
+	}
+	deep := filepath.Join(root, "pkg", "inner")
+	if err := os.MkdirAll(deep, 0o700); err != nil {
+		t.Fatalf("making the nested package directory: %v", err)
+	}
+	t.Chdir(deep)
+
+	got, err := RepoEnvFile()
+	if err != nil {
+		t.Fatalf("RepoEnvFile from a nested package: %v", err)
+	}
+	// The temporary directory may be reached through a symlink, so the
+	// answer is compared after resolving both sides.
+	want := filepath.Join(root, ".env")
+	if resolve(t, got) != resolve(t, want) {
+		t.Errorf("RepoEnvFile = %q, want the .env beside go.mod at %q", got, want)
+	}
+}
+
+func TestRepoEnvFileReportsThatThereIsNoModuleRoot(t *testing.T) {
+	t.Setenv(EnvFileVar, "")
+	t.Chdir(t.TempDir())
+
+	if _, err := RepoEnvFile(); err == nil {
+		t.Fatal("RepoEnvFile found a module root above a directory that has none")
+	}
+}
+
+// resolve follows symlinks so two spellings of the same directory compare
+// equal; macOS reaches the temporary directory through /var, which is a link
+// to /private/var.
+func resolve(t *testing.T, path string) string {
+	t.Helper()
+	dir, err := filepath.EvalSymlinks(filepath.Dir(path))
+	if err != nil {
+		return path
+	}
+	return filepath.Join(dir, filepath.Base(path))
+}

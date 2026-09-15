@@ -55,9 +55,12 @@ func translateRequest(req *goodall.Request, d Dialect, stream bool) (*chatReques
 		Model:      req.Model,
 		Tools:      wireTools(req.Tools),
 		ToolChoice: wireToolChoice(req.ToolChoice),
-		MaxTokens:  req.MaxTokens,
 		Stop:       req.StopSequences,
 		Stream:     stream,
+	}
+	t.applyOutputCap(req.MaxTokens, out)
+	if stream && t.quirks.StreamUsage {
+		out.StreamOptions = &streamOptions{IncludeUsage: true}
 	}
 	if req.ToolChoice.NoParallel {
 		serial := false
@@ -147,6 +150,21 @@ func (t *translator) marker(c *goodall.CacheControl) *cacheControl {
 	}
 	t.markers++
 	return &cacheControl{Type: cacheEphemeral, TTL: c.TTL}
+}
+
+// applyOutputCap writes the output-token cap into the member the dialect reads
+// it from. The two names are not interchangeable: api.openai.com refuses
+// max_tokens on a reasoning model rather than ignoring it, and a request that
+// sent both would be refused for the one it should not have sent.
+func (t *translator) applyOutputCap(max int, out *chatRequest) {
+	if max == 0 {
+		return
+	}
+	if t.quirks.OutputCap == CapMaxCompletionTokens {
+		out.MaxCompletion = max
+		return
+	}
+	out.MaxTokens = max
 }
 
 // applyReasoning writes the thinking configuration in the shape the dialect

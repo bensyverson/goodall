@@ -1,0 +1,12 @@
+data: {"id":"gen-1789478315-ab0XwQJujoaebf3o1Xnw","object":"chat.completion.chunk","created":1789478315,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"Or","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478315-ab0XwQJujoaebf3o1Xnw","object":"chat.completion.chunk","created":1789478315,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"ange","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1789478315-ab0XwQJujoaebf3o1Xnw","object":"chat.completion.chunk","created":1789478315,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"stop","native_finish_reason":"end_turn"}]}
+
+data: {"id":"gen-1789478315-ab0XwQJujoaebf3o1Xnw","object":"chat.completion.chunk","created":1789478315,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","service_tier":"default","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"stop","native_finish_reason":"end_turn"}],"usage":{"prompt_tokens":24,"completion_tokens":5,"total_tokens":29,"cost":0.00024255,"is_byok":false,"prompt_tokens_details":{"cached_tokens":0,"cache_write_tokens":0,"audio_tokens":0,"video_tokens":0},"cost_details":{"upstream_inference_cost":0.000245,"upstream_inference_prompt_cost":0.00012,"upstream_inference_completions_cost":0.000125},"completion_tokens_details":{"reasoning_tokens":0,"image_tokens":0,"audio_tokens":0}}}
+
+data: [DONE]
+

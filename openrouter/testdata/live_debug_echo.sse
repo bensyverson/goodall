@@ -1,0 +1,12 @@
+data: {"id":"gen-1789478320-5NzFI1oee3ZE1NvZHbtO","object":"chat.completion.chunk","created":1789478320,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[],"debug":{"echo_upstream_body":{"messages":[{"role":"user","content":[{"type":"text","text":"Answer in one short sentence: what is the capital of France?"}]}],"thinking":{"type":"adaptive","display":"summarized"},"model":"claude-opus-5","stream":true,"metadata":{"user_id":"<redacted>"},"max_tokens":2048,"stop_sequences":[],"cache_control":{"type":"ephemeral"}}}}
+
+data: {"id":"gen-1789478320-5NzFI1oee3ZE1NvZHbtO","object":"chat.completion.chunk","created":1789478320,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"Paris.","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+: OPENROUTER PROCESSING
+
+data: {"id":"gen-1789478320-5NzFI1oee3ZE1NvZHbtO","object":"chat.completion.chunk","created":1789478320,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"stop","native_finish_reason":"end_turn"}]}
+
+data: {"id":"gen-1789478320-5NzFI1oee3ZE1NvZHbtO","object":"chat.completion.chunk","created":1789478320,"model":"anthropic/claude-opus-5","provider":"Claude Platform on AWS","service_tier":"default","choices":[{"index":0,"delta":{"content":"","role":"assistant"},"finish_reason":"stop","native_finish_reason":"end_turn"}],"usage":{"prompt_tokens":24,"completion_tokens":6,"total_tokens":30,"cost":0.0002673,"is_byok":false,"prompt_tokens_details":{"cached_tokens":0,"cache_write_tokens":0,"audio_tokens":0,"video_tokens":0},"cost_details":{"upstream_inference_cost":0.00027,"upstream_inference_prompt_cost":0.00012,"upstream_inference_completions_cost":0.00015},"completion_tokens_details":{"reasoning_tokens":0,"image_tokens":0,"audio_tokens":0}}}
+
+data: [DONE]
+

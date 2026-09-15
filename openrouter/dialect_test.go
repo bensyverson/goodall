@@ -42,8 +42,13 @@ func TestDialectQuirks(t *testing.T) {
 			Metadata:         true,
 			UsageCost:        true,
 		}},
-		{OpenAI, Quirks{Reasoning: ReasoningEffortField, Metadata: true}},
-		{LMStudio, Quirks{Reasoning: ReasoningEffortField}},
+		{OpenAI, Quirks{
+			Reasoning:   ReasoningEffortField,
+			OutputCap:   CapMaxCompletionTokens,
+			StreamUsage: true,
+			Metadata:    true,
+		}},
+		{LMStudio, Quirks{Reasoning: ReasoningEffortField, StreamUsage: true}},
 		{Generic, Quirks{}},
 		{Dialect("something-new"), Quirks{}},
 	} {
@@ -158,5 +163,96 @@ func TestOpenRouterDialectSendsItsOwnMembers(t *testing.T) {
 	}
 	if bytes.Contains(body, []byte(`"reasoning_effort":`)) {
 		t.Errorf("OpenRouter request should carry the reasoning object, not reasoning_effort\nbody: %s", body)
+	}
+}
+
+func TestTheOpenAIDialectCapsTheAnswerWithMaxCompletionTokens(t *testing.T) {
+	// Recorded 2026-09-15: api.openai.com refuses max_tokens on its
+	// reasoning models with HTTP 400 "Unsupported parameter: 'max_tokens'
+	// is not supported with this model. Use 'max_completion_tokens'
+	// instead." OpenRouter accepts either, so only the OpenAI dialect
+	// changes the member name.
+	req := &goodall.Request{
+		Model:     "gpt-6-astra",
+		MaxTokens: 512,
+		Messages:  []goodall.Message{goodall.UserMessage(goodall.Text{Text: "hi"})},
+	}
+	for _, tc := range []struct {
+		dialect Dialect
+		want    string
+		absent  string
+	}{
+		{OpenAI, `"max_completion_tokens":512`, `"max_tokens"`},
+		{OpenRouter, `"max_tokens":512`, `"max_completion_tokens"`},
+		{LMStudio, `"max_tokens":512`, `"max_completion_tokens"`},
+		{Generic, `"max_tokens":512`, `"max_completion_tokens"`},
+	} {
+		t.Run(tc.dialect.String(), func(t *testing.T) {
+			wire, err := translateRequest(req, tc.dialect, false)
+			if err != nil {
+				t.Fatalf("translating: %v", err)
+			}
+			body, err := json.Marshal(wire)
+			if err != nil {
+				t.Fatalf("marshalling: %v", err)
+			}
+			if !bytes.Contains(body, []byte(tc.want)) {
+				t.Errorf("the body does not carry %s:\n%s", tc.want, body)
+			}
+			if bytes.Contains(body, []byte(tc.absent)) {
+				t.Errorf("the body carries %s, which this dialect does not take:\n%s", tc.absent, body)
+			}
+		})
+	}
+}
+
+func TestTheDialectsThatMustAskForStreamedUsageDoSo(t *testing.T) {
+	// Recorded 2026-09-15: a streamed call to api.openai.com returns no
+	// usage chunk at all unless the request asked for one, so every
+	// streamed OpenAI-dialect answer reported zero tokens. OpenRouter
+	// always sends usage and documents the option as a no-op, so it is not
+	// sent there; Generic keeps to the members every server implements.
+	req := &goodall.Request{
+		Model:    "some/model",
+		Messages: []goodall.Message{goodall.UserMessage(goodall.Text{Text: "hi"})},
+	}
+	for _, tc := range []struct {
+		dialect Dialect
+		want    bool
+	}{
+		{OpenAI, true},
+		{LMStudio, true},
+		{OpenRouter, false},
+		{Generic, false},
+	} {
+		t.Run(tc.dialect.String(), func(t *testing.T) {
+			streamed, err := translateRequest(req, tc.dialect, true)
+			if err != nil {
+				t.Fatalf("translating the streamed request: %v", err)
+			}
+			body, err := json.Marshal(streamed)
+			if err != nil {
+				t.Fatalf("marshalling: %v", err)
+			}
+			asked := bytes.Contains(body, []byte(`"stream_options":{"include_usage":true}`))
+			if asked != tc.want {
+				t.Errorf("stream_options asked = %v, want %v:\n%s", asked, tc.want, body)
+			}
+
+			// A blocking call reports usage without being asked, and
+			// stream_options on a non-streamed request is an error on
+			// some servers.
+			blocking, err := translateRequest(req, tc.dialect, false)
+			if err != nil {
+				t.Fatalf("translating the blocking request: %v", err)
+			}
+			body, err = json.Marshal(blocking)
+			if err != nil {
+				t.Fatalf("marshalling: %v", err)
+			}
+			if bytes.Contains(body, []byte(`"stream_options"`)) {
+				t.Errorf("a blocking request carries stream_options:\n%s", body)
+			}
+		})
 	}
 }

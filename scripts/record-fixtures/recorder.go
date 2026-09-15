@@ -84,6 +84,14 @@ func (t *recordingTransport) taken() capture {
 	return last
 }
 
+// status is the HTTP status of the last round trip, without clearing it. Zero
+// means no call has been made since the last taken.
+func (t *recordingTransport) status() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.last.Status
+}
+
 // requestBody reads the body about to be sent without consuming it. The
 // transport rebuilds the body for each attempt through GetBody, which is the
 // copy to read; a request without one is read and replaced.
@@ -186,6 +194,9 @@ func readable(body []byte) []byte {
 // have, and losing it would mean making the call again to see it.
 func (r *recorder) stream(ctx context.Context, p goodall.Provider, name string, req *goodall.Request) (*goodall.Response, error) {
 	resp, collectErr := p.Stream(ctx, req).Collect()
+	if err := r.refused(name, ".sse", collectErr); err != nil {
+		return resp, err
+	}
 	if err := r.save(name, ".sse"); err != nil {
 		return resp, err
 	}
@@ -197,11 +208,32 @@ func (r *recorder) stream(ctx context.Context, p goodall.Provider, name string, 
 // live_<name>.json.
 func (r *recorder) complete(ctx context.Context, c goodall.Completer, name string, req *goodall.Request) (*goodall.Response, error) {
 	resp, callErr := c.Complete(ctx, req)
+	if err := r.refused(name, ".json", callErr); err != nil {
+		return resp, err
+	}
 	if err := r.save(name, ".json"); err != nil {
 		return resp, err
 	}
 	reportUsage(name, resp)
 	return resp, callErr
+}
+
+// refused reports the error for a call the server turned away before it
+// produced an answer, and discards the capture rather than writing it.
+//
+// A stream that broke halfway is worth keeping — those are exactly the bytes
+// the offline tests should have. A refusal is not: its body is a JSON error
+// envelope, and writing one under a .sse name leaves a file the tests read as
+// a recording of an answer. The error envelopes that belong on disk are
+// recorded deliberately, by [recorder.failing].
+func (r *recorder) refused(name, ext string, callErr error) error {
+	status := r.transport.status()
+	if status == 0 || status == http.StatusOK {
+		return nil
+	}
+	r.transport.taken()
+	return fmt.Errorf("%s: the server refused the request with HTTP %d, so no %s fixture was written: %w",
+		name, status, ext, callErr)
 }
 
 // failing makes one blocking call that is expected to fail and records the
@@ -225,8 +257,9 @@ func (r *recorder) failing(ctx context.Context, c goodall.Completer, name string
 	return nil
 }
 
-// reportUsage prints what one call cost in tokens. Money is not printed:
-// Anthropic reports no price on this API, and a figure this tool invented
+// reportUsage prints what one call cost in tokens, and in money only where the
+// provider itself reported a figure: Anthropic reports no price on this API,
+// so its lines carry none, and a figure this tool invented from a price list
 // would be worse than none.
 func reportUsage(name string, resp *goodall.Response) {
 	if resp == nil {
@@ -234,6 +267,16 @@ func reportUsage(name string, resp *goodall.Response) {
 		return
 	}
 	u := resp.Usage
-	fmt.Printf("    %s: stop=%s input=%d output=%d cache_read=%d cache_write=%d\n",
-		name, resp.StopReason, u.Input, u.Output, u.CacheRead, u.CacheWrite)
+	fmt.Printf("    %s: stop=%s input=%d output=%d reasoning=%d cache_read=%d cache_write=%d%s\n",
+		name, resp.StopReason, u.Input, u.Output, u.Reasoning, u.CacheRead, u.CacheWrite,
+		reportedCost(resp.Cost))
+}
+
+// reportedCost renders a provider's own cost figure, and nothing at all when
+// the provider reported none.
+func reportedCost(c goodall.Cost) string {
+	if !c.Reported {
+		return ""
+	}
+	return fmt.Sprintf(" cost=%s %s", c.Amount, c.Currency)
 }
