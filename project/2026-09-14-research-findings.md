@@ -1,0 +1,171 @@
+# Research findings: APIs, Go 1.27, prior art, and the Swift predecessors
+
+Point-in-time record, 2026-09-14, of the research behind the architecture proposal. It answers the brief's open questions with verified facts, then lists the design implications and the decisions that were still open when it was written. The architecture plan, once agreed, supersedes the *proposal* section here but not the facts.
+
+## Method
+
+- **Anthropic Messages API.** Read from the bundled `claude-api` reference (cached 2026-06-24) and re-fetched live from `https://platform.claude.com/docs/en/build-with-claude/streaming.md`, `.../vision.md` and `https://platform.claude.com/docs/en/api/messages/create.md` (`WebFetch`, 2026-09-14).
+- **OpenRouter.** A research agent read the current docs tree (`https://openrouter.ai/docs/api_reference/*`, `/docs/guides/*`, the `llms.txt` index), the live OpenAPI spec at `https://openrouter.ai/openapi.json`, and made two live unauthenticated calls to `GET https://openrouter.ai/api/v1/models`. Reproduce with `curl -sL https://openrouter.ai/docs/<path>.md`.
+- **Go.** A research agent read the go.dev release notes for 1.23–1.27 and the source of the official SDKs; the two load-bearing claims (json/v2 GA, generic methods) were re-verified here with `go run` on `go1.27.0 darwin/arm64`.
+- **Swift predecessors.** Two read-only agents surveyed `../LLM` (27 source files, 4,275 lines, 372 tests) and `../Operator` (60 source files, 4,634 lines, 255 tests), including commit history.
+
+Anything a source could not confirm is marked UNVERIFIED.
+
+## 1. Anthropic Messages API: facts that shape the design
+
+**Endpoint and headers.** `POST https://api.anthropic.com/v1/messages`, `x-api-key`, `anthropic-version: 2023-06-01`, optional `anthropic-beta`. `GET /v1/models` and `/v1/models/{id}` return `max_input_tokens`, `max_tokens` and a typed `capabilities` tree with `{supported: bool}` leaves: `image_input`, `pdf_input` (separate flags), `thinking.types.{adaptive,enabled}`, `effort.{low..max}`, `structured_outputs`, `context_management.*`, `batch`, `citations`, `code_execution`.
+
+**Request.** `model`, `max_tokens` (required), `messages` (roles `user`/`assistant`, plus mid-conversation `system` on Opus 5 and Fable 5.x), `system` (string or text blocks), `tools`, `tool_choice`, `thinking`, `output_config{effort, format}`, `metadata`, `stop_sequences`, `stream`, top-level `cache_control`, `service_tier`, `container`, `inference_geo`, `fallbacks`. `temperature`/`top_p`/`top_k` are rejected on Opus 4.7+ and Fable. Consecutive same-role messages are merged server-side. Assistant prefill is a 400 on all current models.
+
+**Content blocks (input).** `text`, `image` (source `base64`|`url`|`file`; JPEG/PNG/GIF/WebP; 10 MB; 8000 px; 600 per request, stricter per-image limits above 20), `document` (PDF or text; source `base64`|`text`|`content`|`url`|`file`; optional `title`, `context`, `citations`), `tool_use` (`id`, `name`, `input` object), `tool_result` (`tool_use_id`, `is_error`, `content` as string **or** a list of `text`/`image`/`document`/`search_result` blocks), `thinking` (`thinking`, `signature`), `redacted_thinking` (`data`), `server_tool_use`, `container_upload`, `search_result`. Every block accepts `cache_control`.
+
+**Response.** `id`, `model`, `content` (blocks above plus server-tool results), `stop_reason` in `end_turn | max_tokens | stop_sequence | tool_use | pause_turn | refusal`, `stop_details` (only on refusal), `usage{input_tokens, output_tokens, cache_creation_input_tokens, cache_read_input_tokens, cache_creation{ephemeral_5m_input_tokens, ephemeral_1h_input_tokens}, server_tool_use, service_tier, iterations, inference_geo, speed}`, `input_transformations`, `diagnostics`. Total prompt size is the sum of the three input-token fields.
+
+**Streaming (SSE).** Events: `message_start` (message with empty content and the *input-side* usage), `content_block_start{index, content_block}`, `content_block_delta{index, delta}` with delta types `text_delta`, `input_json_delta{partial_json}`, `thinking_delta`, `signature_delta`, `citations_delta`, `content_block_stop{index}`, `message_delta{delta{stop_reason, stop_sequence}, usage}` (cumulative), `message_stop`, `ping`, and `error{error{type, message}}` (an `overloaded_error` can arrive mid-stream). The docs require unknown event types to be tolerated. Tool input arrives as partial JSON strings; the final `input` is an object. With `display: "omitted"` a thinking block still opens, gets an empty `thinking_delta` and a `signature_delta`, and closes. `eager_input_streaming: true` on a tool turns off server-side buffering of tool input, at the cost of client-side validation (a truncated input can parse as a valid partial object, so check `stop_reason == max_tokens` before running tools).
+
+**Thinking.** `thinking: {type: "adaptive", display: "summarized"|"omitted"}` plus `output_config.effort` in `low|medium|high|xhigh|max` on 4.6+; `budget_tokens` only on Haiku 4.5 and older; Fable 5.x rejects an explicit `disabled` and always thinks. Default display is `omitted` on 4.7+ (a silent change), so a UI that shows thinking must ask for `summarized`.
+
+**Preserved thinking (the constraint that shapes everything).** Thinking blocks must be passed back **unchanged, including empty ones**. On Fable 5.1 the signature also binds the block to the model that produced it and to the conversation prefix (system prompt, tool set, every earlier message). Editing, reordering or removing an earlier turn, rebuilding `system` or `tools`, or injecting-then-deleting a reminder invalidates every later thinking block; enforced accounts get a 400, others get the block silently dropped (with `input_transformations` under the `thinking-binding-controls-2026-08-01` beta). What stays valid: append-only histories, appended `role: "system"` messages, removing a *leading* run of thinking blocks, reordering tools without changing them, changing parameters outside `system`/`tools`/`messages`, adding or moving `cache_control`, server-side compaction. Simple compaction (summary as a fresh first message, nothing replayed) is fine; keep-tail compaction is not.
+
+**Prompt caching.** Prefix match over `tools` → `system` → `messages`; any byte change invalidates everything after it. Max 4 explicit breakpoints; a top-level `cache_control` auto-places one on the last cacheable block and moves it forward each turn. Minimum cacheable prefix is model-dependent (512 on Opus 5 and Fable, 1024 on Sonnet 5 and Opus 4.8, 4096 on Opus 4.6 and Haiku 4.5). Reads cost 0.1× (0.025× on Fable 5.1); writes 1.25× (5 min) or 2× (1 h). A 20-position lookback window applies. Recommended agent-loop shape: one explicit breakpoint on the last static system block plus top-level automatic caching. Tool definitions must serialise deterministically; the tool *order* is bound too.
+
+**Errors.** `{type: "error", error: {type, message}, request_id}`; types `invalid_request_error` 400, `authentication_error` 401, `billing_error` 402, `permission_error` 403, `not_found_error` 404 (also an unavailable model), `request_too_large` 413, `rate_limit_error` 429 (`retry-after`, `x-ratelimit-*`), `api_error` 500, `overloaded_error` 529. 429/5xx/529 are retryable with backoff.
+
+**Stop-reason handling.** `tool_use` → run tools; `pause_turn` → resend unchanged; `refusal` → stop and never run that turn's tools; `max_tokens` → stop, a cut-off tool input is not runnable; unknown → stop. Anthropic's own Go tool runner encodes exactly this table, with `MaxIterations: 0` meaning unlimited (a trap).
+
+**Recovery after a dropped stream.** Application-level only: save the partial text, start a new request with a user message that quotes it and asks to continue. Tool-use and thinking blocks cannot be partially recovered.
+
+**Vision cost.** `⌈w/28⌉ × ⌈h/28⌉` visual tokens; 4.7+ models downscale to a 2576 px long edge (older: 1568 px).
+
+## 2. OpenRouter: facts that shape the design
+
+**Endpoints.** Base `https://openrouter.ai/api/v1`, `Authorization: Bearer`. `POST /chat/completions` (primary), `POST /responses` (GA since 2026-07-25, stateless only), `POST /messages` (an Anthropic Messages skin), `GET /models`, `GET /generation?id=`, `GET /key`, `GET /credits`. Attribution headers: `HTTP-Referer` (required for attribution) and `X-OpenRouter-Title` (`X-Title` still accepted). `X-Generation-Id` comes back on every response.
+
+**Models catalogue.** `{data: [...], total_count, links.next}`. Per model: `architecture.input_modalities` (`text`, `image`, `file`; `file` is how PDF input is expressed), `output_modalities`, `context_length`, `top_provider.max_completion_tokens`, `supported_parameters` (`tools`, `tool_choice`, `reasoning`, `reasoning_effort`, `structured_outputs`, `response_format`, ...), `pricing` (**decimal strings in USD per token**: `prompt`, `completion`, `input_cache_read`, `input_cache_write`, `input_cache_write_1h`, `web_search`, `request`, `image`, `internal_reasoning`), and a live but undocumented `reasoning{mandatory, supported_efforts, default_effort}` object. Filters: `input_modalities=image`, `supported_parameters=tools`, etc.
+
+**Messages.** Roles `system`/`developer`/`user`/`assistant`/`tool`. Content parts: `text` (with optional `cache_control`), `image_url{url, detail}` (URL or data URL; `detail: "original"` is an OpenRouter extension), `input_audio{data, format}` (base64 only), `file{filename, file_data|file_id}` for PDFs (with the `file-parser` plugin: engines `native`, `mistral-ocr` at $2 per 1,000 pages, `cloudflare-ai` free), `video_url`. Assistant messages carry `content`, `tool_calls`, `reasoning`, `reasoning_details`, `refusal`, `annotations` (file annotations to resend so a PDF is not re-parsed).
+
+**Tools.** OpenAI shape: `tools[].function{name, description, parameters, strict}`; `tool_choice` `none|auto|required|{type:function,function:{name}}`; `parallel_tool_calls` default true. Assistant `tool_calls[].function.arguments` is always a JSON **string**; results are `role: "tool"` messages with `tool_call_id`. `tools` must be resent on every request. For Anthropic models, `strict: true` on a tool is **silently stripped** unless the caller sends `x-anthropic-beta: structured-outputs-2025-11-13`. Structured output via `response_format{type: json_schema, json_schema{name, strict, schema}}`; support is per endpoint, so pair it with `provider.require_parameters: true`.
+
+**Reasoning.** Request `reasoning{effort: none|minimal|low|medium|high|xhigh|max, max_tokens, exclude, enabled, context, mode}` (the OpenAPI schema lists only `effort` and `summary`; the rest are documented and accepted). Mapping to Anthropic: `effort` → a budget ratio of `max_tokens` (0.95 / 0.8 / 0.5 / 0.2 / 0.1), and OpenRouter defaults Claude's `display` to `summarized`. Response: `message.reasoning` (string) and `message.reasoning_details[]` with variants `reasoning.text{text, signature}`, `reasoning.summary{summary}`, `reasoning.encrypted{data}`, each with `id`, `format` (`anthropic-claude-v1`, `openai-responses-v1`, ...) and `index`. **To continue across tool calls, `reasoning_details` must be sent back verbatim and in order**; it is the model-agnostic carrier of Anthropic signatures and OpenAI encrypted reasoning. A mid-conversation effort change is a pseudo-message `{role: system, content: "", configuration_update{reasoning{effort}}}` that must keep its position thereafter.
+
+**Streaming.** `data: {json}` lines, `data: [DONE]`, and comment keep-alives `: OPENROUTER PROCESSING` that a hand-rolled parser must skip. Every stream ends with an extra usage chunk that **repeats `finish_reason`**, so a state machine must not treat it as a second terminal event. `finish_reason` in `stop|length|tool_calls|content_filter|error|null` with unknown values allowed; `native_finish_reason` carries the provider's own string. Tool-call deltas are keyed by `index`, with `id`/`name` on the first fragment and `arguments` fragments after. Mid-stream failures arrive as an SSE event with a top-level `error` (possibly as the only event), so **HTTP 200 does not mean success**; the same applies to blocking responses, which can carry `error` with no `choices` or a per-choice `error` with `finish_reason: "error"`. `stream_options.include_usage` and `usage.include` are deprecated no-ops: usage is always returned.
+
+**Usage and cost.** `usage{prompt_tokens, completion_tokens, total_tokens, prompt_tokens_details{cached_tokens, cache_write_tokens, audio_tokens, video_tokens}, completion_tokens_details{reasoning_tokens, ...}, cost, cost_details{upstream_inference_cost, ...}, is_byok, server_tool_use_details}`. `cost` is USD charged to the account. `GET /generation?id=` adds latency, `native_tokens_*`, `cache_discount`, `provider_name`, `cancelled`.
+
+**Caching.** Anthropic and Qwen need explicit `cache_control` (top-level automatic, or per-block with a 4-breakpoint cap); OpenAI, DeepSeek, Gemini, Grok, Groq, Moonshot cache automatically. OpenRouter translates `cache_control` blocks into OpenAI's `prompt_cache_breakpoint` and back, but TTLs do not translate. Sticky provider routing after a cache hit (10-minute session, keyed from the first system and first user message); `session_id` or `x-session-id` pins it from the first request, which matters for loops whose opening messages vary.
+
+**Provider routing.** `provider{order, allow_fallbacks, require_parameters, only, ignore, quantizations, sort, data_collection, zdr, max_price, ...}`; suffixes `:nitro`, `:floor`, `:free`, `:exacto`, `:thinking` (`:online` deprecated in favour of the `openrouter:web_search` server tool); `models[]` fallback list. `transforms`/middle-out is gone; the replacement is `plugins: [{id: "context-compression"}]`, on by default for endpoints with ≤ 8,192 context.
+
+**Errors.** `{error{code, message, metadata}}`; `code` mirrors the HTTP status only before the response is committed. The stable field to switch on is `error.metadata.error_type` (`context_length_exceeded`, `rate_limit_exceeded`, `provider_overloaded`, `provider_unavailable`, `invalid_image`, `image_too_large`, `unsupported_image_format`, `refusal`, `content_policy_violation`, `payment_required`, `server`, `timeout`, `unmapped`, ...), with `metadata.provider_name`, `provider_code`, `raw`. A model-produced refusal is **not** an error: `message.refusal` with `finish_reason: content_filter`. Sending an image to a text-only model yields "no endpoints found that support image input" (blog-sourced; exact status and `error_type` UNVERIFIED). `Retry-After` on 429 and 503.
+
+**Cancellation.** Closing the connection stops billing on roughly half of the providers (Anthropic, OpenAI, DeepInfra, Together, ...; not Bedrock, Google, Groq, Mistral, ...) and never for non-streaming requests. A library can promise `context.Context` cancellation, not a billing stop.
+
+**Debugging aid.** `debug: {echo_upstream_body: true}` (streaming only) returns the exact body OpenRouter sent upstream, which is the right tool for asserting the cross-provider translation without a live provider.
+
+## 3. Go 1.27: what the floor buys
+
+Verified here on `go1.27.0 darwin/arm64` (`go run` on a scratch module): `encoding/json/v2` and `encoding/json/jsontext` import with no `GOEXPERIMENT`; `omitzero` works; a generic method (`func (r *Reg) Add[T any](...)`) compiles; `jsontext.Value.IsValid()` returns false for an incomplete object.
+
+- **`encoding/json/v2` is GA in 1.27** (the release notes say v1 is now backed by it and `GOEXPERIMENT=nojsonv2` is the temporary opt-out). Changes since the experiment period that stale write-ups miss: the `inline` tag option is now **`embed`**; the `format` and `unknown` tag options, `DiscardUnknownMembers` and `SkipFunc` were removed; numeric `jsontext.Token` accessors now also return errors. Defaults: case-sensitive member matching, unknown members ignored (`RejectUnknownMembers(true)` to refuse), duplicate names rejected. `MarshalToFunc`/`UnmarshalFromFunc` options marshal an interface-typed union without methods on the types (the marshaler may receive the pointer form, so handle both `T` and `*T`). `json.UnmarshalDecode` over a `jsontext.Decoder` decodes one value at a time from an `io.Reader`.
+- **Generic methods** (1.27): a method may declare its own type parameters; interface methods may not. Every incumbent library works around their absence with package-level generic functions.
+- **`uuid` in the standard library** (1.27), including time-sortable v7.
+- **`testing/synctest` GA** (1.25) with `synctest.Sleep` (1.27): deterministic tests for retries, backoff and timeouts.
+- `sync.WaitGroup.Go` (1.25), `errors.AsType[E]` (1.26), `log/slog.NewMultiHandler` (1.26), `reflect.Type.Fields()` iterators (1.26), `bytes.Buffer.Peek` (1.26), a default `goroutineleak` pprof profile (1.27), and `go fix` modernizers (1.27).
+- **Sum types do not exist.** Proposal golang/go#76920 (filed 2025-12-18 by the Go team) did not ship in 1.27. The idiom remains a sealed interface (unexported marker method) plus a type switch.
+
+## 4. Prior art in Go
+
+- **`anthropics/anthropic-sdk-go`** (v1.72.0, `go 1.24`, 17 direct dependencies including AWS, GCP, OTel via Bedrock/Vertex living in the same module). Generated code: `message.go` is 529 KB. Unions are wide structs with every variant's fields (`ContentBlockUnion`) on the response side and `OfX` pointer structs on the request side; the `AsAny()` switch returns an unexported interface. Streaming is `Stream[T].Next()/Current()/Err()` over an SSE decoder that silently drops event types not in a hard-coded list. The accumulator does raw JSON string surgery with `tidwall/sjson`. Its `toolrunner` (beta) is the reference for a type-erased `Tool` interface with a generic typed constructor, parallel tool execution, and the stop-reason table. Open issues worth knowing: #182 (`tool_result.content` typed as array only), #272 (`map[string]any` schemas get their keys sorted, which measurably changes model behaviour), #410/#420 (schema post-processing bugs), #407 (retry timer leak).
+- **`openai/openai-go/v3`** (`go 1.25`, Azure and AWS dependencies): same generator and idioms; its `ChatCompletionAccumulator` has `JustFinishedToolCall()`-style edge detection, a good idea; parameters are `map[string]any`.
+- **Agent frameworks.** `tmc/langchaingo` (65 direct deps, stale since 2026-01), `firebase/genkit` Go (`ai.NewTool[In,Out]`, `WithMaxTurns` default 5, `WithReturnToolRequests` for approval, both callback and `iter.Seq2` streaming), `cloudwego/eino` (`go 1.18`, hand-rolled `StreamReader[T]` with `Copy(n)` fan-out), `google/adk-go` (`Run(...) iter.Seq2[*Event, error]`, but ships gorm, cobra and websocket from a library module), `microsoft/agent-framework-go` (`type ResponseStream iter.Seq2[*ResponseUpdate, error]` with `Collect()`), `modelcontextprotocol/go-sdk` (8 deps; `AddTool[In,Out]` is a package-level function because generic methods did not exist). Neither Anthropic nor OpenAI ships an official Go *agent* SDK.
+- **Streaming shape.** No consensus: `Next()/Current()` (SDKs), `iter.Seq2[T, error]` (every first-party 2026 framework), callbacks (langchaingo, genkit), channels (Mozilla `any-llm-go`). The decisive argument for iterators: they are synchronous and own their cleanup, so a consumer's early `break` unwinds the producer and closes the HTTP body on the consumer's goroutine; channels need a producer goroutine and disciplined draining, and the failure mode is a leaked goroutine holding an open body.
+- **Options.** Google's style guide: an options struct when most callers set several shared options; functional options when most callers set none. Per-request parameters are a struct; client construction is functional options. `param.Opt[T]` exists in the SDKs only because `omitzero` did not.
+- **JSON Schema from structs.** `google/jsonschema-go` (used by the MCP SDK, adk-go, Microsoft) has one test-only dependency and its `infer.go` is about 400 lines of stdlib-only reflection; `invopop/jsonschema` pulls an ordered-map, a YAML library and more. Property order is semantically load-bearing (SDK issue #272), which rules out `map[string]any` anywhere a schema lives.
+- **SSE parsing.** Both SDKs do it in under 200 lines with `bufio.Scanner`; the buffer must be raised well above the 64 KB default (base64 images, large tool inputs). The WHATWG spec also terminates lines on a lone CR, which `bufio.ScanLines` does not handle; a 30-line `SplitFunc` is correct.
+- **Markdown.** No standard-library option. `yuin/goldmark/v2` (v2.1.0, 2026-09-13, MIT, `go 1.25`, **zero dependencies**, CommonMark 0.31.2, raw HTML off by default) is the only actively released zero-dependency choice; about 12k lines. `rsc.io/markdown` is vendored inside the `go` command but not importable. No well-known minimal CommonMark subset exists to vendor; a chat-safe subset (paragraphs, headings, emphasis, inline and fenced code, links, lists, block quotes) is a few hundred lines to hand-write.
+- **Typed capability registries.** None with adoption. Anthropic keeps capabilities at runtime behind `GET /v1/models`; OpenRouter exposes two flat string sets. Both keep image and PDF input distinct.
+
+## 5. The Swift predecessors: carry over and change
+
+**`../LLM`.** One flat module whose "neutral" types are OpenAI's wire format with Anthropic bolted on via mutable `useAnthropicToolFormat` flags on the request struct, two near-identical request builders, and a `skip*` boolean cascade grown one commit per model quirk. Thinking blocks never round-trip (signature discarded), `stop_reason` is not surfaced, HTTP error bodies are written to stderr and collapsed to a status code, audio/video enum cases exist but are dropped, breaking out of a stream does not cancel the request, and the OpenRouter SSE quirks (multiple JSON objects in one `data:` line, `reasoning` vs `reasoning_content`, missing blank-line separators) each cost a fix commit. Worth keeping: immutable value-typed conversations, the `Fast/Standard/Flagship × Direct/Reasoning` tiering, tri-state "unknown model, assume yes" capabilities, one result type shared by the streaming and blocking paths, sorted-key serialisation for cache stability, an injectable image resizer/describer with a `warnings` list for silent degradation, and encode/decode table tests over captured JSON (372 of them).
+
+**`../Operator`.** Three layers (stateless wire, loop, composition); `Operative` is a struct with all mutable state local to the run; one `AsyncStream<Operation>` output with a documented ordering contract and a `result()` adapter; five-method middleware with the doctrine "events for observation, hooks for control"; budgets (turns, tokens, per-turn tokens, wall clock) as an invariant with no unbounded mode; schemas derived from `Codable` structs with description keys validated at registration; rich schema-aware tool-error messages fed back to the model; `appendToolExchange` for injecting recalled context as a synthetic tool exchange without disturbing the prefix. Pain: `any Error` inside the event enum made it non-`Codable`, which is why no front-end SSE/JSON surface ever existed; cancellation returns silently with no terminal event; a live bug leaves a dangling `tool_use` on argument-parse failure; `beforeToolCalls` errors are swallowed while the docs promise short-circuiting; compaction rewrites the caller's history destructively; cache-token fields are dropped from usage; the MCP SDK is compiled into the core target; the design history was gitignored and deleted.
+
+## 6. Design implications (invariants the plan must state)
+
+1. **History is append-only.** Preserved thinking makes any edit of an earlier turn a correctness bug, not a cache miss. Hooks may rewrite the *new* user turn before it is committed and may append; they may not edit, reorder or delete. Compaction is "summary as a fresh first message", never keep-tail. Redaction for front ends is a *view*, never a rewrite of the canonical thread.
+2. **Thinking blocks are opaque payloads that round-trip byte-exact and in order**, on both providers (`signature` on Anthropic, `reasoning_details` on OpenRouter). The neutral model carries display text *and* the provider's raw block.
+3. **One neutral block model in both directions**, including thinking and tool blocks. The Swift port's four overlapping representations are why thinking could not round-trip.
+4. **Every event is JSON-serialisable.** Tool errors travel as message plus typed code; a front-end SSE/NDJSON feed then costs nothing.
+5. **Streaming is the only provider path; blocking is `Collect()` on the stream.** One result type, by construction.
+6. **HTTP 200 is not success and stop reasons are typed.** Both providers can deliver an error in a 200 body; `finish_reason` appears twice on OpenRouter streams; unknown enum values and unknown event types are surfaced, never dropped.
+7. **Schemas are ordered typed structs, never maps.** Property order changes model behaviour.
+8. **Deterministic request bytes.** Stable field order, stable tool order, no timestamps or ids in the prefix; a test asserts that two consecutive requests share a byte-identical prefix.
+9. **Every `tool_use` gets a `tool_result`**, including parse failures and unknown tools, assembled as one unit.
+10. **A finite turn budget by default**, and a terminal event on every exit path including cancellation, carrying the conversation so far.
+11. **Capabilities are runtime facts** (from each provider's models endpoint, cached), tri-state with "unknown means try", enforced as typed pre-flight errors and translated provider errors, not as compile-time phantom types.
+12. **The core takes no dependencies.** On Go 1.27 that is easier than the alternative: json/v2 replaces the raw-JSON surgery libraries, `uuid` is in std, schema inference is ~400 lines of reflection, and `synctest` covers timing tests.
+
+## 7. Proposed approach (proposed 2026-09-14, not yet decided)
+
+> Recorded here so the reasoning survives; the agreed version becomes the architecture plan.
+
+**One module, layered packages.** The Swift split into two packages cost re-exports, twenty type aliases and cross-module default-argument pain, and the eventual reversal; Go modules would add version skew and `replace` directives on top. One module, with the layering enforced by package boundaries and a dependency-direction check in tests:
+
+| Package | Holds | Depends on |
+|---|---|---|
+| `goodall` | `Block` sealed interface and its concrete types (`Text`, `Image`, `Document`, `ToolUse`, `ToolResult`, `Thinking`, `RedactedThinking`), `Message`, `Conversation` (append-only value), `Request`, `Provider` interface, `Stream` (`iter.Seq2[Event, error]` with `Collect`), the `Event` family, `Tool` interface and `NewTool[In]` with struct-tag schema inference, `Schema`, `Usage`/`Cost`, `Thinking` config, `CachePolicy`, `Capabilities`, `*APIError`, and the `Agent` loop with hooks and budget | std only |
+| `goodall/anthropic` | Messages API client: wire structs, SSE decoder, translation both ways, models endpoint, pricing table | `goodall` |
+| `goodall/openrouter` | Chat Completions client: wire structs, SSE decoder (keep-alive comments, double finish reason, 200-with-error), `reasoning_details` round-trip, models endpoint with live pricing, provider routing options | `goodall` |
+| `goodall/chat` | `Thread` (id + conversation + usage + cost) and a `ThreadStore` interface with an in-memory implementation, the redaction view, an SSE/NDJSON event writer, `net/http` handler helpers, a `Renderer` interface with a zero-dependency chat-safe Markdown subset | `goodall` |
+| `goodall/internal/sse` | The shared SSE framer | std only |
+
+**Core surface, sketched.**
+
+```go
+type Provider interface {
+    Stream(ctx context.Context, req *Request) Stream
+}
+type Stream iter.Seq2[Event, error]
+func (s Stream) Collect() (*Message, error)
+
+type Tool interface {
+    Name() string; Description() string; Schema() *Schema
+    Execute(ctx context.Context, input jsontext.Value) (ToolResult, error)
+}
+func NewTool[In any](name, description string, run func(context.Context, In) (ToolResult, error)) (Tool, error)
+
+type Agent struct { Provider Provider; Model string; System string; Tools []Tool; Budget Budget; Hooks Hooks; Thinking Thinking; Cache CachePolicy }
+func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stream   // events; Collect() gives Result
+```
+
+Events are one flat stream: provider events (`MessageStart`, `BlockStart`, `TextDelta`, `ThinkingDelta`, `ToolInputDelta`, `BlockStop`, `MessageDelta`, `MessageStop`, `Unknown`) and loop events (`TurnStart`, `ToolCallStart`, `ToolCallEnd`, `TurnEnd`, `Done`, `Stopped{Reason, Conversation, Usage}`). Hooks are a struct of typed funcs (`BeforeSend`, `AfterReceive`, `BeforeToolCall` returning `Allow | Deny | Modify | Defer`, `AfterToolCall`); every hook error short-circuits; `Defer` ends the run with the pending calls in the result so an approval UI can resume by supplying results. Transport concerns (logging, recording, auth) use an injected `*http.Client`/`http.RoundTripper`. Retries with jittered backoff on 429/529/5xx honour `Retry-After` and are tested with `synctest`.
+
+**Cache control.** `CachePolicy` is a typed constant (`CacheAuto`, `CacheManual`, `CacheOff`). Auto sends a top-level `cache_control` plus one explicit breakpoint on the last static system block; manual honours per-block markers the caller sets and validates the 4-breakpoint budget. OpenRouter translates the same markers for non-Anthropic models.
+
+**Capabilities.** `Capabilities` is a struct of typed tri-state facts (`ImageInput`, `PDFInput`, `AudioInput`, `Tools`, `Thinking` with supported efforts, `CacheControl`, `StructuredOutput`, `ContextWindow`, `MaxOutput`) populated from each provider's models endpoint and cached; a request carrying an input the model is known not to accept fails before the network call with a typed `*CapabilityError`; provider messages such as "no endpoints found that support image input" are translated into the same error.
+
+**Cost.** `Usage` is normalised (input, output, cache read, cache write, reasoning). `Cost` comes from the response when the provider reports it (OpenRouter) and otherwise from a `Pricer`; the thread accumulates both.
+
+**Testing.** Table tests over captured JSON fixtures for every block type and event type on both providers; `httptest.Server` for the transport (status handling, retries, cancellation mid-stream, body close on early break); `synctest` for timing; a byte-identical-prefix test for caching; a recording script under `scripts/` that refreshes fixtures from live APIs when `.env` is present, so the unit suite stays offline.
+
+## 8. Decisions still open when this was written
+
+1. Package boundary for the loop: in the root package (proposed) or a separate `goodall/agent`.
+2. Thread ownership for the chat layer: server-owned threads behind a `ThreadStore` (proposed; the front end receives a redacted view and sends back only a thread id and the new message) versus client-carried history with a persisted redaction map.
+3. Pricing source when the provider reports no cost (Anthropic): a dated static table, a caller-supplied `Pricer`, or OpenRouter's catalogue fetched at runtime.
+4. Markdown: a zero-dependency chat-safe subset behind a `Renderer` interface (proposed), or a `yuin/goldmark/v2` dependency.
+5. JSON Schema inference: write ~400 lines of reflection (proposed) or depend on `google/jsonschema-go`.
+6. Whether `goodall/openrouter` should double as a generic OpenAI-compatible client (LM Studio, Ollama, vLLM) or stay OpenRouter-specific over an internal OpenAI-shaped core.
+7. Which OpenRouter endpoint: Chat Completions (proposed), `/responses`, or the `/messages` skin (which the Anthropic client could reach with a base-URL override).
+8. Default turn budget, and whether cancellation waits for in-flight tools.
+9. Licence.
+10. Whether MCP client support is in scope for v1 (proposed: backlog).
+
+## Sources
+
+Anthropic: `https://platform.claude.com/docs/en/build-with-claude/streaming.md`, `.../vision.md`, `.../prompt-caching`, `https://platform.claude.com/docs/en/api/messages/create.md`, `https://platform.claude.com/docs/en/about-claude/models/migration-guide.md` (preserved thinking), bundled `claude-api` reference cached 2026-06-24.
+OpenRouter: `https://openrouter.ai/openapi.json`, `https://openrouter.ai/docs/api_reference/streaming`, `.../api_reference/errors-and-debugging`, `https://openrouter.ai/docs/guides/best-practices/reasoning-tokens`, `.../best-practices/prompt-caching`, `.../features/tool-calling`, `.../features/structured-outputs`, `.../routing/provider-selection`, `.../overview/multimodal/{image-understanding,audio,pdfs}`, `https://openrouter.ai/docs/cookbook/administration/usage-accounting`, `https://openrouter.ai/docs/app-attribution`, `https://openrouter.ai/api/v1/models` (live).
+Go: `https://go.dev/doc/go1.27` (language, `encoding/json/v2`), `https://go.dev/doc/go1.26`, `https://go.dev/doc/go1.25`, `https://go.dev/doc/go1.24`, `https://go.dev/doc/go1.23`, `https://github.com/golang/go/issues/76920`, `https://google.github.io/styleguide/go/best-practices`, `https://html.spec.whatwg.org/multipage/server-sent-events.html`.
+Prior art: `https://github.com/anthropics/anthropic-sdk-go` (`packages/ssestream`, `toolrunner`, `betatoolrunner.go`, `schemautil.go`, `model.go`; issues #182, #272, #407, #410, #420), `https://github.com/openai/openai-go`, `https://github.com/firebase/genkit`, `https://github.com/cloudwego/eino`, `https://github.com/google/adk-go`, `https://github.com/microsoft/agent-framework-go`, `https://github.com/modelcontextprotocol/go-sdk`, `https://github.com/tmc/langchaingo`, `https://github.com/google/jsonschema-go`, `https://github.com/yuin/goldmark` (`v2.1.0/go.mod`).
