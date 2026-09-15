@@ -17,7 +17,10 @@ import (
 // The buffered events are the run's alone and are released with it. A run that
 // has ended is removed from the service's table, so a client that attaches
 // after the end reads the thread instead — the thread is the record, and
-// keeping a finished run's events would be a cache with no eviction.
+// keeping a finished run's events would be a cache with no eviction. Between
+// the unregistering and the closing of the subscriptions the terminal event
+// is delivered; a client attaching in that window finds no run and reads the
+// thread, which by then holds the answer.
 type activeRun struct {
 	id       string
 	threadID string
@@ -100,9 +103,10 @@ func (r *activeRun) overflowed(sub *subscriber) bool {
 	return sub.overflow
 }
 
-// end closes every subscription. It runs after the thread has been persisted,
-// so a client that reads its subscription to the end and then reads the
-// thread sees the answer it just watched arrive.
+// end closes every subscription. It runs after the terminal event has been
+// delivered, which is itself after the thread was persisted and freed, so a
+// client that reads its subscription to the end and then reads the thread
+// sees the answer it just watched arrive.
 func (r *activeRun) end() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -113,17 +117,27 @@ func (r *activeRun) end() {
 	}
 }
 
-// drive is the run's own goroutine: read the stream to its terminal event,
-// fan every event out, persist what the run produced, then release the run.
+// drive is the run's own goroutine: read the stream, fan every event out,
+// and at the terminal event persist what the run produced and free the thread
+// before that event is delivered, then close the subscriptions.
+//
+// The order at the end is the contract every client leans on: by the time a
+// subscriber holds the Done or Stopped, the thread is in the store and a Send
+// on it succeeds. A client may therefore stop reading at the terminal event
+// and carry straight on, which is the natural shape of a CLI; delivering the
+// event first would race that client's next Send into ErrThreadBusy and its
+// next Get into the thread as it was.
 func (s *Service) drive(ctx context.Context, run *activeRun, thread *Thread, start func(context.Context) goodall.Stream) {
 	defer s.wg.Done()
 	// Cancelling on the way out closes the provider's request when the
 	// stream ended for any other reason, and releases the context.
 	defer run.cancel()
+	// Closing the subscriptions is the last thing that happens, whatever
+	// ended the stream, so a subscriber never waits on a run that is gone.
+	defer run.end()
 
 	s.log(ctx, slog.LevelDebug, "chat: run started", "run", run.id, "thread", run.threadID)
 
-	var result *goodall.Result
 	for ev, err := range start(ctx) {
 		if err != nil {
 			// Agent.Run and Agent.Resume never yield an error
@@ -133,33 +147,41 @@ func (s *Service) drive(ctx context.Context, run *activeRun, thread *Thread, sta
 				"run", run.id, "thread", run.threadID, "err", err)
 			break
 		}
-		run.emit(ev)
-		switch e := ev.(type) {
-		case goodall.Done:
-			done := e.Result
-			result = &done
-		case goodall.Stopped:
-			stopped := e.Result
-			result = &stopped
+		if result, terminal := terminalResult(ev); terminal {
+			s.persist(run, thread, result)
+			s.unregister(run)
+			run.emit(ev)
+			return
 		}
+		run.emit(ev)
 	}
-
-	if result != nil {
-		s.persist(run, thread, result)
-	}
-	s.release(run)
+	// A stream that ended with no terminal event broke invariant 10; the
+	// thread is left as it was, and freed.
+	s.unregister(run)
 }
 
-// release frees the thread for the next run and closes every subscription. It
-// happens after persistence, so a client that is refused a Send with
-// ErrThreadBusy is refused only while there is really something in flight.
-func (s *Service) release(run *activeRun) {
+// terminalResult reads the result off a run's terminal event, reporting
+// whether the event was one.
+func terminalResult(ev goodall.Event) (*goodall.Result, bool) {
+	switch e := ev.(type) {
+	case goodall.Done:
+		return &e.Result, true
+	case goodall.Stopped:
+		return &e.Result, true
+	}
+	return nil, false
+}
+
+// unregister frees the thread for the next run. It happens after persistence
+// and before the terminal event is delivered, so a client that is refused a
+// Send with ErrThreadBusy is refused only while there is really something in
+// flight, and a client holding the terminal event is never refused.
+func (s *Service) unregister(run *activeRun) {
 	s.mu.Lock()
 	if s.runs[run.threadID] == run {
 		delete(s.runs, run.threadID)
 	}
 	s.mu.Unlock()
-	run.end()
 }
 
 // persist writes what the run produced: the conversation it built, and its

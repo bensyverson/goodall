@@ -51,7 +51,10 @@ type Run struct {
 	// subscription: single-consumer, read once, and detached — not
 	// stopped — by breaking out of the range; a second range over it
 	// finds nothing more. It ends with the run's terminal event, or with
-	// [ErrSubscriberOverflow] if the reader fell too far behind.
+	// [ErrSubscriberOverflow] if the reader fell too far behind. The
+	// terminal event is delivered only after the thread has been
+	// persisted and freed, so a reader may stop at it and send again at
+	// once.
 	Events goodall.Stream
 }
 

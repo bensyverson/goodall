@@ -66,9 +66,8 @@ func Loop(ctx context.Context, svc *chat.Service, in io.Reader, out io.Writer, o
 }
 
 // turn sends one line and prints the run that answers it, reading the stream
-// to its very end: the service persists the thread and frees it for the next
-// turn as the stream closes, so a loop that stopped reading at the terminal
-// event would race its own next Send.
+// to its end. The service persists the thread and frees it before it delivers
+// the terminal event, so the next line can be sent the moment this returns.
 func turn(ctx context.Context, svc *chat.Service, out io.Writer, opts Options, line string) error {
 	run, err := svc.Send(ctx, opts.ThreadID, goodall.Text{Text: line})
 	if err != nil {

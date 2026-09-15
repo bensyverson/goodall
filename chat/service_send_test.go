@@ -1,7 +1,11 @@
 package chat_test
 
 import (
+	"context"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/chat"
@@ -169,4 +173,102 @@ func TestRunEventsIsSingleUse(t *testing.T) {
 		t.Errorf("the second read saw %d events, want none: the stream is single-use", second)
 	}
 	var _ *chat.Run = run
+}
+
+// gatedStore is a MemoryStore whose Put parks until the test lets it go, so a
+// test can hold the service between the run's last event and its persistence
+// and see which the client meets first.
+type gatedStore struct {
+	*chat.MemoryStore
+	entered chan struct{} // closed when the first gated Put begins
+	release chan struct{} // closed by the test to let the Put through
+	once    sync.Once
+	gating  atomic.Bool
+}
+
+func newGatedStore() *gatedStore {
+	return &gatedStore{
+		MemoryStore: chat.NewMemoryStore(),
+		entered:     make(chan struct{}),
+		release:     make(chan struct{}),
+	}
+}
+
+// Put parks while gating is set; the create and the test's own writes go
+// straight through.
+func (g *gatedStore) Put(ctx context.Context, thread *chat.Thread) error {
+	if g.gating.Load() {
+		g.once.Do(func() { close(g.entered) })
+		<-g.release
+	}
+	return g.MemoryStore.Put(ctx, thread)
+}
+
+// TestTheTerminalEventArrivesAfterTheThreadIsPersistedAndFreed is the CLI's
+// shape: a client that stops reading the moment it sees Done and sends the
+// next line at once. The thread must already be persisted and free by the
+// time the terminal event is delivered, or the next Send races into
+// ErrThreadBusy and a Get right after Done reads the thread as it was.
+func TestTheTerminalEventArrivesAfterTheThreadIsPersistedAndFreed(t *testing.T) {
+	agent, _ := agentFor([]fake.Turn{
+		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "one"}),
+		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "two"}),
+	})
+	store := newGatedStore()
+	svc := chat.NewService(agent, store)
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = svc.Shutdown(ctx)
+	})
+	thread := newThread(t, svc)
+	store.gating.Store(true)
+
+	run := send(t, svc, thread.ID, "first")
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for ev := range run.Events {
+			if ev.Type() == goodall.EventDone {
+				return
+			}
+		}
+	}()
+
+	// The run reaches persistence and parks there. Done must not have been
+	// delivered yet: the client is still ranging.
+	select {
+	case <-store.entered:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the run never reached the store")
+	}
+	select {
+	case <-done:
+		t.Fatal("Done was delivered before the thread was persisted")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	close(store.release)
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("Done never arrived after the store let the write through")
+	}
+
+	// By the time Done is in hand the thread is persisted and free.
+	stored, err := svc.Get(t.Context(), thread.ID)
+	if err != nil {
+		t.Fatalf("Get: %v", err)
+	}
+	if stored.Version != 2 {
+		t.Errorf("after Done the thread is at version %d, want 2", stored.Version)
+	}
+	if _, err := svc.Send(t.Context(), thread.ID, goodall.Text{Text: "second"}); err != nil {
+		t.Fatalf("Send right after Done: %v", err)
+	}
+	final := waitForVersion(t, svc, thread.ID, 3)
+	last, _ := final.Conversation.Last()
+	if last.Text() != "two" {
+		t.Errorf("the second answer is %q, want %q", last.Text(), "two")
+	}
 }
