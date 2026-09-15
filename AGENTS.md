@@ -8,7 +8,7 @@ Minimal — ideally zero — dependencies, brought in only with a strong case. M
 
 ## Documentation
 
-- [README.md](README.md) — not yet written; it will cover what goodall is, install, and the quick start for each of the two consumers
+- [README.md](README.md) — the front door: what goodall is, install, a quick start for each of the two consumers (each compiles as an example test), the examples, the package map and links here
 - [project/](project/) — dated design documents, findings and plans, the written history of the project; start with [project/2026-09-14-initial-vision.md](project/2026-09-14-initial-vision.md), **the brief**: use cases, the required product features (providers, streaming, media, thinking, tools, stopping, cache control, Markdown, cost tracking, redaction, hooks), prior art and constraints. Then [project/2026-09-14-research-findings.md](project/2026-09-14-research-findings.md), **the research**: verified facts about the Anthropic and OpenRouter APIs, Go 1.27, Go prior art and the Swift predecessors, the design invariants they imply, and the proposed approach with its open decisions. Then [project/2026-09-14-architecture-plan.md](project/2026-09-14-architecture-plan.md), **the plan**: the decisions and their reasons, the binding invariants, the design of each package, testing, and the task tree that was imported into `job`.
 - [project/backlog.md](project/backlog.md) — work decided against and what would un-park it; read it before proposing something that sounds novel
 - [project/gotchas.md](project/gotchas.md) — project traps and rule feedback; read it at session start
