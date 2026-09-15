@@ -91,6 +91,29 @@ func classifyStop(reason StopReason, toolCalls int) turnOutcome {
 // which is what cancellation, a timeout and a broken stream leave behind.
 const unrunEnded = "This tool was not run: the run ended before the call could start."
 
+// unrunHook is the result text for a tool call a hook stopped before anything
+// ran, which is what a BeforeToolCall or AfterReceive error leaves behind.
+const unrunHook = "This tool was not run: a hook stopped the run before the call could start."
+
+// deniedText is the result text for a call a hook refused without giving a
+// reason, which at least tells the model that the refusal was not the tool's.
+const deniedText = "This tool was not run: a hook refused the call."
+
+// unrunDropped is the result text for a call whose tool did run but whose
+// result the loop did not keep, because a hook failed while the turn's
+// results were being recorded. It says the result is gone rather than that
+// the call did not happen, since the tool's side effects did.
+const unrunDropped = "This tool ran, but its result was not kept: a hook stopped the run while the turn's results were being recorded."
+
+// deferredText says why a run paused, for a person reading a log or a UI.
+func deferredText(calls int) string {
+	if calls == 1 {
+		return "a hook deferred the turn's tool call for approval; it is in the result's pending calls"
+	}
+	return "a hook deferred the turn's " + strconv.Itoa(calls) +
+		" tool calls for approval; they are in the result's pending calls"
+}
+
 // unrunReason is the result text for a tool call the stop reason forbade. It
 // is written for the model, which reads it on any later turn, so it says that
 // the call did not happen and why rather than apologising.

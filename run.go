@@ -33,6 +33,17 @@ type run struct {
 	cost   Cost
 	last   *Response // the last completed turn, nil until one finishes
 	turn   int       // how many turns have started
+
+	// newTurn is the user message the next send will commit: the caller's
+	// input on the first turn, the tool results on later ones, nil when
+	// the run continues from the conversation as it stands. It is held
+	// uncommitted so that BeforeSend can shape it, and committed before
+	// the send and before any terminal event, so the conversation the
+	// result carries is always whole.
+	newTurn *Message
+	// deferred is the turn's tool calls when a hook deferred them, which
+	// is what the terminal Result.Pending reports.
+	deferred []ToolUse
 }
 
 // execute is the loop itself: check the budget, send, forward every event,
@@ -74,9 +85,17 @@ func (r *run) execute(ctx context.Context, input []Block) {
 		}
 		r.agent.log(runCtx, slog.LevelDebug, "goodall: turn start", "turn", r.turn, "model", r.agent.Model)
 
+		// The hook sees the parameters and the uncommitted turn and no
+		// history at all; the loop fills the messages in afterwards, so
+		// nothing a hook writes there can reach an earlier message.
 		req := r.request()
-		// HOOK INSERTION POINT (mi7b09): BeforeSend(ctx, req) runs here,
-		// with the request built and nothing sent yet.
+		if err := r.beforeSend(runCtx, req, r.newTurn); err != nil {
+			r.stop(StopCauseHook, err.Error())
+			return
+		}
+		r.commitNewTurn()
+		req.Messages = r.conv.Messages()
+
 		resp, err := r.streamTurn(runCtx, req)
 		if err != nil {
 			if errors.Is(err, errConsumerLeft) {
@@ -85,12 +104,19 @@ func (r *run) execute(ctx context.Context, input []Block) {
 			r.failTurn(runCtx, resp, err)
 			return
 		}
-		// HOOK INSERTION POINT (mi7b09): AfterReceive(ctx, &resp.Message)
-		// runs here, with the turn complete and nothing appended yet.
 
+		// The hook may shape the response through the pointer, so the
+		// accounting and everything downstream read what it left; the
+		// tokens are counted either way, because they were spent.
+		hookErr := r.afterReceive(runCtx, resp)
 		r.last = resp
 		r.usage = r.usage.Add(resp.Usage)
 		r.cost = r.cost.Add(resp.Cost)
+		if hookErr != nil {
+			r.commit(resp.Message, unrunHook)
+			r.stop(StopCauseHook, hookErr.Error())
+			return
+		}
 		if !r.emit(TurnEnd{Turn: r.turn, Response: *resp}) {
 			return
 		}
@@ -138,9 +164,23 @@ func (r *run) prepare(input []Block) error {
 		r.tools[name] = tool
 	}
 	if len(input) > 0 {
-		r.conv = r.conv.Append(UserMessage(input...))
+		msg := UserMessage(input...)
+		r.newTurn = &msg
 	}
 	return nil
+}
+
+// commitNewTurn appends the turn the run has been holding, if it has one.
+// Every send and every terminal event goes through it, so the conversation a
+// caller gets back always includes the input the run was working on
+// (invariant 10) and never ends in a tool_use with no results message
+// (invariant 9).
+func (r *run) commitNewTurn() {
+	if r.newTurn == nil {
+		return
+	}
+	r.conv = r.conv.Append(*r.newTurn)
+	r.newTurn = nil
 }
 
 // withTimeout derives the run's context. The wall-clock budget carries its own
@@ -156,10 +196,13 @@ func (r *run) withTimeout(ctx context.Context) (context.Context, context.CancelF
 // request builds one turn's request. It is rebuilt each turn from the same
 // fields in the same order, so the prefix a provider caches is byte-stable
 // between turns (invariant 8).
+//
+// Messages is left empty: the loop fills it in after BeforeSend has run, from
+// the conversation plus the turn the hook may have shaped, so a hook is
+// handed the parameters and the new turn and no history to write into.
 func (r *run) request() *Request {
 	req := &Request{
 		Model:     r.agent.Model,
-		Messages:  r.conv.Messages(),
 		Tools:     r.agent.Tools,
 		MaxTokens: r.agent.MaxTokens,
 		Thinking:  r.agent.Thinking,
@@ -211,6 +254,9 @@ func (r *run) streamTurn(ctx context.Context, req *Request) (*Response, error) {
 // left dangling and the conversation can be sent again as it stands
 // (invariant 9).
 func (r *run) commit(msg Message, why string) {
+	// The turn being answered comes first, or the history would read as
+	// an answer to a question nobody asked.
+	r.commitNewTurn()
 	if len(msg.Content) == 0 {
 		// An empty assistant turn is not a turn; appending one would
 		// leave a conversation no provider would accept.
@@ -282,8 +328,7 @@ func (r *run) result() Result {
 	if r.last != nil {
 		out.StopReason = r.last.StopReason
 	}
-	// HOOK INSERTION POINT (mi7b09): Pending is filled here from the tool
-	// calls a hook deferred.
+	out.Pending = r.deferred
 	return out
 }
 
@@ -300,14 +345,17 @@ func (r *run) emit(ev Event) bool {
 
 // done ends a run that reached a natural end.
 func (r *run) done() {
+	r.commitNewTurn()
 	r.agent.log(r.ctx, slog.LevelInfo, "goodall: run done",
 		"turns", r.turn, "tokens", TokensSpent(r.usage))
 	r.emit(Done{Result: r.result()})
 }
 
 // stop ends a run that stopped early for a reason that is not a failure: a
-// budget, a refusal, a cut-off turn, a stop reason goodall does not know.
+// budget, a hook, a refusal, a cut-off turn, a stop reason goodall does not
+// know.
 func (r *run) stop(cause StopCause, message string) {
+	r.commitNewTurn()
 	r.agent.log(r.ctx, slog.LevelInfo, "goodall: run stopped",
 		"cause", cause.String(), "message", message, "turns", r.turn, "tokens", TokensSpent(r.usage))
 	r.emit(Stopped{Cause: cause, Message: message, Result: r.result()})
@@ -317,6 +365,7 @@ func (r *run) stop(cause StopCause, message string) {
 // the provider's classification when there was one, so a caller can decide
 // whether trying again is worth anything.
 func (r *run) fail(cause StopCause, kind ErrorKind, message string) {
+	r.commitNewTurn()
 	r.agent.log(r.ctx, slog.LevelInfo, "goodall: run failed",
 		"cause", cause.String(), "kind", kind.String(), "message", message, "turns", r.turn)
 	r.emit(Stopped{Cause: cause, Message: message, Kind: kind, Result: r.result()})

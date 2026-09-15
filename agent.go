@@ -45,6 +45,11 @@ type Agent struct {
 	// Budget bounds the whole run: turns, tokens and wall clock. The zero
 	// Budget still limits turns, to DefaultMaxTurns.
 	Budget Budget
+	// Hooks are the run's control points: shaping a turn before it is
+	// sent, reading an answer before it is committed, and allowing,
+	// refusing, changing or deferring each tool call. The zero Hooks is
+	// no hooks at all.
+	Hooks Hooks
 	// Logger records turn boundaries, tool calls and how the run ended. A
 	// nil Logger logs nothing, which is the default.
 	Logger *slog.Logger
@@ -56,8 +61,10 @@ type Agent struct {
 //
 // When input is given it is appended to conv as one user message. When it is
 // empty the run continues from conv as it stands, which is how a caller who
-// appended tool results itself carries on. conv is a value and is never
-// modified; the conversation the run built is on the terminal event's Result.
+// appended tool results itself carries on; a run that paused for approval is
+// continued with [Agent.Resume], which assembles the results for you. conv is
+// a value and is never modified; the conversation the run built is on the
+// terminal event's Result.
 //
 // The stream never yields a non-nil error. Every ending — a finished answer,
 // a spent budget, a cancelled context, a provider failure, an agent that was
