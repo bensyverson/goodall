@@ -21,3 +21,7 @@ The bundled skill fires whenever Anthropic is named and insists code call Claude
 ## 2026-09-14 A literal BOM in a Go string literal breaks the *source file*, not just the test
 
 Writing a test case for BOM-stripping with `"﻿" + "data: ..."` fails the build with `illegal byte order mark` — Go rejects an actual U+FEFF byte sequence anywhere in a source file except as the file's own leading bytes, and a string-writing tool that emits the literal UTF-8 bytes for `﻿` (rather than the six ASCII characters `\`, `u`, `F`, `E`, `F`, `F`) triggers this even though the *text* looks like a harmless escape. Use `"\xEF\xBB\xBF"` (raw hex-byte escapes) instead: it stays plain ASCII in the source and only becomes the BOM at runtime.
+
+## 2026-09-14 Inside `synctest.Test`, derive contexts from `context.Background()`, not `t.Context()`
+
+`synctest.Test` waits for every bubbled goroutine to exit before it returns, and `t.Context()` is only cancelled when the test function returns; a goroutine parked on that context (the transport's body watcher, anything selecting on `ctx.Done()`) deadlocks the bubble. A nil `Done` channel is the mirror trap: a `select` over one is not durably blocked, so the bubble never goes idle and fake time never advances. Found by the transport leaf (`internal/transport/retry_test.go` shows the working pattern).
