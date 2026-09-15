@@ -1,0 +1,30 @@
+{
+  "id": "msg_01Fixture",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-opus-4-5-20251101",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "The user wants the weather in Paris. I should call get_weather.",
+      "signature": "ErUBCkYIBRgCIkDfixtureSignature=="
+    },
+    {
+      "type": "text",
+      "text": "Let me check the weather."
+    },
+    {
+      "type": "tool_use",
+      "id": "toolu_01Fixture",
+      "name": "get_weather",
+      "input": {"location":"Paris"}
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 412,
+    "cache_read_input_tokens": 1024,
+    "output_tokens": 187
+  }
+}

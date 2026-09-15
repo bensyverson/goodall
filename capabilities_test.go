@@ -13,6 +13,7 @@ func sameCapabilities(a, b Capabilities) bool {
 		return false
 	}
 	return a.ImageInput == b.ImageInput &&
+		a.ThinkingStyle == b.ThinkingStyle &&
 		a.PDFInput == b.PDFInput &&
 		a.AudioInput == b.AudioInput &&
 		a.Tools == b.Tools &&
@@ -215,6 +216,44 @@ func TestModelInfoJSON(t *testing.T) {
 	}
 	if back.ID != info.ID || back.Provider != info.Provider || !sameCapabilities(back.Capabilities, info.Capabilities) {
 		t.Fatalf("round trip = %+v, want %+v", back, info)
+	}
+}
+
+// TestModelInfoThinkingStyleAndDisplayName: the catalogue's word on which
+// thinking form a model takes, and its human name, survive a round trip and
+// are omitted when the provider published neither.
+func TestModelInfoThinkingStyleAndDisplayName(t *testing.T) {
+	info := ModelInfo{
+		ID:           "claude-opus-4-6",
+		DisplayName:  "Claude Opus 4.6",
+		Capabilities: Capabilities{Thinking: Supported, ThinkingStyle: ThinkingAdaptive},
+	}
+	const want = `{"id":"claude-opus-4-6","display_name":"Claude Opus 4.6","capabilities":{"thinking":"supported","thinking_style":"adaptive"}}`
+	got, err := json.Marshal(info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Fatalf("marshal = %s, want %s", got, want)
+	}
+	var back ModelInfo
+	if err := json.Unmarshal(got, &back); err != nil {
+		t.Fatal(err)
+	}
+	if back.DisplayName != info.DisplayName || back.Capabilities.ThinkingStyle != ThinkingAdaptive {
+		t.Fatalf("round trip = %+v, want %+v", back, info)
+	}
+	for _, style := range []ThinkingStyle{ThinkingStyleUnknown, ThinkingAdaptive, ThinkingBudget} {
+		if style.String() == "" {
+			t.Errorf("%q has an empty String", string(style))
+		}
+	}
+	bare, err := json.Marshal(ModelInfo{ID: "x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(bare) != `{"id":"x","capabilities":{}}` {
+		t.Errorf("unset fields were written: %s", bare)
 	}
 }
 

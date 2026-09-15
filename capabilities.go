@@ -105,6 +105,10 @@ type Capabilities struct {
 	// StructuredOutput is whether the model constrains its answer to a
 	// schema.
 	StructuredOutput Support `json:"structured_output,omitzero"`
+	// ThinkingStyle is which form of thinking the model takes, where the
+	// provider distinguishes them; the zero value means it did not say,
+	// which leaves a provider's own heuristic in charge.
+	ThinkingStyle ThinkingStyle `json:"thinking_style,omitzero"`
 	// ThinkingEfforts are the rungs of the effort ladder this model
 	// accepts; empty means the provider did not say.
 	ThinkingEfforts []Effort `json:"thinking_efforts,omitzero"`
@@ -114,6 +118,30 @@ type Capabilities struct {
 	// MaxOutput is the largest completion the model produces, in tokens;
 	// zero means unknown.
 	MaxOutput int `json:"max_output,omitzero"`
+}
+
+// ThinkingStyle is which form of extended thinking a model takes: the
+// effort-driven adaptive form or the older explicit token budget. It is a
+// fact from the catalogue, kept separate from Thinking (whether the model
+// thinks at all) because a provider translates the same ThinkingConfig
+// differently for each form.
+type ThinkingStyle string
+
+const (
+	// ThinkingStyleUnknown is the zero value: the provider did not say.
+	ThinkingStyleUnknown ThinkingStyle = ""
+	// ThinkingAdaptive takes an effort rung and decides its own budget.
+	ThinkingAdaptive ThinkingStyle = "adaptive"
+	// ThinkingBudget takes an explicit token budget.
+	ThinkingBudget ThinkingStyle = "budget"
+)
+
+// String names the style, calling the zero value "unknown".
+func (s ThinkingStyle) String() string {
+	if s == ThinkingStyleUnknown {
+		return "unknown"
+	}
+	return string(s)
 }
 
 // Get reads one capability by name, so a check can be written once over
@@ -147,6 +175,9 @@ type ModelInfo struct {
 	ID string `json:"id,omitzero"`
 	// Provider names the provider the facts came from.
 	Provider string `json:"provider,omitzero"`
+	// DisplayName is the provider's human-readable name for the model,
+	// empty when it publishes none.
+	DisplayName string `json:"display_name,omitzero"`
 	// Capabilities is what the model accepts.
 	Capabilities Capabilities `json:"capabilities"`
 	// Pricing is the per-token price, or nil when the provider publishes

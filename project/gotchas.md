@@ -29,3 +29,7 @@ Writing a test case for BOM-stripping with `"﻿" + "data: ..."` fails the build
 ## 2026-09-14 A second `json.WithUnmarshalers` replaces the first instead of adding to it
 
 The root package now has two interface dispatches, `Block` and `Event`. Building the option set as `json.JoinOptions(json.WithUnmarshalers(evFn), blockUnmarshalers)` compiles and runs, and the *event* dispatch silently never fires: json/v2 treats a later option of the same kind as an override, so only the block unmarshalers survive. The failure reads as "cannot derive concrete type for nil interface with finite type set" on the outer type, which points at the interface rather than at the options. Join the funcs, not the options: `json.WithUnmarshalers(json.JoinUnmarshalers(json.UnmarshalFromFunc(a), json.UnmarshalFromFunc(b)))`. Any leaf adding a third dispatch does the same.
+
+## 2026-09-15 `gofmt -w .` and `gofmt -l .` from the main checkout recurse into `.claude/worktrees/`
+
+Unlike the Go toolchain's `./...`, gofmt walks every directory including dot-directories, so a formatting pass in the main checkout rewrites files in every running agent's worktree and `gofmt -l .` reports their half-written files as yours. Format only what git tracks: `gofmt -l -w $(git ls-files '*.go')`. The same applies to any `find`-style tool run from the root.
