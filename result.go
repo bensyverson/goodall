@@ -18,6 +18,10 @@ type Response struct {
 	// StopSequence is the stop sequence that ended the turn, empty
 	// otherwise.
 	StopSequence string `json:"stop_sequence,omitzero"`
+	// NativeStopReason is the upstream model's own stop string when a
+	// router normalised it into StopReason, for diagnostics; empty when
+	// StopReason is already the wire string.
+	NativeStopReason string `json:"native_stop_reason,omitzero"`
 	// Usage counts the tokens this call consumed.
 	Usage Usage `json:"usage,omitzero"`
 	// Cost is what the call cost, when the provider says so.

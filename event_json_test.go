@@ -116,6 +116,11 @@ func eventCases() []eventCase {
 			want:  `{"type":"message_delta","stop_reason":"stop_sequence","stop_sequence":"END"}`,
 		},
 		{
+			name:  "message delta carrying the upstream provider's own stop reason",
+			event: MessageDelta{StopReason: StopEndTurn, NativeStopReason: "end_turn"},
+			want:  `{"type":"message_delta","stop_reason":"end_turn","native_stop_reason":"end_turn"}`,
+		},
+		{
 			name:  "message stop",
 			event: MessageStop{},
 			want:  `{"type":"message_stop"}`,

@@ -78,6 +78,8 @@ type ModelLister interface {        // optional
 >
 > *`Request.Extensions` is an `Extension` interface* with one method, `Provider() string`. Each provider defines its own options struct, names itself, and rejects another provider's before sending, so a request built for one provider fails loudly on another instead of losing its options.
 
+> **Added 2026-09-15 before the provider fan-out.** OpenRouter normalises the upstream model's stop string into its own `finish_reason` and reports the original as `native_finish_reason`; the neutral model had no slot for it. `MessageDelta` and `Response` now carry `NativeStopReason string`, empty on a provider whose wire string *is* the `StopReason` (Anthropic). It is diagnostic only: the loop acts on `StopReason`.
+
 **Tools.**
 
 ```go

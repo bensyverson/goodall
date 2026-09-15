@@ -35,6 +35,7 @@ type Accumulator struct {
 	model        string
 	stopReason   StopReason
 	stopSequence string
+	nativeStop   string
 	usage        Usage
 	cost         Cost
 
@@ -151,6 +152,9 @@ func (a *Accumulator) Apply(ev Event) error {
 		}
 		if e.StopSequence != "" {
 			a.stopSequence = e.StopSequence
+		}
+		if e.NativeStopReason != "" {
+			a.nativeStop = e.NativeStopReason
 		}
 		a.usage = laterUsage(a.usage, e.Usage)
 		if e.Cost != (Cost{}) {
@@ -288,13 +292,14 @@ func (a *Accumulator) Message() Message {
 // would only give every caller two paths to write.
 func (a *Accumulator) Response() *Response {
 	return &Response{
-		ID:           a.id,
-		Model:        a.model,
-		Message:      a.Message(),
-		StopReason:   a.stopReason,
-		StopSequence: a.stopSequence,
-		Usage:        a.usage,
-		Cost:         a.cost,
+		ID:               a.id,
+		Model:            a.model,
+		Message:          a.Message(),
+		StopReason:       a.stopReason,
+		StopSequence:     a.stopSequence,
+		NativeStopReason: a.nativeStop,
+		Usage:            a.usage,
+		Cost:             a.cost,
 	}
 }
 

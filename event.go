@@ -141,12 +141,16 @@ type BlockStop struct {
 
 // MessageDelta carries the stop reason and the message's usage. Usage is
 // cumulative for the message, not an increment, so a later MessageDelta
-// replaces an earlier one rather than adding to it.
+// replaces an earlier one rather than adding to it. NativeStopReason is the
+// upstream model's own stop string when a router normalised it into
+// StopReason (OpenRouter's native_finish_reason); a provider whose wire
+// string is the StopReason leaves it empty.
 type MessageDelta struct {
-	StopReason   StopReason `json:"stop_reason,omitzero"`
-	StopSequence string     `json:"stop_sequence,omitzero"`
-	Usage        Usage      `json:"usage,omitzero"`
-	Cost         Cost       `json:"cost,omitzero"`
+	StopReason       StopReason `json:"stop_reason,omitzero"`
+	StopSequence     string     `json:"stop_sequence,omitzero"`
+	NativeStopReason string     `json:"native_stop_reason,omitzero"`
+	Usage            Usage      `json:"usage,omitzero"`
+	Cost             Cost       `json:"cost,omitzero"`
 }
 
 // MessageStop closes the assistant message. It is the only event that makes a

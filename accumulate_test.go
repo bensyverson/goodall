@@ -273,6 +273,25 @@ func TestAccumulatorUsage(t *testing.T) {
 
 // TestAccumulatorIgnoresLoopEvents: a run stream carries the loop's events
 // alongside the provider's, and one accumulator sees both.
+func TestAccumulatorKeepsTheNativeStopReason(t *testing.T) {
+	var acc Accumulator
+	events := []Event{
+		MessageStart{ID: "gen_1"},
+		MessageDelta{StopReason: StopEndTurn, NativeStopReason: "end_turn"},
+		MessageDelta{Usage: Usage{Output: 3}},
+		MessageStop{},
+	}
+	for _, ev := range events {
+		if err := acc.Apply(ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	resp := acc.Response()
+	if resp.StopReason != StopEndTurn || resp.NativeStopReason != "end_turn" {
+		t.Errorf("stop reasons = %q / native %q, want end_turn / end_turn", resp.StopReason, resp.NativeStopReason)
+	}
+}
+
 func TestAccumulatorIgnoresLoopEvents(t *testing.T) {
 	a := applyAll(t,
 		TurnStart{Turn: 1},
