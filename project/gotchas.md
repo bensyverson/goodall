@@ -41,3 +41,7 @@ Reading a JSON object member by member with `jsontext.Decoder` — `tok, _ := de
 ## 2026-09-15 A service test that stops a run right after starting it may stop it before the provider is ever called
 
 `chat.Service.Send` returns once the run is registered, not once it has sent anything, so a test that calls `Stop` (or `Shutdown`) on the next line can cancel the run at the top of the loop, before `Provider.Stream`. The run still ends and persists correctly — but the fake provider's script cursor has not advanced, so the *next* run in the same test gets `Script[0]` again. The symptom is a later `Stalled` turn hanging where an `Answer` was expected, ten seconds of polling and a failure that names the wrong thing. Drive a subscription to a provider event (`sub.until(goodall.EventBlockStop)`) before stopping, or gate on the tool actually starting.
+
+## 2026-09-15 In encoding/json/v2 a nil slice marshals as `[]`, so a round trip turns `nil` into an empty slice
+
+Unlike v1, json/v2 writes a nil slice as an empty array unless the field asks for `format:emitnull`, so `Blocks(nil)` comes back from a decode as `Blocks{}` and `reflect.DeepEqual` fails on a difference nothing in the payload records. It bit the wire writers' round-trip test through a `TurnEnd` whose `Response.Message` had no content — the failure names the two `goodall.Blocks` values in a wall of `%#v` and reads like an encoder bug rather than a fixture one. Any fixture compared with `DeepEqual` across an encode should carry non-nil slices, or the comparison should be over the JSON.
