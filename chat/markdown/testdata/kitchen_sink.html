@@ -1,0 +1,24 @@
+<h2>How to read a file</h2>
+<p>You can use <code>os.ReadFile</code>:</p>
+<pre><code class="language-go">data, err := os.ReadFile(&quot;config.json&quot;)
+if err != nil {
+  return err
+}
+</code></pre>
+<p>A few things to note:</p>
+<ul>
+<li>It reads the <strong>whole</strong> file into memory.</li>
+<li>For large files, use a <em>streaming</em> reader instead.
+<ul>
+<li><code>bufio.Scanner</code> is the usual choice.</li>
+</ul>
+</li>
+<li>See the <a href="https://pkg.go.dev/os" title="os on pkg.go.dev">package docs</a> for details.</li>
+</ul>
+<blockquote>
+<p>Note: <code>os.ReadFile</code> returns <code>[]byte</code>, not a string.
+Convert it with <code>string(data)</code> if you need text.</p>
+</blockquote>
+<hr>
+<p>That&#39;s it. See <a href="https://go.dev/">https://go.dev/</a> for more, and here is the mascot:
+<img src="https://go.dev/gopher.png" alt="the Go gopher"></p>
