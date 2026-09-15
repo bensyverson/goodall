@@ -1,0 +1,19 @@
+{
+  "model": "claude-sonnet-5",
+  "max_tokens": 2048,
+  "cache_control": {
+    "type": "ephemeral"
+  },
+  "stream": true,
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Answer in one short sentence: what is the capital of France?"
+        }
+      ]
+    }
+  ]
+}

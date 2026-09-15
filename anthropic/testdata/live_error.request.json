@@ -1,0 +1,18 @@
+{
+  "model": "claude-no-such-model-20260101",
+  "max_tokens": 2048,
+  "cache_control": {
+    "type": "ephemeral"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "This request is never served."
+        }
+      ]
+    }
+  ]
+}

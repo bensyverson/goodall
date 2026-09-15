@@ -15,6 +15,7 @@ vendor/
 # after its directory. List each main package here as it is added so a binary
 # is never committed by accident. Regenerate the list with:
 #   go list -f '{{if eq .Name "main"}}/{{.Dir}}{{end}}' ./... | sed 's|.*/|/|'
+/record-fixtures
 
 # job: cache and its sidecars (-shm, -wal, .lock, .pre-adopt) are disposable, rebuilt from .jobs/log
 .jobs.db*

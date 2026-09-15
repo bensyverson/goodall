@@ -393,10 +393,18 @@ type wireRequest struct {
 // counts, not a share of input_tokens, so the prompt size is the sum of the
 // three input members.
 type wireUsage struct {
-	InputTokens              int `json:"input_tokens,omitzero"`
-	OutputTokens             int `json:"output_tokens,omitzero"`
-	CacheCreationInputTokens int `json:"cache_creation_input_tokens,omitzero"`
-	CacheReadInputTokens     int `json:"cache_read_input_tokens,omitzero"`
+	InputTokens              int                      `json:"input_tokens,omitzero"`
+	OutputTokens             int                      `json:"output_tokens,omitzero"`
+	CacheCreationInputTokens int                      `json:"cache_creation_input_tokens,omitzero"`
+	CacheReadInputTokens     int                      `json:"cache_read_input_tokens,omitzero"`
+	OutputTokensDetails      *wireOutputTokensDetails `json:"output_tokens_details,omitzero"`
+}
+
+// wireOutputTokensDetails breaks the generated tokens down. Anthropic reports
+// the thinking share here, on both paths and in the message_delta of a stream;
+// it is a part of output_tokens rather than a count beside it.
+type wireOutputTokensDetails struct {
+	ThinkingTokens int `json:"thinking_tokens,omitzero"`
 }
 
 // wireResponse is a whole message: the body of a non-streaming response and

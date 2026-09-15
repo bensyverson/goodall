@@ -343,15 +343,21 @@ func translateResponse(w *wireResponse) *goodall.Response {
 	}
 }
 
-// neutral maps Anthropic's token ledger onto goodall's. Anthropic breaks out
-// no reasoning tokens, so that field stays zero.
+// neutral maps Anthropic's token ledger onto goodall's. The thinking share of
+// the output is reported under output_tokens_details, and a response that
+// carries no such member leaves Reasoning at zero — which is what a turn that
+// did not think reports in any case.
 func (u wireUsage) neutral() goodall.Usage {
-	return goodall.Usage{
+	usage := goodall.Usage{
 		Input:      u.InputTokens,
 		Output:     u.OutputTokens,
 		CacheRead:  u.CacheReadInputTokens,
 		CacheWrite: u.CacheCreationInputTokens,
 	}
+	if d := u.OutputTokensDetails; d != nil {
+		usage.Reasoning = d.ThinkingTokens
+	}
+	return usage
 }
 
 // neutralBlocks translates a decoded content list into neutral blocks.

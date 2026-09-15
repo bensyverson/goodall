@@ -1,0 +1,27 @@
+{
+  "model": "claude-sonnet-5",
+  "max_tokens": 2048,
+  "cache_control": {
+    "type": "ephemeral"
+  },
+  "stream": true,
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "image",
+          "source": {
+            "type": "base64",
+            "media_type": "image/png",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAFUlEQVR4nGL5VMXDgA0wwRhDQwIwAC0lAYsctKtjAAAAAElFTkSuQmCC"
+          }
+        },
+        {
+          "type": "text",
+          "text": "Answer with one word: what colour is this image?"
+        }
+      ]
+    }
+  ]
+}

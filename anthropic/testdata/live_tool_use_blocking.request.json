@@ -1,0 +1,49 @@
+{
+  "model": "claude-sonnet-5",
+  "max_tokens": 2048,
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Look up the current weather in a city.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "the city to look up, such as Paris"
+          },
+          "unit": {
+            "type": "string",
+            "description": "celsius or fahrenheit",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ]
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "tool_choice": {
+    "type": "tool",
+    "name": "get_weather"
+  },
+  "cache_control": {
+    "type": "ephemeral"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What is the weather in Paris right now?"
+        }
+      ]
+    }
+  ]
+}

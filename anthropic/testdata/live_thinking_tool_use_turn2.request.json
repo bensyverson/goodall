@@ -1,0 +1,87 @@
+{
+  "model": "claude-sonnet-5",
+  "max_tokens": 2048,
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Look up the current weather in a city.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "the city to look up, such as Paris"
+          },
+          "unit": {
+            "type": "string",
+            "description": "celsius or fahrenheit",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ]
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "thinking": {
+    "type": "adaptive",
+    "display": "summarized"
+  },
+  "output_config": {
+    "effort": "low"
+  },
+  "cache_control": {
+    "type": "ephemeral"
+  },
+  "stream": true,
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "A cyclist in Paris will ride 40 km at 24 km/h, starting at 14:00. Work out when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "thinking",
+          "thinking": "At 24 km/h, 40 km takes 1 hour 40 minutes, so starting at 14:00 means finishing at 15:40. Now I should check the weather.\n\n",
+          "signature": "EsoCCpABCBEYAipADjrRHRVbUqZW6Vhab1nyQxJAHpxIE6PhVedRQiLtSI1ZEGUWHJUeZ8XYAHvYFgaiKbsh1HzhyoOJxz8C4vVmTDIPY2xhdWRlLXNvbm5ldC01OABCCHRoaW5raW5nWiQxYWZjNjM3Yi1jYmJlLTQ5MGYtYjk4ZS1mMmYxMjJlMmIzNDaoAYbwpNUGEgx5Z3tSlYIyekY6IxYaDGAVn5dUkPheikp3LSIwsAOcDYBdAahve6sOvHABECrdiGe/rKGNY46Pt88n2+djF24dKexD6fPr0S5NsgmtKmdwHCrLQkXhmtKlc/D85abV977Dy19vZ2De3/WAelDis4ZipbllVI2oI6tL2Ww1tPY8BenV5RJa5XlI9VB/t1B1TlbrNqteduQtILy3FARgxxdGQuEWKzRBlHQR+tA8kTK3s8iuLUijGAE="
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_01WPsBhhC4osJ1Eh4Ec8HfnC",
+          "name": "get_weather",
+          "input": {
+            "city": "Paris",
+            "unit": "celsius"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "toolu_01WPsBhhC4osJ1Eh4Ec8HfnC",
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"city\":\"Paris\",\"temperature_c\":18,\"conditions\":\"light rain\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
