@@ -155,25 +155,34 @@ func (s *Service) Get(ctx context.Context, threadID string) (*Thread, error) {
 }
 
 // Send appends the input to the thread and starts a run to answer it,
-// returning the run's id as soon as the run is registered.
+// returning the run as soon as it is registered: its id, and a stream of its
+// events that was attached before the run began.
 //
 // The run is the service's, not the caller's: it is started on a goroutine
 // with a context derived from the service's own lifetime, so it survives the
 // request, the CLI invocation or the app that started it. ctx governs only
 // this call — loading the thread and registering the run.
 //
+// The returned stream is what a caller on one goroutine reads. It is a
+// subscription like any other — leaving it detaches and changes nothing about
+// the run — but because it was attached before the first event, it sees the
+// whole run however quickly the run finishes. A [Service.Subscribe] made after
+// Send returns can miss a run that ended in between, since a finished run's
+// events are not retained; that is the shape for a second request that
+// attaches to a run somebody else started.
+//
 // A thread that already has a run in flight is refused with [ErrThreadBusy];
 // a thread the store does not hold is refused with [ErrThreadNotFound]. When
 // the run ends the service persists the thread — the conversation the run
 // produced, and its usage and cost added to the thread's totals — whether or
-// not anyone subscribed.
-func (s *Service) Send(ctx context.Context, threadID string, input ...goodall.Block) (string, error) {
+// not anyone read the stream.
+func (s *Service) Send(ctx context.Context, threadID string, input ...goodall.Block) (*Run, error) {
 	if s.isClosed() {
-		return "", ErrServiceClosed
+		return nil, ErrServiceClosed
 	}
 	thread, err := s.store.Get(ctx, threadID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	conv := thread.Conversation
 	return s.begin(thread, func(runCtx context.Context) goodall.Stream {
@@ -190,16 +199,16 @@ func (s *Service) Send(ctx context.Context, threadID string, input ...goodall.Bl
 // tools is refused with [ErrNotResolvable] rather than starting a run that
 // could only fail. Which calls are waiting is on the terminal event's
 // Result.Pending, and in the thread's last message.
-func (s *Service) Resolve(ctx context.Context, threadID string, results ...goodall.ToolResult) (string, error) {
+func (s *Service) Resolve(ctx context.Context, threadID string, results ...goodall.ToolResult) (*Run, error) {
 	if s.isClosed() {
-		return "", ErrServiceClosed
+		return nil, ErrServiceClosed
 	}
 	thread, err := s.store.Get(ctx, threadID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if err := resolvable(thread); err != nil {
-		return "", err
+		return nil, err
 	}
 	conv := thread.Conversation
 	return s.begin(thread, func(runCtx context.Context) goodall.Stream {
@@ -269,18 +278,22 @@ func (s *Service) Shutdown(ctx context.Context) error {
 	}
 }
 
-// begin registers a run for the thread and starts it. start is called on the
-// run's own goroutine with the run's context, so the stream is created there
-// and belongs to nobody else.
-func (s *Service) begin(thread *Thread, start func(context.Context) goodall.Stream) (string, error) {
+// begin registers a run for the thread, attaches the starter's subscription
+// and starts the run. start is called on the run's own goroutine with the
+// run's context, so the stream is created there and belongs to nobody else.
+//
+// The subscription is attached before the goroutine exists, which is the
+// whole point of returning it: nothing the run does can happen before the
+// starter is listening.
+func (s *Service) begin(thread *Thread, start func(context.Context) goodall.Stream) (*Run, error) {
 	s.mu.Lock()
 	if s.closed {
 		s.mu.Unlock()
-		return "", ErrServiceClosed
+		return nil, ErrServiceClosed
 	}
 	if _, busy := s.runs[thread.ID]; busy {
 		s.mu.Unlock()
-		return "", fmt.Errorf("chat: thread %q: %w", thread.ID, ErrThreadBusy)
+		return nil, fmt.Errorf("chat: thread %q: %w", thread.ID, ErrThreadBusy)
 	}
 	runCtx, cancel := context.WithCancel(s.ctx)
 	run := newActiveRun(thread.ID, cancel, s.buffer)
@@ -288,8 +301,10 @@ func (s *Service) begin(thread *Thread, start func(context.Context) goodall.Stre
 	s.wg.Add(1)
 	s.mu.Unlock()
 
+	sub := &subscriber{ch: make(chan goodall.Event, run.buffer)}
+	backlog, live := run.attach(sub)
 	go s.drive(runCtx, run, thread, start)
-	return run.id, nil
+	return &Run{ID: run.id, Events: follow(context.Background(), run, sub, backlog, live)}, nil
 }
 
 // isClosed reports whether Shutdown has been called, which is what turns

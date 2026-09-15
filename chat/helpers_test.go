@@ -46,16 +46,16 @@ func newThread(t *testing.T, svc *chat.Service) *chat.Thread {
 }
 
 // send is a Send of one line of text, which must succeed.
-func send(t *testing.T, svc *chat.Service, threadID, text string) string {
+func send(t *testing.T, svc *chat.Service, threadID, text string) *chat.Run {
 	t.Helper()
-	runID, err := svc.Send(t.Context(), threadID, goodall.Text{Text: text})
+	run, err := svc.Send(t.Context(), threadID, goodall.Text{Text: text})
 	if err != nil {
 		t.Fatalf("Send: %v", err)
 	}
-	if runID == "" {
+	if run.ID == "" {
 		t.Error("Send returned an empty run id")
 	}
-	return runID
+	return run
 }
 
 // waitForVersion polls the store until the thread reaches version v, which is

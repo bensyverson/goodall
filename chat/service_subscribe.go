@@ -37,6 +37,29 @@ func (s *Service) Subscribe(ctx context.Context, threadID string) goodall.Stream
 
 		sub := &subscriber{ch: make(chan goodall.Event, run.buffer)}
 		backlog, live := run.attach(sub)
+		follow(ctx, run, sub, backlog, live)(yield)
+	}
+}
+
+// Run is a run the service has started, handed back by [Service.Send] and
+// [Service.Resolve]: its id, and its events from the very first one.
+type Run struct {
+	// ID identifies the run in the service's logs.
+	ID string
+	// Events is the run's stream, attached before the run began, so it
+	// sees every event however quickly the run finishes. It is a
+	// subscription: single-consumer, read once, and detached — not
+	// stopped — by breaking out of the range; a second range over it
+	// finds nothing more. It ends with the run's terminal event, or with
+	// [ErrSubscriberOverflow] if the reader fell too far behind.
+	Events goodall.Stream
+}
+
+// follow is the body of every subscription: the backlog the attach handed
+// back, then the live tail until the run closes the channel or ctx ends.
+// [Service.Subscribe] and [Service.Send] differ only in when they attached.
+func follow(ctx context.Context, run *activeRun, sub *subscriber, backlog []goodall.Event, live bool) goodall.Stream {
+	return func(yield func(goodall.Event, error) bool) {
 		if live {
 			defer run.detach(sub)
 		}
