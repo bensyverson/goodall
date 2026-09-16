@@ -274,6 +274,27 @@ func TestServiceViewRedactsTheAgentsSystemPrompt(t *testing.T) {
 	}
 }
 
+// TestServiceViewOptionsReportsTheAgentsTwoFacts is what lets a caller redact
+// something other than a stored thread — a stream — without reaching into the
+// service for the agent itself.
+func TestServiceViewOptionsReportsTheAgentsTwoFacts(t *testing.T) {
+	agent, _ := agentFor(nil)
+	agent.System = secretSystem
+	agent.Thinking.Display = goodall.DisplayOmitted
+	svc, _ := serviceFor(t, agent)
+
+	want := chat.ViewOptions{HasSystemPrompt: true, ThinkingDisplay: goodall.DisplayOmitted}
+	if got := svc.ViewOptions(); got != want {
+		t.Errorf("ViewOptions reports %+v, want %+v", got, want)
+	}
+
+	bare, _ := agentFor(nil)
+	bareSvc, _ := serviceFor(t, bare)
+	if got := bareSvc.ViewOptions(); got != (chat.ViewOptions{}) {
+		t.Errorf("an agent with no prompt and the default display reports %+v, want the zero options", got)
+	}
+}
+
 // placeholders collects every opaque id in a view, so a test can assert they
 // are unique and thread-scoped.
 func placeholders(view *chat.ThreadView) []string {

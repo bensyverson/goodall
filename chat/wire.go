@@ -54,6 +54,11 @@ type WireError struct {
 // terminated by a blank line. It is what an HTTP handler wires a run stream or
 // a [Service.Subscribe] stream to.
 //
+// It writes whatever stream it is given, redacted or not: a run stream carries
+// tool inputs, tool results and the conversation, and taking those out is the
+// caller's choice, made by wrapping the stream in [Redact] before passing it
+// in.
+//
 // A stream that ends in an error becomes one final frame named "stream_error",
 // carrying a [WireError], and WriteSSE returns nil: the failure was delivered,
 // which is the writer's whole job. The error it does return is a failure to
@@ -76,7 +81,9 @@ func WriteSSE(w io.Writer, events goodall.Stream) error {
 //
 // It ends, flushes and fails on exactly the same terms as [WriteSSE]: a stream
 // error becomes one final {"type":"stream_error",…} line and a nil return, and only a
-// failure to write is reported.
+// failure to write is reported. It likewise writes whatever stream it is
+// given, so a caller that owes its consumer a redacted stream passes one in
+// through [Redact].
 func WriteNDJSON(w io.Writer, events goodall.Stream) error {
 	return writeStream(w, writeNDJSONFrame, events)
 }

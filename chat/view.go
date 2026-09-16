@@ -215,10 +215,19 @@ func (s *Service) View(ctx context.Context, threadID string) (*ThreadView, error
 	if err != nil {
 		return nil, err
 	}
-	return NewThreadView(thread, ViewOptions{
+	return NewThreadView(thread, s.ViewOptions()), nil
+}
+
+// ViewOptions are the agent's two view facts: whether it has a system prompt,
+// and how much of its thinking it displays. [Service.View] fills a stored
+// thread's view from them; a caller redacting something else — a live stream
+// through [Redact] — reads them here rather than from the agent, which the
+// service does not hand out.
+func (s *Service) ViewOptions() ViewOptions {
+	return ViewOptions{
 		HasSystemPrompt: s.agent.System != "",
 		ThinkingDisplay: s.agent.Thinking.Display,
-	}), nil
+	}
 }
 
 // blockView redacts one block. id is the placeholder this block's position

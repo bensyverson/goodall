@@ -49,14 +49,15 @@ func ExampleService_Send() {
 }
 
 // An HTTP handler that streams a thread's run to the browser as server-sent
-// events: the shape the web example is built on.
+// events, redacted the way the thread's view is: the shape the web example is
+// built on.
 func ExampleWriteSSE() {
 	var svc *chat.Service // built as in ExampleService_Send
 
 	http.HandleFunc("GET /threads/{id}/events", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
-		if err := chat.WriteSSE(w, svc.Subscribe(r.Context(), r.PathValue("id"))); err != nil {
+		if err := chat.WriteSSE(w, chat.Redact(svc.Subscribe(r.Context(), r.PathValue("id")), svc.ViewOptions())); err != nil {
 			log.Println(err)
 		}
 	})

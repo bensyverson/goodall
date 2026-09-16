@@ -113,9 +113,14 @@ func (s *server) send(w http.ResponseWriter, r *http.Request) {
 }
 
 // events streams the thread's run as Server-Sent Events: what the run has
-// already produced, verbatim, then its live tail, ending with the run's one
-// terminal event — which is what tells the page to close its EventSource,
-// since an EventSource reconnects to any stream that merely ends.
+// already produced, then its live tail, ending with the run's one terminal
+// event — which is what tells the page to close its EventSource, since an
+// EventSource reconnects to any stream that merely ends.
+//
+// The stream is redacted on the way out, as the view route's thread is: the
+// browser is handed which tool ran and whether it failed, never what was
+// passed to it, what it returned, or the conversation the terminal event
+// carries.
 //
 // A thread with no run in flight, and a thread the store does not hold, both
 // stream nothing and end at once: a subscription cannot tell them apart, and
@@ -130,7 +135,8 @@ func (s *server) events(w http.ResponseWriter, r *http.Request) {
 	// cannot be flushed buffers instead, which is slow but not wrong.
 	_ = http.NewResponseController(w).Flush()
 
-	if err := chat.WriteSSE(w, s.svc.Subscribe(r.Context(), r.PathValue("id"))); err != nil {
+	stream := chat.Redact(s.svc.Subscribe(r.Context(), r.PathValue("id")), s.svc.ViewOptions())
+	if err := chat.WriteSSE(w, stream); err != nil {
 		// The only error is a failure to write: the client has gone.
 		// The run is untouched and keeps going.
 		log.Printf("the event stream for thread %s ended: %v", r.PathValue("id"), err)

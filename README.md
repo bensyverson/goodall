@@ -79,10 +79,10 @@ for ev, _ := range run.Events {
 view, err := svc.View(ctx, thread.ID) // no system prompt, no tool internals
 ```
 
-The service owns the run: `Send` returns as soon as it starts, the run finishes and persists whether or not anyone is listening, `Subscribe` attaches a second client mid-answer and replays what it missed, `Stop` cancels and keeps the partial answer. An HTTP handler streams a thread with one line:
+The service owns the run: `Send` returns as soon as it starts, the run finishes and persists whether or not anyone is listening, `Subscribe` attaches a second client mid-answer and replays what it missed, `Stop` cancels and keeps the partial answer. An HTTP handler streams a thread with one line, redacted as the view is — the browser sees which tool ran, never what went into it or came back:
 
 ```go
-chat.WriteSSE(w, svc.Subscribe(r.Context(), r.PathValue("id")))
+chat.WriteSSE(w, chat.Redact(svc.Subscribe(r.Context(), r.PathValue("id")), svc.ViewOptions()))
 ```
 
 Both compile as `ExampleService_Send` and `ExampleWriteSSE` in the `chat` package. Implement `chat.ThreadStore` to persist threads elsewhere; `chat/storetest` is the contract test.
@@ -106,7 +106,7 @@ In the terminal, type a line and press return. Ctrl-C while the answer is stream
 | `goodall` | Blocks, messages and conversations; tools with inferred schemas; the provider seam; the streaming event model; the agent loop with budgets, hooks, approval and resume; capability pre-flight against the model catalog |
 | `goodall/anthropic` | The Messages API: streaming and blocking, thinking (adaptive and budget), images and PDFs, cache control, the models catalog |
 | `goodall/openrouter` | Chat Completions with typed dialects for OpenRouter, OpenAI, LM Studio and generic servers: reasoning details round-tripped verbatim, cost reporting, the catalog with prices |
-| `goodall/chat` | Threads, stores, the service that owns runs, the redacted view, SSE and NDJSON writers, a chat-safe Markdown subset |
+| `goodall/chat` | Threads, stores, the service that owns runs, the redacted view and the redacted stream, SSE and NDJSON writers, a chat-safe Markdown subset |
 
 ## Reading further
 
