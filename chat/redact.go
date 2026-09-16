@@ -8,11 +8,13 @@ import "github.com/bensyverson/goodall"
 // than a front end reading the history.
 //
 // What it takes out is every tool call's input — whole on the call, and in the
-// fragments that streamed it in — every tool result's content, the assistant
-// message the turn and terminal events carry, and the conversation a terminal
-// event carries. What survives is what a UI renders and bills on: which tool
+// fragments that streamed it in — every tool result's content, wherever one
+// travels, the assistant message the turn and terminal events carry, the
+// conversation a terminal event carries, and the bytes of any media on the turn
+// a run commits. What survives is what a UI renders and bills on: which tool
 // ran under which id, whether it failed, the tokens, the money, the stop
-// reason, and the model's own text, which is the answer being watched.
+// reason, the model's own text, which is the answer being watched, and the
+// person's own words on the turn that prompted it.
 // Thinking text follows the agent's own display setting, exactly as the view
 // does: under [goodall.DisplayOmitted] the block still opens, streams and
 // closes, carrying no text, because the fact that the model thought is not
@@ -68,6 +70,9 @@ func redactEvent(ev goodall.Event, opts ViewOptions) (goodall.Event, bool) {
 			// there was a failure.
 			Result: goodall.ToolResult{ToolUseID: e.Result.ToolUseID, IsError: e.Result.IsError},
 		}, true
+	case goodall.TurnCommitted:
+		e.Message = redactMessage(e.Message)
+		return e, true
 	case goodall.TurnEnd:
 		e.Response = redactResponse(e.Response)
 		return e, true
@@ -94,6 +99,71 @@ func redactEvent(ev goodall.Event, opts ViewOptions) (goodall.Event, bool) {
 // means nothing on the way out.
 func redactToolUse(use goodall.ToolUse) goodall.ToolUse {
 	return goodall.ToolUse{ID: use.ID, Name: use.Name}
+}
+
+// redactMessage redacts a whole turn block by block. It is the new turn's
+// rule, and only the new turn's: the assistant message a response carries is
+// dropped whole by redactResponse, because a front end has been streaming it
+// and has no use for a second copy, while the turn the run just appended is the
+// question a front end has nothing else to render from.
+//
+// An empty turn is returned as it stands, so the events a stream carries are
+// unchanged rather than merely equal.
+func redactMessage(msg goodall.Message) goodall.Message {
+	if len(msg.Content) == 0 {
+		return msg
+	}
+	content := make(goodall.Blocks, len(msg.Content))
+	for i, blk := range msg.Content {
+		content[i] = redactBlock(blk)
+	}
+	msg.Content = content
+	return msg
+}
+
+// redactBlock redacts one block of a new turn, following [blockView]'s rules on
+// [goodall.Block] itself: [goodall.Block] is sealed, so there is no chat-side
+// placeholder block to mint and no position in a stored history to derive a
+// placeholder id from. A block that withholds something keeps its shape and
+// loses its content instead.
+//
+// Text passes through: it is the question a front end is rendering. Media keeps
+// its type and its media type and loses its bytes, which the front end sent and
+// already has; a source it can fetch for itself is nothing to withhold. A
+// document's title is the sender's own label and stays, while its context is
+// prose about the content, which the view never carries either. A tool result
+// keeps its id and whether it failed, exactly as [goodall.ToolCallEnd]'s result
+// does, since a results turn reaching a front end whole would be a hole in that
+// same fence.
+//
+// The cache marker goes with the content wherever one is dropped, for
+// redactToolUse's reason: it shapes a request to the provider and means nothing
+// on the way out.
+//
+// Everything else — a tool call, thinking, a block goodall does not model —
+// passes through. A new turn does not carry them in practice, but a caller's
+// Send takes any block, and passing one on is honest about not having reasoned
+// about it, where dropping it would hide that.
+func redactBlock(blk goodall.Block) goodall.Block {
+	switch b := blk.(type) {
+	case goodall.Image:
+		return goodall.Image{Source: redactSource(b.Source)}
+	case goodall.Document:
+		return goodall.Document{Source: redactSource(b.Source), Title: b.Title}
+	case goodall.ToolResult:
+		return goodall.ToolResult{ToolUseID: b.ToolUseID, IsError: b.IsError}
+	default:
+		return blk
+	}
+}
+
+// redactSource replaces inline bytes with the shape they arrived in. A URL or
+// an uploaded file is fetchable by the front end, so it passes through.
+func redactSource(src goodall.Source) goodall.Source {
+	if src.Type != goodall.SourceBytes {
+		return src
+	}
+	return goodall.Source{Type: goodall.SourceBytes, MediaType: src.MediaType}
 }
 
 // redactResponse drops the assistant message and keeps the rest of the

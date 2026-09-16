@@ -18,7 +18,13 @@ const (
 	canaryInput  = "CANARY-SECRET-INPUT"
 	canaryResult = "CANARY-SECRET-RESULT"
 	canaryAnswer = "CANARY-SECRET-ANSWER"
+	canaryMedia  = "CANARY-SECRET-IMAGE-BYTES"
 )
+
+// canaryQuestion is the other half of the new turn's rule: the person's own
+// text is not a secret, so it must survive a redaction that drops the bytes
+// beside it.
+const canaryQuestion = "CANARY-PUBLIC-QUESTION"
 
 // canaryEvents is mixedEvents with a secret planted wherever the stream is
 // supposed to withhold one: the tool call's input, the fragments it streamed
@@ -44,6 +50,10 @@ func canaryEvents() []goodall.Event {
 		goodall.MessageStop{},
 		goodall.ToolCallStart{ToolUse: use},
 		goodall.ToolCallEnd{ToolUse: use, Result: goodall.TextResult(canaryResult)},
+		goodall.TurnCommitted{Turn: 2, Message: goodall.UserMessage(goodall.ToolResult{
+			ToolUseID: "toolu_1",
+			Content:   goodall.Blocks{goodall.Text{Text: canaryResult}},
+		})},
 		goodall.TurnEnd{Turn: 1, Response: response},
 		goodall.Done{Result: goodall.Result{
 			Response:     &response,
@@ -269,6 +279,92 @@ func TestRedactDropsTheHistoryFromTheTerminalEvents(t *testing.T) {
 	}
 	if !reflect.DeepEqual(stopped, wantStopped) {
 		t.Errorf("the redacted Stopped is\n%#v\nwant\n%#v", stopped, wantStopped)
+	}
+}
+
+// TestRedactKeepsTheQuestionAndDropsItsBytes is the new turn's rule: the text
+// a person sent is what the front end is rendering, so it survives, while the
+// bytes of a picture they attached do not — the front end is the side that sent
+// them, exactly as [chat.NewThreadView] reasons about a stored thread.
+func TestRedactKeepsTheQuestionAndDropsItsBytes(t *testing.T) {
+	got := collect(t, chat.Redact(streamOf(goodall.TurnCommitted{Turn: 1, Message: goodall.UserMessage(
+		goodall.Text{Text: canaryQuestion},
+		goodall.Image{
+			Source: goodall.BytesSource("image/png", []byte(canaryMedia)),
+			Cache:  &goodall.CacheControl{},
+		},
+	)}), displayedOptions))
+
+	if len(got) != 1 {
+		t.Fatalf("Redact yielded %d events for one, %v", len(got), types(got))
+	}
+	committed, ok := got[0].(goodall.TurnCommitted)
+	if !ok {
+		t.Fatalf("the event is a %T, want a TurnCommitted", got[0])
+	}
+	want := goodall.TurnCommitted{Turn: 1, Message: goodall.UserMessage(
+		goodall.Text{Text: canaryQuestion},
+		goodall.Image{Source: goodall.Source{Type: goodall.SourceBytes, MediaType: "image/png"}},
+	)}
+	if !reflect.DeepEqual(committed, want) {
+		t.Errorf("the redacted turn is\n%#v\nwant\n%#v", committed, want)
+	}
+}
+
+// TestRedactDropsTheContentOfACommittedToolResult closes the fence a
+// ToolCallEnd already draws: a results turn reaches the front end as ids and
+// outcomes, never as what the tools returned.
+func TestRedactDropsTheContentOfACommittedToolResult(t *testing.T) {
+	got := collect(t, chat.Redact(streamOf(goodall.TurnCommitted{Turn: 2, Message: goodall.UserMessage(
+		goodall.ToolResult{
+			ToolUseID: "toolu_1",
+			IsError:   true,
+			Content:   goodall.Blocks{goodall.Text{Text: canaryResult}},
+		},
+	)}), displayedOptions))
+
+	committed, ok := got[0].(goodall.TurnCommitted)
+	if !ok {
+		t.Fatalf("the event is a %T, want a TurnCommitted", got[0])
+	}
+	want := goodall.TurnCommitted{Turn: 2, Message: goodall.UserMessage(
+		goodall.ToolResult{ToolUseID: "toolu_1", IsError: true},
+	)}
+	if !reflect.DeepEqual(committed, want) {
+		t.Errorf("the redacted turn is\n%#v\nwant\n%#v", committed, want)
+	}
+}
+
+// TestRedactPassesAFetchableSourceThrough is the view's other media rule: a URL
+// or an uploaded file is something the front end can fetch for itself, so there
+// is nothing to withhold. A document's Context is prose the sender wrote about
+// the content and never travels either way, as the view's own media never
+// carries it.
+func TestRedactPassesAFetchableSourceThrough(t *testing.T) {
+	got := collect(t, chat.Redact(streamOf(goodall.TurnCommitted{Turn: 1, Message: goodall.UserMessage(
+		goodall.Image{Source: goodall.URLSource("https://example.com/cat.png")},
+		goodall.Document{Source: goodall.FileSource("file_123"), Title: "The Report", Context: canaryMedia},
+		goodall.Document{
+			Source:  goodall.BytesSource("application/pdf", []byte(canaryMedia)),
+			Title:   "The Other Report",
+			Context: canaryMedia,
+		},
+	)}), displayedOptions))
+
+	committed, ok := got[0].(goodall.TurnCommitted)
+	if !ok {
+		t.Fatalf("the event is a %T, want a TurnCommitted", got[0])
+	}
+	want := goodall.TurnCommitted{Turn: 1, Message: goodall.UserMessage(
+		goodall.Image{Source: goodall.URLSource("https://example.com/cat.png")},
+		goodall.Document{Source: goodall.FileSource("file_123"), Title: "The Report"},
+		goodall.Document{
+			Source: goodall.Source{Type: goodall.SourceBytes, MediaType: "application/pdf"},
+			Title:  "The Other Report",
+		},
+	)}
+	if !reflect.DeepEqual(committed, want) {
+		t.Errorf("the redacted turn is\n%#v\nwant\n%#v", committed, want)
 	}
 }
 

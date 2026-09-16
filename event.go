@@ -4,7 +4,7 @@ import "encoding/json/jsontext"
 
 // EventType is the tag that identifies an event on the wire. Providers
 // neutralize their own event vocabularies onto these, and the agent loop adds
-// the six that describe a run; anything a provider sends that does not map
+// the seven that describe a run; anything a provider sends that does not map
 // onto one arrives as an UnknownEvent rather than being dropped.
 type EventType string
 
@@ -32,6 +32,8 @@ const (
 
 	// EventTurnStart opens one model call of a run.
 	EventTurnStart EventType = "turn_start"
+	// EventTurnCommitted carries the user turn a run just appended.
+	EventTurnCommitted EventType = "turn_committed"
 	// EventToolCallStart reports that a tool is about to run.
 	EventToolCallStart EventType = "tool_call_start"
 	// EventToolCallEnd reports a tool's result.
@@ -63,7 +65,8 @@ func (t EventType) Known() bool {
 // model's message ignores the loop's.
 func (t EventType) FromLoop() bool {
 	switch t {
-	case EventTurnStart, EventToolCallStart, EventToolCallEnd, EventTurnEnd, EventDone, EventStopped:
+	case EventTurnStart, EventTurnCommitted, EventToolCallStart, EventToolCallEnd,
+		EventTurnEnd, EventDone, EventStopped:
 		return true
 	}
 	return false
@@ -204,6 +207,28 @@ type TurnStart struct {
 	Turn int `json:"turn,omitzero"`
 }
 
+// TurnCommitted carries the user turn the run has just appended to the
+// conversation: the caller's input on the first turn of a Run, the results a
+// Resume was handed, or the results the loop's own tool calls produced. It
+// fires at the moment the turn is appended — after BeforeSend has shaped it and
+// before the request goes out — not when the caller made the call, so what it
+// carries is the message that really entered the history rather than the one
+// that was asked for.
+//
+// It is what lets a subscriber who was not there for the call render the whole
+// exchange: a client attaching mid-answer replays it out of the run's backlog
+// and has the question above the answer.
+//
+// Message.Role is always [RoleUser]. A turn carrying tool results is a user
+// turn in the conversation itself, as it is on Anthropic's wire, so the loop
+// does not invent a third role for it.
+type TurnCommitted struct {
+	// Turn is the turn number this commit belongs to, counted from one.
+	Turn int `json:"turn,omitzero"`
+	// Message is the turn as it was appended.
+	Message Message `json:"message"`
+}
+
 // ToolCallStart reports that the loop is about to run a tool, after any hook
 // has allowed it.
 type ToolCallStart struct {
@@ -333,6 +358,9 @@ func (UnknownEvent) Type() EventType { return EventUnknown }
 func (TurnStart) Type() EventType { return EventTurnStart }
 
 // Type reports the event's wire tag.
+func (TurnCommitted) Type() EventType { return EventTurnCommitted }
+
+// Type reports the event's wire tag.
 func (ToolCallStart) Type() EventType { return EventToolCallStart }
 
 // Type reports the event's wire tag.
@@ -358,6 +386,7 @@ func (MessageDelta) isEvent()   {}
 func (MessageStop) isEvent()    {}
 func (UnknownEvent) isEvent()   {}
 func (TurnStart) isEvent()      {}
+func (TurnCommitted) isEvent()  {}
 func (ToolCallStart) isEvent()  {}
 func (ToolCallEnd) isEvent()    {}
 func (TurnEnd) isEvent()        {}

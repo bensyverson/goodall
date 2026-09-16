@@ -66,10 +66,10 @@
 // named frame only to a listener for that name, so every one the page acts on
 // is listed here; the rest of goodall's events are simply not listened for.
 const EVENTS = [
-  "turn_start", "message_start", "block_start", "text_delta", "thinking_delta",
-  "signature_delta", "tool_input_delta", "block_stop", "message_delta",
-  "message_stop", "tool_call_start", "tool_call_end", "turn_end", "unknown",
-  "done", "stopped",
+  "turn_start", "turn_committed", "message_start", "block_start", "text_delta",
+  "thinking_delta", "signature_delta", "tool_input_delta", "block_stop",
+  "message_delta", "message_stop", "tool_call_start", "tool_call_end",
+  "turn_end", "unknown", "done", "stopped",
 ];
 
 const el = {
@@ -116,14 +116,6 @@ function rememberThread(id) {
   localStorage.setItem("goodall.thread", id);
   if (location.hash.slice(1) !== id) history.replaceState(null, "", "#" + id);
 }
-
-// The line the person sent is not in the thread until the run ends — the
-// service persists once — and it is not an event either, so the page keeps it
-// until the answer is stored. This is what makes a reload mid-answer show the
-// question as well as the partial answer.
-const pendingKey = () => "goodall.pending." + threadID;
-const pending = () => localStorage.getItem(pendingKey()) || "";
-const setPending = text => text ? localStorage.setItem(pendingKey(), text) : localStorage.removeItem(pendingKey());
 
 // ---- rendering the stored thread --------------------------------------
 
@@ -181,6 +173,33 @@ function blockNode(block, status) {
   }
 }
 
+// A committed turn carries goodall's own blocks, which are tagged "type" and
+// shaped for a provider, while the thread view's blocks are tagged "kind" and
+// shaped for a reader. This is the one translation between them, so the live
+// question renders through the same blockNode as the stored one.
+function viewOfBlock(block) {
+  switch (block.type) {
+    case "text": return { kind: "text", text: block.text };
+    case "thinking": return { kind: "thinking", text: block.text };
+    case "redacted_thinking": return { kind: "redacted_thinking" };
+    case "image": return { kind: "image", media: viewOfSource(block.source) };
+    case "document": return { kind: "document", media: viewOfSource(block.source, block.title) };
+    case "tool_use": return { kind: "tool_call", tool_use_id: block.id, tool_name: block.name };
+    default: return { kind: "unknown", block_type: block.type };
+  }
+}
+
+function viewOfSource(source, title) {
+  if (!source) return null;
+  return {
+    source: source.type,
+    media_type: source.media_type,
+    url: source.url,
+    file_id: source.file_id,
+    title,
+  };
+}
+
 // Media is a placeholder by design: the view carries where a picture came
 // from, never its bytes, because the page is the side that sent them.
 function mediaLabel(media) {
@@ -231,16 +250,12 @@ function note(text) { el.note.textContent = text; }
 // because a subscription replays the run's events verbatim before its live
 // tail: folding the replay gives exactly what an earlier listener is looking
 // at, so there is no second code path for catching up.
+// The question the run is answering arrives on the stream as turn_committed,
+// so it is part of that replay too and the page keeps nothing of its own.
 function resetLive() {
   liveNodes.clear();
   el.live.replaceChildren();
   messageSeq = 0;
-  const question = pending();
-  if (question) {
-    const node = messageNode("user");
-    node.append(textNode(question));
-    el.live.append(node);
-  }
 }
 
 function liveMessage() {
@@ -271,6 +286,18 @@ function apply(ev) {
     case "message_start":
       messageSeq++;
       break;
+    // The turn the run just appended: the question on the first turn, the
+    // tool results on later ones. The results are already drawn as chips on
+    // the call that asked for them, so a turn of nothing else is not drawn.
+    case "turn_committed": {
+      const content = (ev.message && ev.message.content) || [];
+      const blocks = content.filter(b => b.type !== "tool_result");
+      if (blocks.length === 0) break;
+      const node = messageNode(ev.message.role || "user");
+      for (const block of blocks) node.append(blockNode(viewOfBlock(block), new Map()));
+      el.live.append(node);
+      break;
+    }
     case "text_delta": {
       const p = liveNode(messageSeq + ":text:" + (ev.index || 0), () => textNode(""));
       p.textContent += ev.text || "";
@@ -322,7 +349,6 @@ function terminal(cause) {
 async function endOfRun() {
   clearTimeout(endTimer);
   closeEvents();
-  setPending("");
   const view = await fetchView(threadID);
   if (view) render(view);
   liveNodes.clear();
@@ -392,7 +418,6 @@ el.form.addEventListener("submit", async e => {
     el.text.value = text; // a refused line is handed back rather than lost
     return;
   }
-  setPending(text);
   running(true);
   openEvents();
 });
@@ -404,7 +429,6 @@ el.stop.addEventListener("click", async () => {
 
 el.fresh.addEventListener("click", async () => {
   closeEvents();
-  setPending("");
   const view = await createThread();
   rememberThread(view.id);
   render(view);

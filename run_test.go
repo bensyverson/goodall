@@ -28,14 +28,14 @@ func TestRunTwoTurnsWithATool(t *testing.T) {
 	events := runEvents(t, a, goodall.Conversation{}, goodall.Text{Text: "say hi"})
 
 	wantShape := []goodall.EventType{
-		goodall.EventTurnStart,
+		goodall.EventTurnStart, goodall.EventTurnCommitted,
 		goodall.EventMessageStart,
 		goodall.EventBlockStart, goodall.EventTextDelta, goodall.EventBlockStop,
 		goodall.EventBlockStart, goodall.EventToolInputDelta, goodall.EventBlockStop,
 		goodall.EventMessageDelta, goodall.EventMessageStop,
 		goodall.EventTurnEnd,
 		goodall.EventToolCallStart, goodall.EventToolCallEnd,
-		goodall.EventTurnStart,
+		goodall.EventTurnStart, goodall.EventTurnCommitted,
 		goodall.EventMessageStart,
 		goodall.EventBlockStart, goodall.EventTextDelta, goodall.EventBlockStop,
 		goodall.EventMessageDelta, goodall.EventMessageStop,

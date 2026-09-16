@@ -78,6 +78,8 @@ type ModelLister interface {        // optional
 >
 > *`Request.Extensions` is an `Extension` interface* with one method, `Provider() string`. Each provider defines its own options struct, names itself, and rejects another provider's before sending, so a request built for one provider fails loudly on another instead of losing its options.
 
+> **Added 2026-09-15 with the user-turn event.** The loop events are seven, not six: `TurnCommitted{Turn, Message}` carries the user turn the run has just appended — the caller's input, a `Resume`'s results, or the results the loop's own tool calls produced. It fires inside `commitNewTurn`, after `BeforeSend` has shaped the turn and at the moment it enters the conversation, so what travels is the message that really entered the history. Without it a second subscriber attaching mid-answer replayed the backlog and saw an answer with no question above it, because the chat service persists the thread only when the run ends; the web example carried the question in `localStorage` as a workaround, which this retires. `chat.Redact` passes the text through — the person's own words are not a secret — while zeroing inline media bytes and a tool result's content.
+
 > **Added 2026-09-15 before the provider fan-out.** OpenRouter normalizes the upstream model's stop string into its own `finish_reason` and reports the original as `native_finish_reason`; the neutral model had no slot for it. `MessageDelta` and `Response` now carry `NativeStopReason string`, empty on a provider whose wire string *is* the `StopReason` (Anthropic). It is diagnostic only: the loop acts on `StopReason`.
 
 **Tools.**

@@ -42,6 +42,7 @@ type (
 	messageStopBody    MessageStop
 	unknownEventBody   UnknownEvent
 	turnStartBody      TurnStart
+	turnCommittedBody  TurnCommitted
 	toolCallStartBody  ToolCallStart
 	toolCallEndBody    ToolCallEnd
 	turnEndBody        TurnEnd
@@ -103,6 +104,11 @@ func (e UnknownEvent) MarshalJSONTo(enc *jsontext.Encoder) error {
 // MarshalJSONTo writes the event as a "turn_start" object.
 func (e TurnStart) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return json.MarshalEncode(enc, taggedEvent[turnStartBody]{EventTurnStart, turnStartBody(e)})
+}
+
+// MarshalJSONTo writes the event as a "turn_committed" object.
+func (e TurnCommitted) MarshalJSONTo(enc *jsontext.Encoder) error {
+	return json.MarshalEncode(enc, taggedEvent[turnCommittedBody]{EventTurnCommitted, turnCommittedBody(e)})
 }
 
 // MarshalJSONTo writes the event as a "tool_call_start" object.
@@ -205,6 +211,8 @@ func unmarshalEvent(dec *jsontext.Decoder, e *Event) error {
 		return decodeEvent(e, raw, func(v unknownEventBody) Event { return UnknownEvent(v) })
 	case EventTurnStart:
 		return decodeEvent(e, raw, func(v turnStartBody) Event { return TurnStart(v) })
+	case EventTurnCommitted:
+		return decodeEvent(e, raw, func(v turnCommittedBody) Event { return TurnCommitted(v) })
 	case EventToolCallStart:
 		return decodeEvent(e, raw, func(v toolCallStartBody) Event { return ToolCallStart(v) })
 	case EventToolCallEnd:

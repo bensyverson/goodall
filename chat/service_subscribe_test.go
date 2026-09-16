@@ -132,6 +132,57 @@ func TestSubscribeMidRunReplaysThenGoesLive(t *testing.T) {
 	}
 }
 
+// TestSubscribeMidRunCarriesTheQuestion is the criterion: a client that
+// attaches after a run started and before it ended can render the question that
+// prompted the answer. The thread is not written until the run ends, so the
+// backlog is the only place the question can come from — and it survives the
+// redaction a front end reads through, because a person's own words are not
+// something the back end owns.
+func TestSubscribeMidRunCarriesTheQuestion(t *testing.T) {
+	const question = "what did the tool say?"
+	tool, started, release := gateTool(t)
+	agent, _ := agentFor(gatedScript("all done"), tool)
+	svc, _ := serviceFor(t, agent)
+	thread := newThread(t, svc)
+
+	send(t, svc, thread.ID, question)
+	<-started
+
+	// The run is parked inside the tool, so this subscriber gets the run so
+	// far as its catch-up and nothing live.
+	late := subscribe(t, svc, thread.ID)
+	backlog := late.until(goodall.EventToolCallStart)
+
+	committed, ok := eventOfType(t, backlog, goodall.EventTurnCommitted).(goodall.TurnCommitted)
+	if !ok {
+		t.Fatalf("the backlog's turn_committed is not a TurnCommitted")
+	}
+	if committed.Turn != 1 {
+		t.Errorf("the committed turn is numbered %d, want the first", committed.Turn)
+	}
+	if committed.Message.Role != goodall.RoleUser {
+		t.Errorf("the committed turn is from %q, want the user", committed.Message.Role)
+	}
+	if got := committed.Message.Text(); got != question {
+		t.Errorf("the late subscriber was handed %q, want the question that started the run", got)
+	}
+
+	redacted := collect(t, chat.Redact(streamOf(backlog...), svc.ViewOptions()))
+	through, ok := eventOfType(t, redacted, goodall.EventTurnCommitted).(goodall.TurnCommitted)
+	if !ok {
+		t.Fatalf("the redacted turn_committed is not a TurnCommitted")
+	}
+	if got := through.Message.Text(); got != question {
+		t.Errorf("the redacted turn says %q, want the question a front end renders", got)
+	}
+
+	release()
+	if _, err := late.drain(); err != nil {
+		t.Fatalf("the late subscription ended with %v", err)
+	}
+	waitForVersion(t, svc, thread.ID, 2)
+}
+
 // TestStopMidRunKeepsThePartialAnswer is the stop path: the partial message
 // survives, is marked partial, and is persisted so the thread stays sendable.
 func TestStopMidRunKeepsThePartialAnswer(t *testing.T) {

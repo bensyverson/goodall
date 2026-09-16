@@ -136,6 +136,18 @@ func eventCases() []eventCase {
 			want:  `{"type":"turn_start","turn":1}`,
 		},
 		{
+			name:  "turn committed",
+			event: TurnCommitted{Turn: 1, Message: UserMessage(Text{Text: "say hi"})},
+			want:  `{"type":"turn_committed","turn":1,"message":{"role":"user","content":[{"type":"text","text":"say hi"}]}}`,
+		},
+		{
+			name: "turn committed carrying a turn of tool results",
+			event: TurnCommitted{Turn: 2, Message: UserMessage(
+				ToolResult{ToolUseID: "toolu_1", Content: Blocks{Text{Text: "18C"}}},
+			)},
+			want: `{"type":"turn_committed","turn":2,"message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","content":[{"type":"text","text":"18C"}]}]}}`,
+		},
+		{
 			name: "tool call start",
 			event: ToolCallStart{ToolUse: ToolUse{
 				ID: "toolu_1", Name: "get_weather", Input: jsontext.Value(`{"city":"Paris"}`),
@@ -224,8 +236,8 @@ func TestEventTableCoversEveryType(t *testing.T) {
 	all := []EventType{
 		EventMessageStart, EventBlockStart, EventTextDelta, EventThinkingDelta,
 		EventSignatureDelta, EventToolInputDelta, EventBlockStop, EventMessageDelta,
-		EventMessageStop, EventUnknown, EventTurnStart, EventToolCallStart,
-		EventToolCallEnd, EventTurnEnd, EventDone, EventStopped,
+		EventMessageStop, EventUnknown, EventTurnStart, EventTurnCommitted,
+		EventToolCallStart, EventToolCallEnd, EventTurnEnd, EventDone, EventStopped,
 	}
 	seen := map[EventType]bool{}
 	for _, c := range eventCases() {
@@ -236,8 +248,8 @@ func TestEventTableCoversEveryType(t *testing.T) {
 			t.Errorf("no table case for %s", want)
 		}
 	}
-	if len(all) != 16 {
-		t.Errorf("the event family has %d types, want 16", len(all))
+	if len(all) != 17 {
+		t.Errorf("the event family has %d types, want 17", len(all))
 	}
 }
 
@@ -349,7 +361,7 @@ func TestMalformedEventIsAnError(t *testing.T) {
 }
 
 // TestEventTypeClassification checks the split a run stream depends on: the
-// loop's six events are distinguishable from a provider's without a type
+// loop's seven events are distinguishable from a provider's without a type
 // switch.
 func TestEventTypeClassification(t *testing.T) {
 	for _, tc := range []struct {
@@ -361,6 +373,7 @@ func TestEventTypeClassification(t *testing.T) {
 		{MessageStop{}, false},
 		{UnknownEvent{}, false},
 		{TurnStart{}, true},
+		{TurnCommitted{}, true},
 		{ToolCallStart{}, true},
 		{ToolCallEnd{}, true},
 		{TurnEnd{}, true},

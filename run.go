@@ -99,7 +99,9 @@ func (r *run) execute(ctx context.Context, input []Block) {
 			r.stop(StopCauseHook, err.Error())
 			return
 		}
-		r.commitNewTurn()
+		if !r.commitNewTurn() {
+			return
+		}
 		req.Messages = r.conv.Messages()
 
 		// The check runs after the hook has had the request, so what it
@@ -184,17 +186,24 @@ func (r *run) prepare(input []Block) error {
 	return nil
 }
 
-// commitNewTurn appends the turn the run has been holding, if it has one.
-// Every send and every terminal event goes through it, so the conversation a
-// caller gets back always includes the input the run was working on
-// (invariant 10) and never ends in a tool_use with no results message
-// (invariant 9).
-func (r *run) commitNewTurn() {
+// commitNewTurn appends the turn the run has been holding, if it has one, and
+// announces it as a TurnCommitted. Every send and every terminal event goes
+// through it, so the conversation a caller gets back always includes the input
+// the run was working on (invariant 10) and never ends in a tool_use with no
+// results message (invariant 9).
+//
+// It reports whether the consumer is still reading, as emit does: a run with
+// nothing to commit stopped nothing, so it reports true.
+func (r *run) commitNewTurn() bool {
 	if r.newTurn == nil {
-		return
+		return true
 	}
 	r.conv = r.conv.Append(*r.newTurn)
+	// The event carries the message that was just appended, so a subscriber
+	// rebuilding the exchange sees the turn as it entered the history.
+	alive := r.emit(TurnCommitted{Turn: r.turn, Message: *r.newTurn})
 	r.newTurn = nil
+	return alive
 }
 
 // withTimeout derives the run's context. The wall-clock budget carries its own
