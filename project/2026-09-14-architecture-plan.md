@@ -21,6 +21,16 @@ Decided 2026-09-14 after the [brief](2026-09-14-initial-vision.md) and the [rese
 | MCP | **Out of scope** | Decided by the owner; a protocol stack does not belong in the core |
 | Dependencies | **Zero** in the module | On Go 1.27, json/v2, `uuid` and `synctest` remove every reason the incumbents had |
 
+> **Added 2026-09-17: a judgment model beside the providers, and delegation.** Ruled by the owner on the [TypeSafe and subagents findings](2026-09-17-typesafe-jev-findings.md).
+>
+> | Decision | Ruling | Why |
+> |---|---|---|
+> | TypeSafe's Jev | **Its own package, `goodall/typesafe`**, a blocking client over `POST /v1/systemone`; never a `Provider` | Jev answers typed questions over a state and has no messages, blocks, tools, stop reason or stream; forcing it through the conversation seam would be an adapter holding a decision, and a shared "judge" interface above both would be the second abstraction layer this plan rules out |
+> | How Jev reaches the agent | **A `Tool` and a `BeforeSend` helper** in the same package, no core change | Every composition Jev offers a conversational agent is a tool call or a request-shaping hook, both of which exist |
+> | Who writes the questions | **Both**: one constructor with developer-fixed questions, one where the model authors them at call time, opt-in and documented with the literalness caveat | The fixed form is what TypeSafe recommends (questions and thresholds in one reviewable place); the authored form is the real "delegate a batch of judgments to a cheap model" shape, and a flagship writes better questions than the caveat suggests |
+> | Subagents | **An agent wrapped as a `Tool`** in the root package (`AgentTool`); nested events and per-call accounting as a later leaf designed against the two adapters | A nested run already inherits cancellation, budgets and redaction through `Execute`; what it lacks — visibility in the parent stream, a place to report what it spent — is one core change best shaped by real consumers |
+> | A "delegate" seam in the provider layer | **Parked** in the backlog | Nothing would call it but the two adapters above |
+
 ## Invariants
 
 These are the rules every package obeys; a test guards each one where a test can.
