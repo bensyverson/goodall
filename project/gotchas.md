@@ -53,3 +53,7 @@ An authored OpenRouter stream that ends `data: [DONE]\n` instead of `data: [DONE
 ## 2026-09-15 Recording a provider fixture from a *refused* request leaves a JSON error body in a `.sse` file
 
 `scripts/record-fixtures` saved whatever came back, whether or not the call succeeded — the right call for a stream that broke halfway, the wrong one for an HTTP 400, whose body is a JSON error envelope. The run aborts and prints the error, but the file stays on disk, and the next `go test` reads it as a recording of an answer: the failure surfaces as `the stream ended before message_stop` on a fixture nobody remembers writing. Fixed at the source (`recorder.refused` discards a capture whose status is not 200), so this is only a warning to anyone who finds an old one: delete the fixture as well as re-running the recorder.
+
+## 2026-09-17 A recursive json/v2 dispatch cannot be a package-level declaration initializer
+
+`ToolEvent` carries an `Event`, so the event unmarshaler decodes an inner event with the same options that name the event unmarshaler. Declaring `var eventUnmarshalers = json.WithUnmarshalers(json.JoinUnmarshalers(json.UnmarshalFromFunc(unmarshalEvent), …))` while `unmarshalEvent` reaches `decodeEvent`, which reads `eventUnmarshalers`, fails to compile with "initialization cycle", and the message names the variable rather than the recursion. Assign the options in `init` instead (`event_json.go` does). Any future block or event that nests its own kind hits the same wall.
