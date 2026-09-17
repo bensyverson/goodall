@@ -53,3 +53,7 @@ The plan says the OpenRouter dialect decides whether `strict: true` tools need t
 ## 2026-09-17 A "delegate" or "judge" seam in the provider layer
 
 A second interface beside `Provider` that a judgment model (TypeSafe's Jev) and a nested agent would both satisfy, so the loop could call either through one seam. Parked in the [TypeSafe and subagents findings](2026-09-17-typesafe-jev-findings.md): nothing would call it but the two adapters that already exist as a `Tool` and a `BeforeSend` helper, and it is the second abstraction layer the plan rules out. Revive if a third kind of delegate appears that neither a tool nor a hook can express.
+
+## 2026-09-17 An explicit union type on a judgment tool's `state` schema
+
+`typesafe.Tool` and `typesafe.AuthoredTool` take the state as a `jsontext.Value`, which `goodall.NewTool` infers to a required, described member with no `type`, so a model may write a string, an object or an array there. Spelling that as an explicit union needs `goodall.Schema` to gain `anyOf`, a root-package change. Parked because both providers accept the typeless member and the live run (`typesafe/live_authored_test.go`) shows a model filling it correctly without one. Revive if a model is seen writing the wrong shape, or if a provider starts refusing a property with no type.

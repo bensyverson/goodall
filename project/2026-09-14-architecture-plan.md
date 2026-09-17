@@ -31,6 +31,16 @@ Decided 2026-09-14 after the [brief](2026-09-14-initial-vision.md) and the [rese
 > | Subagents | **An agent wrapped as a `Tool`** in the root package (`AgentTool`); nested events and per-call accounting as a later leaf designed against the two adapters | A nested run already inherits cancellation, budgets and redaction through `Execute`; what it lacks — visibility in the parent stream, a place to report what it spent — is one core change best shaped by real consumers |
 > | A "delegate" seam in the provider layer | **Parked** in the backlog | Nothing would call it but the two adapters above |
 
+> **Ruled 2026-09-17, nested events and per-call accounting** (leaf fH6YmO), designed against `AgentTool` and the three `typesafe` adapters once they existed. The one core change delegation asks for, in three parts.
+>
+> *A tool may report while it runs.* An optional interface beside `Tool`, the house pattern of `Completer` and `ModelLister`: a tool that implements it is run through the reporting method instead of `Execute`, and is handed a `report func(Event)` that it may call any number of times from any goroutine. The loop wraps each reported event as `ToolEvent{ToolUseID, Name, Event}` in the parent's stream, in the order reported, before that call's `ToolCallEnd`. A `report` after the tool has returned is dropped, and a `report` after the consumer stopped reading is dropped rather than blocked on, so a reporting tool can never deadlock the run's unwinding. `Accumulator` ignores it like every other loop event. `AgentTool` reports every event of the child run, so a UI watching the parent sees the delegation's turns, text and tool calls under the call that started them.
+>
+> *What a call spent travels on the call.* `ToolCallEnd` gains `Usage` and `Cost`, filled from what the reporting method returns beside its result; a plain `Execute` tool reports neither. `AgentTool` returns the child's `Result.Usage` and `Result.Cost`; the `typesafe` tools return the answers' usage and an unreported cost.
+>
+> *`Result` is not rolled up.* The findings recommended a cost-only roll-up on the parent's `Result`; ruled against while designing it. `Cost.Add` treats a zero, unreported `Cost` as the identity, so a delegated call whose provider reports no money (every Jev call, every child on Anthropic) would vanish from the sum, and the parent's `Result.Cost` would say `Reported: true` for a figure that omits real spend; the alternative, marking the sum unreported whenever any call's cost was unknown, would erase a whole OpenRouter run's real figure on the first Jev call. Neither is a total a bill can trust. Tokens stay the parent model's own, which is what `Budget` bounds; money and tokens per delegated call are on the `ToolCallEnd` events, and a consumer that wants a total sums the events it chose to count, knowing which ones reported. The chat thread's `Usage` and `Cost` keep their meaning, the thread's own model calls.
+>
+> *Redaction recurses.* `chat.Redact` applies its own rules to the event inside a `ToolEvent` and keeps the id and name, so a front end sees a child's progress as it sees the parent's, and nothing the parent withholds leaks through a child.
+
 ## Invariants
 
 These are the rules every package obeys; a test guards each one where a test can.
