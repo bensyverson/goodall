@@ -70,3 +70,16 @@ const OpenRouterOpenAI = "openai/gpt-6-astra"
 // effort ladder runs from none to max, so it serves all three of text, a tool
 // call and a reasoning answer.
 const OpenAI = "gpt-5.6-terra"
+
+// TypeSafe is the Jev model the TypeSafe live test and
+// scripts/record-fixtures use by default.
+//
+// It is the versioned id jev-1.13.0 rather than the jev-latest alias, which is
+// what a caller's code would normally send: TypeSafe tunes each version's
+// confidence figures separately and says so on its models page, so a fixture
+// recorded behind an alias would start disagreeing with the thresholds a test
+// asserts the moment a release ships, and the disagreement would read as a bug
+// in the client. The response reports the versioned id that answered either
+// way, so pinning it here costs nothing. Override it on the recorder with
+// -model.
+const TypeSafe = "jev-1.13.0"

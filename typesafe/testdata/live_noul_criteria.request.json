@@ -1,0 +1,14 @@
+{
+  "state": "Help! My payouts have been failing for 3 days and I have staff to pay.",
+  "model": "jev-1.13.0",
+  "questions": {
+    "is_urgent": {
+      "type": "noul",
+      "instructions": "Does this message convey urgency?",
+      "criteria": {
+        "true": "Explicitly time-sensitive, or money or work is blocked right now",
+        "false": "No urgency expressed; the sender can wait"
+      }
+    }
+  }
+}

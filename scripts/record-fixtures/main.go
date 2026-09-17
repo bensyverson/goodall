@@ -94,6 +94,12 @@ var providers = map[string]providerSpec{
 		outDir:       "openrouter/testdata",
 		exchanges:    openAIExchanges,
 	},
+	"typesafe": {
+		key:          "TYPESAFE_API_KEY",
+		defaultModel: livemodel.TypeSafe,
+		outDir:       "typesafe/testdata",
+		exchanges:    typeSafeExchanges,
+	},
 }
 
 func main() {

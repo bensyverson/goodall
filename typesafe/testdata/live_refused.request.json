@@ -1,0 +1,10 @@
+{
+  "state": "Help! My payouts have been failing for 3 days.",
+  "model": "jev-1.13.0",
+  "questions": {
+    "vibe": {
+      "type": "vibe",
+      "instructions": "What is the vibe?"
+    }
+  }
+}

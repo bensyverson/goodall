@@ -10,7 +10,9 @@ Read on 2026-09-17. Every page below is served as Markdown by appending `.md` to
 - The API: `api`, `models`, `concepts/system-one`, `concepts/state`, `primitives`, `confidence`, `model-jaggedness/jev-1.13`, and the Python SDK's `sdk/python/api/retries`, `sdk/python/api/constants`, `sdk/python/api/exceptions`.
 - The patterns that bear on an agent: `patterns/fan-out`, `patterns/intent-routing`, `cookbooks/function_calling`, `cookbooks/skill_suggestion`.
 
-No live call was made; there is no TypeSafe key in `.env`. Every fact below is documentation, not observation, and the repo's fixture practice (`scripts/record-fixtures`) would need a key before any of it is asserted in a test.
+No live call was made when this was written; every fact below came from documentation rather than observation.
+
+> **Corrected 2026-09-17 by the client leaf (Qsv3Ux).** The premise above no longer holds: `TYPESAFE_API_KEY` was in `.env` after all, and `go run ./scripts/record-fixtures -provider typesafe -env .env` recorded four live exchanges into `typesafe/testdata` against `jev-1.13.0`. The wire shape below is now **observed**, and it was right about the request, the answers, the usage members and the four error statuses. Four things it did not say are in the block quote at the end of ["The wire"](#the-wire-verified-against-apimd).
 
 ## What Jev is
 
@@ -39,6 +41,15 @@ Authorization: Bearer <TYPESAFE_API_KEY>
 - **Price and limits, from `models.md` on 2026-09-17:** $0.042 per million input tokens; output tokens are free. Rate limits 250,000 tokens per second and 1,200 requests per minute, stated to be adjusting dynamically. There is no per-response cost member, so cost is "not reported" under the plan's cost ruling, the same as Anthropic.
 - **Context, from `model-jaggedness/jev-1.13.md`:** 64k tokens for state plus all questions together, 32k for state plus the longest question. Text only.
 - **Configuration the SDKs read:** `TYPESAFE_API_KEY`, `TYPESAFE_BASE_URL` (default `https://api.typesafe.ai`), `TYPESAFE_DEFAULT_MODEL` (default `jev-latest`).
+
+> **Observed 2026-09-17 by the client leaf (Qsv3Ux)**, recording `typesafe/testdata/live_*` with `go run ./scripts/record-fixtures -provider typesafe -env .env` against `jev-1.13.0`. Everything in the table above held. Four things it did not say:
+>
+> 1. **There is a fourth question type, `bounding_box`, and it is not in the published API reference.** A 422 from a body carrying `"type":"vibe"` answers with `expected_tags: "<QuestionType.Noul: 'noul'>, <QuestionType.Choice: 'choice'>, <QuestionType.Score: 'score'>, <QuestionType.BoundingBox: 'bounding_box'>"` (`typesafe/testdata/live_refused.json`). Its request and answer members are undocumented, so `goodall/typesafe` does not model it; an answer of that type decodes to a `typesafe.UnknownAnswer` carrying its bytes rather than being dropped. The claim above that "a `Question` is one of three types" is the reference's, and the API serves four.
+> 2. **The 422 body is a list, not a string.** It is `{"detail":[{"type","loc","msg","input","ctx"}]}` — FastAPI's validation shape — where `loc` is the path to the offending member (`["body","questions","vibe"]`). A decoder that read `detail` as a string would report nothing useful, so the client renders the list as `body.questions.vibe: <msg>`.
+> 3. **`release_date` is an RFC 3339 timestamp with microseconds**, not a date: `"2026-09-10T18:38:01.391457+00:00"`. `GET /v1/models` answers `{"models":[…]}` — the entries are wrapped, which the summary above left out.
+> 4. **Answer member order differs from the reference's field order.** A `choice` answer arrives as `type, choice, confidence, probabilities` and a `score` as `type, score, confidence, legend, probabilities`. Nothing depends on it — the order matters on the request, which goodall writes — but a reader comparing a fixture with the docs should not think the fixture is wrong.
+>
+> The cost ruling also held: no response carries a money figure, so `Answers.Cost` is always unreported.
 
 ### What "confidence" means
 

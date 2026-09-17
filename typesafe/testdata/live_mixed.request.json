@@ -1,0 +1,33 @@
+{
+  "state": {
+    "subject": "Payouts failing since Tuesday",
+    "body": "Help! My payouts have been failing for 3 days and I have staff to pay.",
+    "plan": "growth"
+  },
+  "model": "jev-1.13.0",
+  "questions": {
+    "department": {
+      "type": "choice",
+      "instructions": "Which team should handle this ticket?",
+      "criteria": {
+        "billing": "Payments, payouts, invoicing, refunds",
+        "technical": "Bugs, outages, integrations",
+        "sales": "Pricing, upgrades, new accounts"
+      }
+    },
+    "is_urgent": {
+      "type": "noul",
+      "instructions": "Does this ticket convey urgency?"
+    },
+    "frustration": {
+      "type": "score",
+      "instructions": "How frustrated is the customer?",
+      "criteria": [
+        "Calm",
+        "Mildly annoyed",
+        "Frustrated",
+        "Furious"
+      ]
+    }
+  }
+}
