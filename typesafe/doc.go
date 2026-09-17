@@ -48,4 +48,20 @@
 //		return err
 //	}
 //	dept, err := answers.Choice("department")
+//
+// # Reaching the judge from an agent
+//
+// Three adapters put a judgment in front of, or inside, a
+// [github.com/bensyverson/goodall.Agent], and none of them needs anything of
+// the core loop that a tool and a hook do not already offer:
+//
+//   - [Tool] is a tool whose questions the developer fixes: the model chooses
+//     what to judge and reads back the typed answers. Reach for this one first.
+//   - [AuthoredTool] is a tool whose questions the model writes at call time,
+//     for judgments that cannot be enumerated in advance. Its input schema
+//     carries the guidance about writing a question, and it refuses a question
+//     set the API could not answer before paying for the call.
+//   - [Route] is a [github.com/bensyverson/goodall.Hooks] BeforeSend hook: it
+//     judges each new turn and hands the answers to a callback that picks the
+//     model, narrows the tools, adds a system line or refuses the turn.
 package typesafe
