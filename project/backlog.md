@@ -57,3 +57,15 @@ A second interface beside `Provider` that a judgment model (TypeSafe's Jev) and 
 ## 2026-09-17 An explicit union type on a judgment tool's `state` schema
 
 `typesafe.Tool` and `typesafe.AuthoredTool` take the state as a `jsontext.Value`, which `goodall.NewTool` infers to a required, described member with no `type`, so a model may write a string, an object or an array there. Spelling that as an explicit union needs `goodall.Schema` to gain `anyOf`, a root-package change. Parked because both providers accept the typeless member and the live run (`typesafe/live_authored_test.go`) shows a model filling it correctly without one. Revive if a model is seen writing the wrong shape, or if a provider starts refusing a property with no type.
+
+## 2026-09-17 Approval inside a delegated run
+
+A hook in an `AgentTool`'s child that defers a tool call for approval ends the child with `StopCauseDeferred`, and the parent receives an error result saying approval inside a delegated run is not supported; the parent's caller is never asked. Parked because a nested pause needs a path from the child's pending calls to the parent's `Result.Pending` and a `Resume` that knows which level to resume, which is a loop design of its own. Revive when a consumer wants a delegate to run tools that need a person's approval; the shape to consider is the child's `Pending` traveling on the parent's `Stopped` with the call that owns it.
+
+## 2026-09-17 Discouraging indirection in the authored judgment tool's guidance
+
+The one live run of `typesafe.AuthoredTool` (findings doc, "Observed 2026-09-17 by the adapters leaf") showed claude-sonnet-5 asking all ten questions in one call, as the description asks, but addressing each ticket by reference over the whole array as state, which is the indirection TypeSafe's jaggedness page says degrades Jev. Jev resolved all ten. Parked because one run is not evidence and every sentence in `DefaultAuthoredDescription` competes with the four already there. Revive when a second run shows a wrong answer traceable to indirection; the fix is a sentence in the description or in the `state` field's `desc`, measured over repeated runs.
+
+## 2026-09-17 One model option across the typesafe client, tools and route
+
+`typesafe.WithModel` is an `AskOption`; the tools take `WithToolModel` and the route `WithRouteModel`, because a construction-time option cannot share the per-call func type. Parked as a naming wart. Revive if the three spellings confuse a consumer; the fix is a small interface-based option type the three constructors share, which is a change to `typesafe/options.go`.
