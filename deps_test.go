@@ -20,6 +20,48 @@ const modulePath = "github.com/bensyverson/goodall"
 // providers and must stay just as light.
 var stdOnly = []string{".", "internal/sse"}
 
+// Every other package in the module — the providers, the chat layer, the
+// judgment client, the internal helpers, the scripts and the examples — may
+// import the standard library and this module's own packages and nothing
+// else. They are found by walking the module rather than listed, so a new
+// subpackage is held to the rule the day it appears; the walk skips hidden
+// directories (agent worktrees live under .claude) and testdata.
+
+// skippedDir reports a directory the module walk does not descend into.
+func skippedDir(name string) bool {
+	return strings.HasPrefix(name, ".") || name == "testdata"
+}
+
+// modulePackages lists every directory under root that holds a Go package,
+// relative to root, in walk order.
+func modulePackages(root string) ([]string, error) {
+	var out []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		if path != root && skippedDir(d.Name()) {
+			return filepath.SkipDir
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		if _, err := build.Default.ImportDir(path, build.IgnoreVendor); err != nil {
+			if _, ok := errors.AsType[*build.NoGoError](err); ok {
+				return nil
+			}
+			return err
+		}
+		out = append(out, filepath.ToSlash(rel))
+		return nil
+	})
+	return out, err
+}
+
 // errNoPackage reports a directory that holds no Go package yet.
 var errNoPackage = errors.New("no Go package")
 
@@ -42,11 +84,14 @@ func isStandardImport(path string) bool {
 }
 
 // checkImports applies the layering rules to the package in dir and returns
-// every violation. In-package test files are held to the same rules as
-// production files; an external test package (package foo_test) may import
-// this module's subpackages, since that is how end-to-end tests reach the
-// providers, but it too may not import outside the standard library.
-func checkImports(root, rel string) ([]violation, error) {
+// every violation. With stdOnlyRule the package may import nothing outside
+// the standard library; without it the package may also import this module's
+// own packages, but still nothing third-party. In-package test files are held
+// to the same rules as production files; an external test package (package
+// foo_test) may import this module's subpackages, since that is how
+// end-to-end tests reach the providers, but it too may not import outside
+// the standard library.
+func checkImports(root, rel string, stdOnlyRule bool) ([]violation, error) {
 	dir := filepath.Join(root, rel)
 	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
 		return nil, errNoPackage
@@ -70,12 +115,12 @@ func checkImports(root, rel string) ([]violation, error) {
 		for _, imp := range imports {
 			switch {
 			case imp == self && external:
-			case strings.HasPrefix(imp, modulePath+"/"):
-				if rel == "." && !external {
-					out = append(out, violation{rel, imp, "the root package must not import a subpackage"})
+			case imp == modulePath || strings.HasPrefix(imp, modulePath+"/"):
+				if stdOnlyRule && !external {
+					out = append(out, violation{rel, imp, "only the standard library is allowed, not another package of this module"})
 				}
 			case !isStandardImport(imp):
-				out = append(out, violation{rel, imp, "only the standard library is allowed"})
+				out = append(out, violation{rel, imp, "only the standard library and this module are allowed"})
 			}
 		}
 	}
@@ -87,14 +132,15 @@ func checkImports(root, rel string) ([]violation, error) {
 
 // TestDependencyDirection is the guard for the plan's "zero dependencies"
 // decision and its layering: the core and internal/sse import only the
-// standard library, and the core never imports one of its own subpackages.
+// standard library, the core never imports one of its own subpackages, and
+// every other package in the module imports nothing third-party.
 func TestDependencyDirection(t *testing.T) {
 	root, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, rel := range stdOnly {
-		violations, err := checkImports(root, rel)
+		violations, err := checkImports(root, rel, true)
 		if errors.Is(err, errNoPackage) {
 			// Announced rather than silent: a package that has not been
 			// written yet has nothing to guard, but a renamed one would
@@ -108,6 +154,72 @@ func TestDependencyDirection(t *testing.T) {
 		for _, v := range violations {
 			t.Errorf("%s imports %q: %s", v.Package, v.Import, v.Rule)
 		}
+	}
+	packages, err := modulePackages(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(packages) <= len(stdOnly) {
+		t.Fatalf("the module walk found only %d packages, %q; it should find every subpackage", len(packages), packages)
+	}
+	for _, rel := range packages {
+		if slices.Contains(stdOnly, rel) {
+			continue
+		}
+		violations, err := checkImports(root, rel, false)
+		if err != nil {
+			t.Fatalf("%s: %v", rel, err)
+		}
+		for _, v := range violations {
+			t.Errorf("%s imports %q: %s", v.Package, v.Import, v.Rule)
+		}
+	}
+}
+
+// TestSubpackageRuleCatchesAThirdPartyImport is the mutation proof for the
+// module-wide rule: a synthetic subpackage that imports the root, a sibling
+// and a third-party module must be flagged for the third-party import alone,
+// and the module walk must find it without it being listed anywhere.
+func TestSubpackageRuleCatchesAThirdPartyImport(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "judgment")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src := "package judgment\n\nimport (\n\t_ \"fmt\"\n\t_ \"" + modulePath + "\"\n\t_ \"" + modulePath + "/internal/transport\"\n\t_ \"github.com/example/dep\"\n)\n"
+	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// A hidden directory and a testdata directory holding Go files must
+	// not be walked: agent worktrees live under .claude and would report
+	// half-written files as the module's.
+	for _, skipped := range []string{".claude/worktrees/x", "judgment/testdata"} {
+		skippedDir := filepath.Join(root, skipped)
+		if err := os.MkdirAll(skippedDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(skippedDir, "b.go"), []byte("package x\n\nimport _ \"github.com/example/other\"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	packages, err := modulePackages(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(packages, []string{"judgment"}) {
+		t.Fatalf("modulePackages = %q, want only the subpackage: hidden and testdata directories are skipped", packages)
+	}
+	violations, err := checkImports(root, "judgment", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, v := range violations {
+		got = append(got, v.Import)
+	}
+	if want := []string{"github.com/example/dep"}; !slices.Equal(got, want) {
+		t.Fatalf("violations = %q, want %q: the root and a sibling are allowed, a third-party module is not", got, want)
 	}
 }
 
@@ -130,7 +242,7 @@ func TestCheckImportsCatchesViolations(t *testing.T) {
 	// third-party module, which is not.
 	write("b_test.go", "package goodall_test\n\nimport (\n\t_ \""+modulePath+"\"\n\t_ \""+modulePath+"/anthropic\"\n\t_ \"golang.org/x/tools/present\"\n)\n")
 
-	violations, err := checkImports(root, ".")
+	violations, err := checkImports(root, ".", true)
 	if err != nil {
 		t.Fatal(err)
 	}

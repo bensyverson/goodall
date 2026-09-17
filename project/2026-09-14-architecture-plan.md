@@ -278,6 +278,8 @@ func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stre
 ## Testing and tooling
 
 - `go test -race ./...` is the suite. A test in the root package walks the import graph and fails if the root or `internal/sse` imports anything outside the standard library, or if `goodall` imports a subpackage.
+
+> **Extended 2026-09-17 after the TypeSafe client leaf noticed the gap.** The test guarded only the two std-only packages; a third-party import in a provider, the chat layer or `goodall/typesafe` would have passed the suite and surfaced only as a `go.mod` change nobody asserts on. `deps_test.go` now also walks the module (skipping hidden directories, where agent worktrees live, and `testdata`) and holds every other package to "the standard library and this module, nothing else", so a new subpackage is covered the day it appears. A synthetic subpackage under a temp dir is the mutation proof.
 - Table tests over captured JSON under `testdata/` for every block, event and error shape on both providers; an `httptest.Server` for status handling, retries, cancellation mid-stream and body close on early break; `synctest` for timing.
 - `scripts/record-fixtures/` refreshes the fixtures from live APIs when `.env` provides keys; live tests skip loudly without it and say what they skipped.
 - OpenRouter's `debug.echo_upstream_body` verifies the translation to Anthropic without a second live provider.
