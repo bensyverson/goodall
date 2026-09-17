@@ -49,7 +49,7 @@ for ev, _ := range agent.Run(ctx, conv, goodall.Text{Text: "Will it rain in Pari
 }
 ```
 
-The tool's JSON schema is inferred from the handler's input type. A run ends in exactly one `Done` or `Stopped` event carrying the conversation so far and the usage, on every path including cancellation. Swap `anthropic.New(...)` for `openrouter.New(openrouter.WithAPIKey(...))` and a model such as `anthropic/claude-sonnet-5` to run the same agent through OpenRouter; `openrouter.WithBaseURL` and `openrouter.WithDialect` point it at OpenAI or a local server. This example compiles as `ExampleAgent_Run` in the root package.
+The tool's JSON schema is inferred from the handler's input type. `goodall.AgentTool` wraps a second agent, on any model or provider, as a tool, so a model can delegate a task and read its answer; the delegated run inherits the caller's cancellation and keeps its own budget, and compiles as `ExampleAgentTool`. A run ends in exactly one `Done` or `Stopped` event carrying the conversation so far and the usage, on every path including cancellation. Swap `anthropic.New(...)` for `openrouter.New(openrouter.WithAPIKey(...))` and a model such as `anthropic/claude-sonnet-5` to run the same agent through OpenRouter; `openrouter.WithBaseURL` and `openrouter.WithDialect` point it at OpenAI or a local server. This example compiles as `ExampleAgent_Run` in the root package.
 
 ## Quick start: a chat back end
 
