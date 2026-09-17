@@ -15,6 +15,12 @@ import "github.com/bensyverson/goodall"
 // ran under which id, whether it failed, the tokens, the money, the stop
 // reason, the model's own text, which is the answer being watched, and the
 // person's own words on the turn that prompted it.
+//
+// An event a running tool reported — a delegated run's own stream, wrapped in a
+// [goodall.ToolEvent] — is redacted by the rule its own type earns, at every
+// depth, keeping the id and the name of the call it belongs to. So a front end
+// watching a redacted stream sees a child's progress as it sees the parent's,
+// and nothing the parent withholds travels through a child instead.
 // Thinking text follows the agent's own display setting, exactly as the view
 // does: under [goodall.DisplayOmitted] the block still opens, streams and
 // closes, carrying no text, because the fact that the model thought is not
@@ -69,7 +75,28 @@ func redactEvent(ev goodall.Event, opts ViewOptions) (goodall.Event, bool) {
 			// view: the model saw the content, the front end sees that
 			// there was a failure.
 			Result: goodall.ToolResult{ToolUseID: e.Result.ToolUseID, IsError: e.Result.IsError},
+			// The tokens and the money a call spent are what a front
+			// end bills on, exactly as a turn's ledger is, so they
+			// travel where the content does not.
+			Usage: e.Usage,
+			Cost:  e.Cost,
 		}, true
+	case goodall.ToolEvent:
+		// A nested event earns the rule its own type earns, at every
+		// depth: the wrapper keeps the call it belongs to, which is
+		// what a front end draws the nesting from, and the event
+		// inside goes through this same mapping. An inner event with no
+		// redacted form takes its wrapper with it, or a front end would
+		// be handed a nesting with nothing in it.
+		if e.Event == nil {
+			return nil, false
+		}
+		inner, keep := redactEvent(e.Event, opts)
+		if !keep {
+			return nil, false
+		}
+		e.Event = inner
+		return e, true
 	case goodall.TurnCommitted:
 		e.Message = redactMessage(e.Message)
 		return e, true

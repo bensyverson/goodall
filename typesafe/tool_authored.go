@@ -78,6 +78,11 @@ type authoredOption struct {
 // is made. A judgment the API refuses carries the API's own message. The model
 // reads either one and writes a better question set.
 //
+// As with [Tool], what a judgment spent travels on the call: the tool
+// implements [goodall.Reporter], so the judge's tokens reach a consumer on that
+// call's [goodall.ToolCallEnd], with an unreported cost, and a question set
+// refused before it was sent declares nothing at all.
+//
 // It returns an error for a nil client and for a definition no provider would
 // accept — the naming rules are [goodall.NewTool]'s:
 //
@@ -91,10 +96,12 @@ func AuthoredTool(client *Client, name string, opts ...ToolOption) (goodall.Tool
 	if cfg.described {
 		description = cfg.description
 	}
-	return goodall.NewTool(name, description, func(ctx context.Context, in authoredJudgment) (goodall.ToolResult, error) {
+	return goodall.NewReportingTool(name, description, func(ctx context.Context, in authoredJudgment, _ func(goodall.Event)) (goodall.ToolOutcome, error) {
 		questions, err := authoredQuestions(in.Questions)
 		if err != nil {
-			return goodall.ErrorResult(err.Error()), nil
+			// The refusal never reached the API, so the call spent
+			// nothing and declares nothing.
+			return goodall.ToolOutcome{Result: goodall.ErrorResult(err.Error())}, nil
 		}
 		return judge(ctx, client, in.State, questions, ask...)
 	})

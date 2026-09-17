@@ -67,14 +67,25 @@ func NewTool[In any](name, description string, run func(context.Context, In) (To
 	if run == nil {
 		return nil, fmt.Errorf("goodall: tool %q has no handler function", name)
 	}
+	def, err := newToolDefinition[In](name, description)
+	if err != nil {
+		return nil, err
+	}
+	return &typedTool[In]{toolDefinition: def, run: run}, nil
+}
+
+// newToolDefinition validates what every typed tool needs and infers the
+// schema from In. It is shared by NewTool and NewReportingTool, which differ
+// only in the shape of the handler they wrap.
+func newToolDefinition[In any](name, description string) (toolDefinition[In], error) {
 	schema, err := SchemaFor[In]()
 	if err != nil {
-		return nil, &toolDefinitionError{name: name, err: err}
+		return toolDefinition[In]{}, &toolDefinitionError{name: name, err: err}
 	}
 	if err := schema.Validate(); err != nil {
-		return nil, &toolDefinitionError{name: name, err: err}
+		return toolDefinition[In]{}, &toolDefinitionError{name: name, err: err}
 	}
-	return &typedTool[In]{name: name, description: description, schema: schema, run: run}, nil
+	return toolDefinition[In]{name: name, description: description, schema: schema}, nil
 }
 
 // validateToolName applies the intersection of the two providers' rules.
@@ -109,25 +120,51 @@ func (e *toolDefinitionError) Error() string {
 
 func (e *toolDefinitionError) Unwrap() error { return e.err }
 
-// typedTool is the Tool NewTool returns: a handler over a Go type, plus the
-// schema inferred from that type once, at construction.
-type typedTool[In any] struct {
+// toolDefinition is everything a typed tool is apart from its handler: the
+// name and description the model reads, the schema inferred from In once at
+// construction, and the input checking every call goes through. The plain and
+// the reporting tool embed it, so the two differ only in how they are run.
+type toolDefinition[In any] struct {
 	name        string
 	description string
 	schema      *Schema
-	run         func(context.Context, In) (ToolResult, error)
 }
 
 // Name is the name the model calls the tool by.
-func (t *typedTool[In]) Name() string { return t.name }
+func (t *toolDefinition[In]) Name() string { return t.name }
 
 // Description is the prose the model decides with.
-func (t *typedTool[In]) Description() string { return t.description }
+func (t *toolDefinition[In]) Description() string { return t.description }
 
 // Schema is the inferred input schema. It is the same pointer on every call:
 // a provider marshals it into every request, so it must not be rebuilt per
 // turn.
-func (t *typedTool[In]) Schema() *Schema { return t.schema }
+func (t *toolDefinition[In]) Schema() *Schema { return t.schema }
+
+// decode reads the model's argument object into In. The second return is the
+// result the model gets instead when the input is the model's own to fix,
+// which is nil when the input was good; see [typedTool.Execute] for the shape
+// of that message and why it is a result rather than an error.
+func (t *toolDefinition[In]) decode(input jsontext.Value) (In, *ToolResult) {
+	value := toolInputObject(input)
+	var in In
+	if err := json.Unmarshal(value, &in, json.RejectUnknownMembers(true)); err != nil {
+		bad := ErrorResult(inputErrorText(t.schema, inputProblem(t.schema, err)))
+		return in, &bad
+	}
+	if missing := missingRequired(t.schema, value); len(missing) > 0 {
+		bad := ErrorResult(inputErrorText(t.schema, missingProblem(missing)))
+		return in, &bad
+	}
+	return in, nil
+}
+
+// typedTool is the Tool NewTool returns: a handler over a Go type, plus the
+// definition inferred from that type once, at construction.
+type typedTool[In any] struct {
+	toolDefinition[In]
+	run func(context.Context, In) (ToolResult, error)
+}
 
 // Execute decodes the model's arguments into In and runs the handler.
 //
@@ -149,13 +186,9 @@ func (t *typedTool[In]) Schema() *Schema { return t.schema }
 // The handler's own result and error pass through untouched; the loop assigns
 // the ToolUseID and turns an error into an error result.
 func (t *typedTool[In]) Execute(ctx context.Context, input jsontext.Value) (ToolResult, error) {
-	value := toolInputObject(input)
-	var in In
-	if err := json.Unmarshal(value, &in, json.RejectUnknownMembers(true)); err != nil {
-		return ErrorResult(inputErrorText(t.schema, inputProblem(t.schema, err))), nil
-	}
-	if missing := missingRequired(t.schema, value); len(missing) > 0 {
-		return ErrorResult(inputErrorText(t.schema, missingProblem(missing))), nil
+	in, bad := t.decode(input)
+	if bad != nil {
+		return *bad, nil
 	}
 	return t.run(ctx, in)
 }

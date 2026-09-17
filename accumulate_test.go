@@ -301,6 +301,10 @@ func TestAccumulatorIgnoresLoopEvents(t *testing.T) {
 		BlockStop{},
 		MessageStop{},
 		ToolCallStart{ToolUse: ToolUse{ID: "toolu_1"}},
+		// A nested event is a loop event too, so a child's whole message
+		// is ignored rather than folded into the parent's.
+		ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: TextDelta{Text: "not mine"}},
+		ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: MessageStop{}},
 		TurnEnd{Turn: 1},
 		Done{},
 	)

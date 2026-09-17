@@ -27,6 +27,14 @@ type call struct {
 // Results are emitted as they arrive, in whatever order the tools finish, and
 // appended in the order the model asked for them: a model reading its own
 // transcript must see its calls answered in the order it made them.
+//
+// A tool that implements [Reporter] also reports events while it runs. The
+// run's yield is not safe for concurrent use and only this goroutine may call
+// it, so the reports are funneled here: every tool sends onto one unbuffered
+// channel this loop selects on beside the finished ones, which is what puts a
+// report on the stream before the result of the call that made it. A report
+// the loop will never read is dropped rather than waited on — see report in
+// runTool — so a reporting tool cannot park the run's unwinding.
 func (r *run) runTools(ctx context.Context, msg Message) bool {
 	calls, ok := r.decide(ctx, msg)
 	if !ok {
@@ -43,44 +51,77 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 	}
 
 	type finished struct {
-		index  int
-		use    ToolUse
-		result ToolResult
+		index   int
+		use     ToolUse
+		outcome ToolOutcome
 	}
+	// Buffered for every call, so no tool can block on sending its result
+	// even when this loop has stopped reading: waiting below then waits
+	// only for work already begun, which is what keeps a canceled run from
+	// leaving tools behind.
 	done := make(chan finished, len(calls))
+	// Unbuffered on purpose: a report is handed over only when this loop
+	// takes it, so the event is on the stream before the reporting tool can
+	// go on to finish, and the order a tool reported in is the order a
+	// consumer sees.
+	reports := make(chan ToolEvent)
+	// Closed on the way out, which is what turns every report still in
+	// flight into a dropped one.
+	stopped := make(chan struct{})
 	var wg sync.WaitGroup
+	// Deferred before the close so that it runs after it: a tool parked on
+	// a report nobody will read must be released before this waits for it.
+	defer wg.Wait()
+	defer close(stopped)
 	for i, c := range calls {
 		if c.denied {
 			// A refused call still produces its result, so the
 			// bookkeeping below has one shape for every call.
-			done <- finished{index: i, use: c.use, result: c.result}
+			done <- finished{index: i, use: c.use, outcome: ToolOutcome{Result: c.result}}
 			continue
 		}
 		wg.Go(func() {
-			done <- finished{index: i, use: c.run, result: r.runTool(ctx, c.run)}
+			done <- finished{index: i, use: c.run, outcome: r.runTool(ctx, c.run, reports, stopped)}
 		})
 	}
-	// The channel is buffered for every call, so no tool can block on
-	// sending its result; waiting here only waits for work already begun,
-	// which is what keeps a canceled run from leaving tools behind.
-	defer wg.Wait()
 
 	results := make([]Block, len(calls))
 	var hookErr error
-	for range calls {
-		out := <-done
+	for remaining := len(calls); remaining > 0; {
+		var out finished
+		select {
+		case nested := <-reports:
+			if hookErr != nil {
+				// The run is ending and the work these events
+				// describe is being discarded with it.
+				continue
+			}
+			if !r.emit(nested) {
+				r.cancel()
+				return false
+			}
+			continue
+		case out = <-done:
+			remaining--
+		}
 		if hookErr != nil {
 			// The run is ending; the remaining tools are drained so
 			// they finish, and their results are dropped rather
 			// than committed unseen by the hook that shapes them.
 			continue
 		}
-		if err := r.afterToolCall(ctx, out.use, &out.result); err != nil {
+		if err := r.afterToolCall(ctx, out.use, &out.outcome.Result); err != nil {
 			hookErr = err
 			continue
 		}
-		results[out.index] = out.result
-		if !r.emit(ToolCallEnd{ToolUse: out.use, Result: out.result}) {
+		results[out.index] = out.outcome.Result
+		end := ToolCallEnd{
+			ToolUse: out.use,
+			Result:  out.outcome.Result,
+			Usage:   out.outcome.Usage,
+			Cost:    out.outcome.Cost,
+		}
+		if !r.emit(end) {
 			// The consumer left with tools still running. Cancel them
 			// before the deferred wait, or a tool that only ends with
 			// its context would hold the consumer's break for ever.
@@ -164,28 +205,65 @@ func (r *run) decide(ctx context.Context, msg Message) ([]call, bool) {
 // as an error result the model can read and correct; a panic is recovered
 // here so that one tool author's bug cannot take the run, or the process,
 // down with it.
-func (r *run) runTool(ctx context.Context, use ToolUse) (result ToolResult) {
+//
+// A tool that implements [Reporter] runs through that interface instead, and
+// is handed a report function that sends onto reports, which the results loop
+// in runTools is reading. Everything else about the call is the same.
+func (r *run) runTool(ctx context.Context, use ToolUse, reports chan<- ToolEvent, stopped <-chan struct{}) (outcome ToolOutcome) {
 	defer func() {
 		if v := recover(); v != nil {
-			result = ErrorResult(fmt.Sprintf("The tool %q failed: %v", use.Name, v))
-			result.ToolUseID = use.ID
+			outcome.Result = ErrorResult(fmt.Sprintf("The tool %q failed: %v", use.Name, v))
+			outcome.Result.ToolUseID = use.ID
 		}
 	}()
 
 	tool, ok := r.tools[use.Name]
 	if !ok {
-		result = ErrorResult(unknownToolText(use.Name, r.agent.Tools))
-		result.ToolUseID = use.ID
-		return result
+		outcome.Result = ErrorResult(unknownToolText(use.Name, r.agent.Tools))
+		outcome.Result.ToolUseID = use.ID
+		return outcome
 	}
-	// Execute turns a bad argument object into an error result of its own,
-	// naming the parameter and listing the rest, so the run continues.
-	out, err := tool.Execute(ctx, use.Input)
+
+	var err error
+	if reporter, reporting := tool.(Reporter); reporting {
+		// returned closes as this call ends, which is what makes a
+		// report from a goroutine the tool left behind a dropped one:
+		// the wrapper would name a call whose result is already out.
+		returned := make(chan struct{})
+		defer close(returned)
+		report := func(ev Event) {
+			if ev == nil {
+				return
+			}
+			// Asked first, so that a report made after the call
+			// ended is dropped even while the loop is still reading
+			// the turn's other calls.
+			select {
+			case <-returned:
+				return
+			case <-stopped:
+				return
+			default:
+			}
+			select {
+			case reports <- ToolEvent{ToolUseID: use.ID, Name: use.Name, Event: ev}:
+			case <-returned:
+			case <-stopped:
+			}
+		}
+		outcome, err = reporter.ExecuteReporting(ctx, use.Input, report)
+	} else {
+		// Execute turns a bad argument object into an error result of
+		// its own, naming the parameter and listing the rest, so the
+		// run continues. A plain tool reports nothing spent, which is
+		// what leaves ToolCallEnd's usage and cost zero.
+		outcome.Result, err = tool.Execute(ctx, use.Input)
+	}
 	if err != nil {
-		out = ErrorResult(err.Error())
+		outcome.Result = ErrorResult(err.Error())
 	}
-	out.ToolUseID = use.ID
-	return out
+	outcome.Result.ToolUseID = use.ID
+	return outcome
 }
 
 // errorResultFor is one error result addressed to a call.

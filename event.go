@@ -4,7 +4,7 @@ import "encoding/json/jsontext"
 
 // EventType is the tag that identifies an event on the wire. Providers
 // neutralize their own event vocabularies onto these, and the agent loop adds
-// the seven that describe a run; anything a provider sends that does not map
+// the eight that describe a run; anything a provider sends that does not map
 // onto one arrives as an UnknownEvent rather than being dropped.
 type EventType string
 
@@ -38,6 +38,8 @@ const (
 	EventToolCallStart EventType = "tool_call_start"
 	// EventToolCallEnd reports a tool's result.
 	EventToolCallEnd EventType = "tool_call_end"
+	// EventToolEvent carries an event a running tool reported.
+	EventToolEvent EventType = "tool_event"
 	// EventTurnEnd closes one model call of a run.
 	EventTurnEnd EventType = "turn_end"
 	// EventDone is the terminal event of a run that finished.
@@ -66,7 +68,7 @@ func (t EventType) Known() bool {
 func (t EventType) FromLoop() bool {
 	switch t {
 	case EventTurnStart, EventTurnCommitted, EventToolCallStart, EventToolCallEnd,
-		EventTurnEnd, EventDone, EventStopped:
+		EventToolEvent, EventTurnEnd, EventDone, EventStopped:
 		return true
 	}
 	return false
@@ -238,12 +240,55 @@ type ToolCallStart struct {
 
 // ToolCallEnd reports a tool's result, including the error results that a
 // failed or refused call produces: every tool_use gets a tool_result.
+//
+// Usage and Cost are what this one call spent, which only a tool that
+// implements [Reporter] can say: a tool that calls a model of its own — an
+// [AgentTool]'s child run, a judgment service — declares its tokens and its
+// money here, and a plain [Tool.Execute] leaves both zero. A zero Usage means
+// "nothing reported", exactly as an unreported Cost does, never "free".
+//
+// What a call spent is deliberately not rolled into [Result]: a delegated call
+// whose provider reports no money would vanish from the sum while the sum
+// called itself a provider's figure, and marking the whole run unreported
+// because one call was would erase a real figure instead. A consumer that
+// wants a total sums the calls it chose to count, knowing which ones reported.
+// [Budget] is unchanged for the same reason: it bounds the parent model's own
+// tokens. See the "Ruled 2026-09-17, nested events and per-call accounting"
+// block quote in project/2026-09-14-architecture-plan.md.
 type ToolCallEnd struct {
 	// ToolUse is the call this result answers.
 	ToolUse ToolUse `json:"tool_use"`
 	// Result is the tool's result, including an error result for a call
 	// the loop declined to run.
 	Result ToolResult `json:"result"`
+	// Usage is the tokens this one call spent, reported only by a tool
+	// that implements [Reporter]; zero means nothing was reported.
+	Usage Usage `json:"usage,omitzero"`
+	// Cost is the money this one call spent, reported only by a tool that
+	// implements [Reporter] and only where its provider says so.
+	Cost Cost `json:"cost,omitzero"`
+}
+
+// ToolEvent is one event a running tool reported, wrapped for the stream of
+// the run that called it. It is how a delegation's progress reaches a UI
+// watching the parent: an [AgentTool] forwards every event of its child run,
+// and the loop emits each one under the call that produced it, in the order it
+// was reported and before that call's [ToolCallEnd].
+//
+// The inner Event is any event at all, a ToolEvent included, so a delegate's
+// own delegate nests a level deeper; the wrapper carries the id and the name of
+// the call at *this* level, which is what lets a consumer draw a tree without
+// tracking the stack itself. [EventType.FromLoop] reports true, so an
+// [Accumulator] over the parent's message ignores it, exactly as it ignores
+// every other loop event: a child's tokens are not the parent's message.
+type ToolEvent struct {
+	// ToolUseID is the id of the call whose tool reported this event.
+	ToolUseID string `json:"tool_use_id,omitzero"`
+	// Name is the name of the tool that reported it, so a consumer can
+	// label the nesting without holding the call it came from.
+	Name string `json:"name,omitzero"`
+	// Event is what the tool reported.
+	Event Event `json:"event,omitzero"`
 }
 
 // TurnEnd closes one model call of a run and carries the whole response, so a
@@ -367,6 +412,9 @@ func (ToolCallStart) Type() EventType { return EventToolCallStart }
 func (ToolCallEnd) Type() EventType { return EventToolCallEnd }
 
 // Type reports the event's wire tag.
+func (ToolEvent) Type() EventType { return EventToolEvent }
+
+// Type reports the event's wire tag.
 func (TurnEnd) Type() EventType { return EventTurnEnd }
 
 // Type reports the event's wire tag.
@@ -389,6 +437,7 @@ func (TurnStart) isEvent()      {}
 func (TurnCommitted) isEvent()  {}
 func (ToolCallStart) isEvent()  {}
 func (ToolCallEnd) isEvent()    {}
+func (ToolEvent) isEvent()      {}
 func (TurnEnd) isEvent()        {}
 func (Done) isEvent()           {}
 func (Stopped) isEvent()        {}

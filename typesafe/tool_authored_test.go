@@ -78,6 +78,44 @@ func TestAuthoredToolSendsTheModelsQuestionsInTheModelsOrder(t *testing.T) {
 	}
 }
 
+// TestAuthoredToolReportsWhatTheJudgmentSpent is the per-call accounting on the
+// delegation shape: the tokens a model-written question set spent travel on the
+// call that spent them, where a consumer can sum the ones it chose to count.
+func TestAuthoredToolReportsWhatTheJudgmentSpent(t *testing.T) {
+	client, _ := serveJSON(t, http.StatusOK, authoredAnswers)
+	agent, _ := agentCalling(authoredTool(t, client), authoredCall)
+	end := oneToolCallEnd(t, runEvents(t, agent, goodall.Conversation{}, goodall.Text{Text: "judge this"}))
+
+	if end.Result.IsError {
+		t.Fatalf("the tool result is an error: %q", end.Result.Text())
+	}
+	if want := (goodall.Usage{Input: 120, Output: 20}); end.Usage != want {
+		t.Errorf("ToolCallEnd usage = %+v, want the judgment's own %+v", end.Usage, want)
+	}
+	if end.Cost.Reported {
+		t.Errorf("ToolCallEnd cost = %+v, want an unreported cost", end.Cost)
+	}
+}
+
+// TestAuthoredToolReportsNoUsageForAQuestionSetItRefused is the shape of a
+// refusal that never reached the API: the model reads what to write instead,
+// and nothing was spent, so nothing is reported.
+func TestAuthoredToolReportsNoUsageForAQuestionSetItRefused(t *testing.T) {
+	client, seen := serveJSON(t, http.StatusOK, authoredAnswers)
+	agent, _ := agentCalling(authoredTool(t, client), `{"state":"anything","questions":[]}`)
+	end := oneToolCallEnd(t, runEvents(t, agent, goodall.Conversation{}, goodall.Text{Text: "judge this"}))
+
+	if !end.Result.IsError {
+		t.Fatalf("an empty question set is not an error result: %q", end.Result.Text())
+	}
+	if seen.Requests != 0 {
+		t.Errorf("the server saw %d requests, want none for a set this package refuses", seen.Requests)
+	}
+	if end.Usage != (goodall.Usage{}) || end.Cost != (goodall.Cost{}) {
+		t.Errorf("ToolCallEnd = %+v / %+v, want nothing reported for a call that spent nothing", end.Usage, end.Cost)
+	}
+}
+
 // TestAuthoredToolRefusesAnUnaskableQuestionBeforeTheNetwork is the guard the
 // authored tool needs and the fixed one does not: the questions are the model's,
 // so they are checked before a call is paid for, and the model is told which

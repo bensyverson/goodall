@@ -45,6 +45,7 @@ type (
 	turnCommittedBody  TurnCommitted
 	toolCallStartBody  ToolCallStart
 	toolCallEndBody    ToolCallEnd
+	toolEventBody      ToolEvent
 	turnEndBody        TurnEnd
 	doneBody           Done
 	stoppedBody        Stopped
@@ -121,6 +122,12 @@ func (e ToolCallEnd) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return json.MarshalEncode(enc, taggedEvent[toolCallEndBody]{EventToolCallEnd, toolCallEndBody(e)})
 }
 
+// MarshalJSONTo writes the event as a "tool_event" object. The event it wraps
+// writes its own tag, so a nested event is the same object at every depth.
+func (e ToolEvent) MarshalJSONTo(enc *jsontext.Encoder) error {
+	return json.MarshalEncode(enc, taggedEvent[toolEventBody]{EventToolEvent, toolEventBody(e)})
+}
+
 // MarshalJSONTo writes the event as a "turn_end" object.
 func (e TurnEnd) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return json.MarshalEncode(enc, taggedEvent[turnEndBody]{EventTurnEnd, turnEndBody(e)})
@@ -165,10 +172,19 @@ func UnmarshalEvent(data []byte) (Event, error) {
 // hot path. The block dispatch is joined into the same Unmarshalers rather
 // than added as a second option: a later WithUnmarshalers replaces an earlier
 // one instead of adding to it, which silently disables the event dispatch.
-var eventUnmarshalers = json.WithUnmarshalers(json.JoinUnmarshalers(
-	json.UnmarshalFromFunc(unmarshalEvent),
-	json.UnmarshalFromFunc(unmarshalBlock),
-))
+//
+// It is assigned in init rather than in its declaration because the dispatch
+// is recursive: a ToolEvent's inner event is decoded by these same options, so
+// unmarshalEvent reaches decodeEvent, which reads this variable, and Go reports
+// a declaration initializer with that shape as an initialization cycle.
+var eventUnmarshalers json.Options
+
+func init() {
+	eventUnmarshalers = json.WithUnmarshalers(json.JoinUnmarshalers(
+		json.UnmarshalFromFunc(unmarshalEvent),
+		json.UnmarshalFromFunc(unmarshalBlock),
+	))
+}
 
 // unmarshalEvent reads one event and picks its concrete type from the "type"
 // member.
@@ -217,6 +233,8 @@ func unmarshalEvent(dec *jsontext.Decoder, e *Event) error {
 		return decodeEvent(e, raw, func(v toolCallStartBody) Event { return ToolCallStart(v) })
 	case EventToolCallEnd:
 		return decodeEvent(e, raw, func(v toolCallEndBody) Event { return ToolCallEnd(v) })
+	case EventToolEvent:
+		return decodeEvent(e, raw, func(v toolEventBody) Event { return ToolEvent(v) })
 	case EventTurnEnd:
 		return decodeEvent(e, raw, func(v turnEndBody) Event { return TurnEnd(v) })
 	case EventDone:
@@ -231,12 +249,13 @@ func unmarshalEvent(dec *jsontext.Decoder, e *Event) error {
 
 // decodeEvent decodes raw into an event's body type, which has no unmarshal
 // method of its own, and converts it back to the event. The "type" member is
-// an unknown member to the body, and json/v2 ignores unknown members. The
-// block dispatch travels along for BlockStart's Block field, which is an
-// interface of its own.
+// an unknown member to the body, and json/v2 ignores unknown members. Both
+// dispatches travel along: the block one for BlockStart's Block field, and the
+// event one for a ToolEvent's inner event, which is how a nested event decodes
+// to any depth through the same table.
 func decodeEvent[Body any](out *Event, raw jsontext.Value, convert func(Body) Event) error {
 	var v Body
-	if err := json.Unmarshal(raw, &v, blockUnmarshalers); err != nil {
+	if err := json.Unmarshal(raw, &v, eventUnmarshalers); err != nil {
 		return fmt.Errorf("goodall: decoding a %T event: %w", convert(v), err)
 	}
 	*out = convert(v)

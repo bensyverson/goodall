@@ -71,6 +71,22 @@ func oneToolResult(t *testing.T, events []goodall.Event) goodall.ToolResult {
 	return out[0]
 }
 
+// oneToolCallEnd is the run's single ToolCallEnd, which is where what the call
+// spent travels.
+func oneToolCallEnd(t *testing.T, events []goodall.Event) goodall.ToolCallEnd {
+	t.Helper()
+	var out []goodall.ToolCallEnd
+	for _, ev := range events {
+		if end, ok := ev.(goodall.ToolCallEnd); ok {
+			out = append(out, end)
+		}
+	}
+	if len(out) != 1 {
+		t.Fatalf("the run carried %d tool call ends, want exactly one", len(out))
+	}
+	return out[0]
+}
+
 // judgeOneCall runs a scripted parent that calls the tool once and returns the
 // tool result the model was given.
 func judgeOneCall(t *testing.T, tool goodall.Tool, input string) goodall.ToolResult {
@@ -150,6 +166,41 @@ func TestToolResultDecodesBackIntoAnswers(t *testing.T) {
 	}
 	if _, err := answers.Score("frustration"); err != nil {
 		t.Errorf("Score: %v", err)
+	}
+}
+
+// TestToolReportsWhatTheJudgmentSpent is the per-call accounting: the judge's
+// own tokens reach the parent's stream on the call that spent them, so a
+// consumer can bill a judgment it never sent itself. The cost is TypeSafe's
+// silence, not a zero: a figure nobody reported must not read as free.
+func TestToolReportsWhatTheJudgmentSpent(t *testing.T) {
+	client, _ := serveJSON(t, http.StatusOK, mixedBody)
+	agent, _ := agentCalling(fixedTool(t, client), `{"state":"anything"}`)
+	end := oneToolCallEnd(t, runEvents(t, agent, goodall.Conversation{}, goodall.Text{Text: "judge this"}))
+
+	if end.Result.IsError {
+		t.Fatalf("the tool result is an error: %q", end.Result.Text())
+	}
+	if want := (goodall.Usage{Input: 448, Output: 73}); end.Usage != want {
+		t.Errorf("ToolCallEnd usage = %+v, want the judgment's own %+v", end.Usage, want)
+	}
+	if end.Cost.Reported {
+		t.Errorf("ToolCallEnd cost = %+v, want an unreported cost: TypeSafe publishes no price on the response", end.Cost)
+	}
+}
+
+// TestToolReportsNothingWhileItRuns is the other half of the interface the
+// judgment tools implement: they have tokens to declare and no progress to
+// show, so the parent's stream carries no nested events at all.
+func TestToolReportsNothingWhileItRuns(t *testing.T) {
+	client, _ := serveJSON(t, http.StatusOK, mixedBody)
+	agent, _ := agentCalling(fixedTool(t, client), `{"state":"anything"}`)
+	events := runEvents(t, agent, goodall.Conversation{}, goodall.Text{Text: "judge this"})
+
+	for _, ev := range events {
+		if nested, ok := ev.(goodall.ToolEvent); ok {
+			t.Errorf("the judgment reported %s while it ran", nested.Event.Type())
+		}
 	}
 }
 

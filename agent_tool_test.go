@@ -192,10 +192,12 @@ func TestAgentToolReportsADeferredChildAsAnError(t *testing.T) {
 	}
 }
 
-// TestAgentToolKeepsTheChildsEventsOutOfTheParentsStream is the documented
-// gap the accounting leaf fills: the parent's stream shows the delegation and
-// nothing of the run behind it.
-func TestAgentToolKeepsTheChildsEventsOutOfTheParentsStream(t *testing.T) {
+// TestAgentToolForwardsTheChildsEventsWrapped is what a UI watching the parent
+// now sees: every event of the delegated run, wrapped in a ToolEvent naming the
+// call that started it, in the child's own order and all of them before the
+// call ends. The parent's own event counts are unchanged, because a nested
+// event travels under its own tag rather than as a second turn of the parent.
+func TestAgentToolForwardsTheChildsEventsWrapped(t *testing.T) {
 	child, _ := agentFor([]fake.Turn{
 		fake.Answer(goodall.StopToolUse, fake.Use("tu_c1", "echo", `{"text":"hi"}`)),
 		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "the child's answer"}),
@@ -216,6 +218,95 @@ func TestAgentToolKeepsTheChildsEventsOutOfTheParentsStream(t *testing.T) {
 	}
 	if got := countEvents(events, goodall.EventDone); got != 1 {
 		t.Errorf("the parent's stream carries %d done events, want only its own", got)
+	}
+
+	var nested []goodall.Event
+	for _, ev := range events {
+		wrapped, ok := ev.(goodall.ToolEvent)
+		if !ok {
+			continue
+		}
+		if wrapped.ToolUseID != "tu_1" || wrapped.Name != "research" {
+			t.Errorf("a nested event is addressed to {%q, %q}, want the research call tu_1", wrapped.ToolUseID, wrapped.Name)
+		}
+		nested = append(nested, wrapped.Event)
+	}
+	if len(nested) == 0 {
+		t.Fatalf("the parent's stream carries no nested events: %v", eventTypes(events))
+	}
+	// The child ran two turns with a tool call in between, so its own
+	// shape must be recognizable inside the wrappers.
+	for _, want := range []goodall.EventType{
+		goodall.EventTurnStart, goodall.EventToolCallStart, goodall.EventToolCallEnd, goodall.EventDone,
+	} {
+		if countEvents(nested, want) == 0 {
+			t.Errorf("no nested %s arrived; the child's stream is not being forwarded whole: %v", want, eventTypes(nested))
+		}
+	}
+	if got := countEvents(nested, goodall.EventTurnStart); got != 2 {
+		t.Errorf("%d nested turn starts arrived, want the child's two", got)
+	}
+	if got, want := nested[len(nested)-1].Type(), goodall.EventDone; got != want {
+		t.Errorf("the last nested event is %s, want the child's %s", got, want)
+	}
+
+	// Every report belongs under the call that produced it.
+	var lastNested, callEnd int
+	for i, ev := range events {
+		switch ev.Type() {
+		case goodall.EventToolEvent:
+			lastNested = i
+		case goodall.EventToolCallEnd:
+			callEnd = i
+		}
+	}
+	if callEnd == 0 || lastNested > callEnd {
+		t.Errorf("the last nested event is at %d and the call ends at %d, want the child's events first: %v",
+			lastNested, callEnd, eventTypes(events))
+	}
+}
+
+// TestAgentToolReportsTheChildsUsageOnTheCall is the per-call accounting: what
+// the delegation spent is the child's own total, and it travels on the
+// ToolCallEnd rather than being rolled into the parent's ledger, which counts
+// the parent model's tokens and nothing else.
+func TestAgentToolReportsTheChildsUsageOnTheCall(t *testing.T) {
+	childCost := price(t, "0.0075")
+	child, _ := agentFor([]fake.Turn{
+		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "the child's answer"}).
+			Using(goodall.Usage{Input: 400, Output: 60}).
+			Costing(childCost),
+	})
+	parent, _ := agentFor([]fake.Turn{
+		delegateTurn("research this"),
+		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "done"}),
+	}, researchTool(t, child))
+
+	events := runEvents(t, parent, goodall.Conversation{}, goodall.Text{Text: "go"})
+	result := terminalDone(t, events).Result
+
+	var ends int
+	for _, ev := range events {
+		end, ok := ev.(goodall.ToolCallEnd)
+		if !ok {
+			continue
+		}
+		ends++
+		if want := (goodall.Usage{Input: 400, Output: 60}); end.Usage != want {
+			t.Errorf("the delegation's ToolCallEnd usage = %+v, want the child's own %+v", end.Usage, want)
+		}
+		if end.Cost != childCost {
+			t.Errorf("the delegation's ToolCallEnd cost = %+v, want the child's own %+v", end.Cost, childCost)
+		}
+	}
+	if ends != 1 {
+		t.Fatalf("the parent carried %d tool call ends, want the one delegation", ends)
+	}
+	if result.Usage != (goodall.Usage{}) {
+		t.Errorf("the parent's usage is %+v, want only its own tokens, which the fake reports as none", result.Usage)
+	}
+	if result.Cost != (goodall.Cost{}) {
+		t.Errorf("the parent's cost is %+v, want the child's money left off the roll-up", result.Cost)
 	}
 }
 

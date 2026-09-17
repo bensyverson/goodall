@@ -395,6 +395,117 @@ func TestRedactFollowsTheAgentsThinkingDisplay(t *testing.T) {
 
 // TestRedactPassesEverythingElseThrough keeps the redaction narrow: an event
 // that carries nothing the back end owns arrives as itself.
+// TestRedactRecursesIntoANestedEvent is the whole of the nested rule: a child's
+// event is redacted by the rule its own type earns, and the wrapper keeps the
+// call it belongs to, so a front end sees a delegation's progress and none of
+// its content.
+func TestRedactRecursesIntoANestedEvent(t *testing.T) {
+	use := goodall.ToolUse{ID: "toolu_c1", Name: "echo", Input: jsontext.Value(`{"text":"` + canaryInput + `"}`)}
+	childResult := goodall.Result{
+		Conversation: goodall.Conversation{}.Append(goodall.AssistantMessage(goodall.Text{Text: canaryAnswer})),
+		Usage:        goodall.Usage{Input: 400, Output: 60},
+		StopReason:   goodall.StopEndTurn,
+	}
+	got := collect(t, chat.Redact(streamOf(
+		goodall.ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: goodall.ToolCallStart{ToolUse: use}},
+		goodall.ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: goodall.Done{Result: childResult}},
+	), displayedOptions))
+
+	if len(got) != 2 {
+		t.Fatalf("Redact yielded %d events for two, %v", len(got), types(got))
+	}
+	wantStart := goodall.ToolEvent{
+		ToolUseID: "toolu_1",
+		Name:      "research",
+		Event:     goodall.ToolCallStart{ToolUse: goodall.ToolUse{ID: "toolu_c1", Name: "echo"}},
+	}
+	if !reflect.DeepEqual(got[0], wantStart) {
+		t.Errorf("the redacted nested call is\n%#v\nwant\n%#v", got[0], wantStart)
+	}
+	wantDone := goodall.ToolEvent{
+		ToolUseID: "toolu_1",
+		Name:      "research",
+		Event: goodall.Done{Result: goodall.Result{
+			Usage:      goodall.Usage{Input: 400, Output: 60},
+			StopReason: goodall.StopEndTurn,
+		}},
+	}
+	if !reflect.DeepEqual(got[1], wantDone) {
+		t.Errorf("the redacted nested Done is\n%#v\nwant\n%#v", got[1], wantDone)
+	}
+}
+
+// TestRedactDropsANestedEventWithNothingLeft is the wrapper's half of the
+// dropped-event rule: a tool input delta has no redacted form, so a wrapper
+// carrying one has nothing to travel with either.
+func TestRedactDropsANestedEventWithNothingLeft(t *testing.T) {
+	got := collect(t, chat.Redact(streamOf(
+		goodall.ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: goodall.ToolInputDelta{
+			Index:       0,
+			PartialJSON: `{"text":"` + canaryInput + `"}`,
+		}},
+		goodall.ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: goodall.MessageStop{}},
+	), displayedOptions))
+
+	want := []goodall.Event{goodall.ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: goodall.MessageStop{}}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Redact yielded\n%#v\nwant\n%#v", got, want)
+	}
+}
+
+// TestRedactRecursesToEveryDepth is the case a delegate's own delegate
+// produces: the rule applies at each level, so nesting cannot be used to carry
+// content past it.
+func TestRedactRecursesToEveryDepth(t *testing.T) {
+	use := goodall.ToolUse{ID: "toolu_g1", Name: "echo", Input: jsontext.Value(`{"text":"` + canaryInput + `"}`)}
+	got := collect(t, chat.Redact(streamOf(
+		goodall.ToolEvent{ToolUseID: "toolu_1", Name: "research", Event: goodall.ToolEvent{
+			ToolUseID: "toolu_c1",
+			Name:      "search",
+			Event:     goodall.ToolCallEnd{ToolUse: use, Result: goodall.TextResult(canaryResult)},
+		}},
+	), displayedOptions))
+
+	want := []goodall.Event{goodall.ToolEvent{
+		ToolUseID: "toolu_1",
+		Name:      "research",
+		Event: goodall.ToolEvent{
+			ToolUseID: "toolu_c1",
+			Name:      "search",
+			Event: goodall.ToolCallEnd{
+				ToolUse: goodall.ToolUse{ID: "toolu_g1", Name: "echo"},
+				Result:  goodall.ToolResult{},
+			},
+		},
+	}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Redact yielded\n%#v\nwant\n%#v", got, want)
+	}
+}
+
+// TestRedactKeepsWhatANestedCallSpent is the money and the tokens: what a
+// delegated call spent is what a front end bills on, so it survives the
+// redaction that drops everything the call passed and produced.
+func TestRedactKeepsWhatANestedCallSpent(t *testing.T) {
+	cost := costOf(t, "0.0075")
+	got := collect(t, chat.Redact(streamOf(goodall.ToolCallEnd{
+		ToolUse: goodall.ToolUse{ID: "toolu_1", Name: "research", Input: jsontext.Value(`{"prompt":"` + canaryInput + `"}`)},
+		Result:  goodall.TextResult(canaryResult),
+		Usage:   goodall.Usage{Input: 400, Output: 60},
+		Cost:    cost,
+	}), displayedOptions))
+
+	want := []goodall.Event{goodall.ToolCallEnd{
+		ToolUse: goodall.ToolUse{ID: "toolu_1", Name: "research"},
+		Result:  goodall.ToolResult{},
+		Usage:   goodall.Usage{Input: 400, Output: 60},
+		Cost:    cost,
+	}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Redact yielded\n%#v\nwant\n%#v", got, want)
+	}
+}
+
 func TestRedactPassesEverythingElseThrough(t *testing.T) {
 	events := []goodall.Event{
 		goodall.TurnStart{Turn: 1},

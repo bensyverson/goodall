@@ -322,6 +322,10 @@ function apply(ev) {
     case "stopped":
       terminal(ev.cause || "stopped");
       break;
+    // A "tool_event" — the stream of a run a tool started, such as an
+    // agent-as-tool delegation — is ignored on purpose: this page draws a
+    // call as one chip, and drawing the work behind it is a nesting the CLI
+    // example shows instead.
   }
   window.scrollTo({ top: document.body.scrollHeight });
 }

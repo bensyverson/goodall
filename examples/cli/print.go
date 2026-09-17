@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -21,6 +22,10 @@ const (
 	// toolLabel opens a tool line, both when the call starts and when it
 	// ends.
 	toolLabel = "[tool]"
+	// nestedIndent starts every line of a delegated run, one level in, so
+	// a delegate's work reads as work under the call that asked for it
+	// rather than as part of the answer.
+	nestedIndent = "    "
 	// usageLabel opens the one-line summary of what a turn cost.
 	usageLabel = "[usage]"
 	// stoppedLabel opens the line that says a run ended early.
@@ -61,11 +66,21 @@ type printer struct {
 	// delta is rendered by what its block is rather than by what arrived
 	// last.
 	thinking map[int]bool
+	// children is a printer per tool call that reports events of its own,
+	// keyed by the call's id. A delegated run is a run: it opens blocks and
+	// streams deltas, so it needs the same state this printer keeps, kept
+	// separately and written one level in.
+	children map[string]*printer
 }
 
 // newPrinter is a printer that writes to out, at the start of a line.
 func newPrinter(out io.Writer) *printer {
-	return &printer{out: out, atLineStart: true, thinking: make(map[int]bool)}
+	return &printer{
+		out:         out,
+		atLineStart: true,
+		thinking:    make(map[int]bool),
+		children:    make(map[string]*printer),
+	}
 }
 
 // event renders one event of a run. Events it does not render — the turn and
@@ -95,6 +110,8 @@ func (p *printer) event(ev goodall.Event) {
 			status = statusError
 		}
 		p.line("%s %s %s: %s", toolLabel, e.ToolUse.Name, status, oneLine(e.Result.Text()))
+	case goodall.ToolEvent:
+		p.nested(e)
 	case goodall.TurnEnd:
 		p.usage(e.Turn, e.Response.Usage, e.Response.Cost)
 	case goodall.Done:
@@ -107,6 +124,29 @@ func (p *printer) event(ev goodall.Event) {
 		}
 		p.line("%s %s: %s", stoppedLabel, e.Cause, e.Message)
 	}
+}
+
+// nested renders one event a running tool reported, one level in, through a
+// printer of its own: a delegated run streams text and calls tools exactly as
+// the parent does, so it gets the same renderer rather than a second set of
+// rules.
+//
+// The child writes through an indenting writer, so this printer never sees
+// those bytes and cannot know whether a line was left half-written; it takes
+// that back from the child afterwards, which is what lets its own next label
+// start on a line of its own.
+func (p *printer) nested(e goodall.ToolEvent) {
+	if e.Event == nil {
+		return
+	}
+	child, ok := p.children[e.ToolUseID]
+	if !ok {
+		p.newline()
+		child = newPrinter(&indentWriter{out: p.out, prefix: nestedIndent, atLineStart: true})
+		p.children[e.ToolUseID] = child
+	}
+	child.event(e.Event)
+	p.atLineStart = child.atLineStart
 }
 
 // fail reports a stream that ended in an error, which for a subscription
@@ -174,6 +214,47 @@ func (p *printer) prefixed(text, prefix string) {
 		p.atLineStart = true
 		text = after
 	}
+}
+
+// indentWriter prefixes every line it writes, which is how a delegated run's
+// output is set one level in without the renderer above it knowing anything
+// about indentation.
+type indentWriter struct {
+	// out is where the prefixed lines go.
+	out io.Writer
+	// prefix starts every line.
+	prefix string
+	// atLineStart is whether the next byte begins a line, so the prefix is
+	// written once per line however the writes fall.
+	atLineStart bool
+}
+
+// Write writes p to the underlying writer, starting each line with the prefix.
+// It reports the bytes of p it consumed, never counting the prefixes, as
+// io.Writer requires.
+func (w *indentWriter) Write(p []byte) (int, error) {
+	written := 0
+	for len(p) > 0 {
+		if w.atLineStart {
+			if _, err := io.WriteString(w.out, w.prefix); err != nil {
+				return written, err
+			}
+			w.atLineStart = false
+		}
+		line := p
+		if i := bytes.IndexByte(p, '\n'); i >= 0 {
+			line, p = p[:i+1], p[i+1:]
+			w.atLineStart = true
+		} else {
+			p = nil
+		}
+		n, err := w.out.Write(line)
+		written += n
+		if err != nil {
+			return written, err
+		}
+	}
+	return written, nil
 }
 
 // oneLine folds a tool result onto the status line, so a long result does not

@@ -163,6 +163,38 @@ func eventCases() []eventCase {
 			want: `{"type":"tool_call_end","tool_use":{"type":"tool_use","id":"toolu_1","name":"get_weather","input":{"city":"Paris"}},"result":{"type":"tool_result","tool_use_id":"toolu_1","content":[{"type":"text","text":"18C"}]}}`,
 		},
 		{
+			name: "tool call end carrying what the call spent",
+			event: ToolCallEnd{
+				ToolUse: ToolUse{ID: "toolu_2", Name: "research", Input: jsontext.Value(`{"prompt":"why"}`)},
+				Result:  ToolResult{ToolUseID: "toolu_2", Content: Blocks{Text{Text: "because"}}},
+				Usage:   Usage{Input: 900, Output: 120},
+				Cost:    costOf("0.0042"),
+			},
+			want: `{"type":"tool_call_end","tool_use":{"type":"tool_use","id":"toolu_2","name":"research","input":{"prompt":"why"}},"result":{"type":"tool_result","tool_use_id":"toolu_2","content":[{"type":"text","text":"because"}]},"usage":{"input_tokens":900,"output_tokens":120},"cost":{"amount":0.0042,"currency":"USD","reported":true}}`,
+		},
+		{
+			name: "tool event wrapping a child's text delta",
+			event: ToolEvent{
+				ToolUseID: "toolu_2",
+				Name:      "research",
+				Event:     TextDelta{Index: 1, Text: "reading"},
+			},
+			want: `{"type":"tool_event","tool_use_id":"toolu_2","name":"research","event":{"type":"text_delta","index":1,"text":"reading"}}`,
+		},
+		{
+			name: "tool event wrapping a tool event, which a delegate's own delegate produces",
+			event: ToolEvent{
+				ToolUseID: "toolu_2",
+				Name:      "research",
+				Event: ToolEvent{
+					ToolUseID: "toolu_7",
+					Name:      "search",
+					Event:     ToolCallStart{ToolUse: ToolUse{ID: "toolu_7", Name: "search"}},
+				},
+			},
+			want: `{"type":"tool_event","tool_use_id":"toolu_2","name":"research","event":{"type":"tool_event","tool_use_id":"toolu_7","name":"search","event":{"type":"tool_call_start","tool_use":{"type":"tool_use","id":"toolu_7","name":"search"}}}}`,
+		},
+		{
 			name: "turn end",
 			event: TurnEnd{Turn: 1, Response: Response{
 				ID:         "msg_01",
@@ -237,7 +269,7 @@ func TestEventTableCoversEveryType(t *testing.T) {
 		EventMessageStart, EventBlockStart, EventTextDelta, EventThinkingDelta,
 		EventSignatureDelta, EventToolInputDelta, EventBlockStop, EventMessageDelta,
 		EventMessageStop, EventUnknown, EventTurnStart, EventTurnCommitted,
-		EventToolCallStart, EventToolCallEnd, EventTurnEnd, EventDone, EventStopped,
+		EventToolCallStart, EventToolCallEnd, EventToolEvent, EventTurnEnd, EventDone, EventStopped,
 	}
 	seen := map[EventType]bool{}
 	for _, c := range eventCases() {
@@ -248,8 +280,8 @@ func TestEventTableCoversEveryType(t *testing.T) {
 			t.Errorf("no table case for %s", want)
 		}
 	}
-	if len(all) != 17 {
-		t.Errorf("the event family has %d types, want 17", len(all))
+	if len(all) != 18 {
+		t.Errorf("the event family has %d types, want 18", len(all))
 	}
 }
 
@@ -361,7 +393,7 @@ func TestMalformedEventIsAnError(t *testing.T) {
 }
 
 // TestEventTypeClassification checks the split a run stream depends on: the
-// loop's seven events are distinguishable from a provider's without a type
+// loop's eight events are distinguishable from a provider's without a type
 // switch.
 func TestEventTypeClassification(t *testing.T) {
 	for _, tc := range []struct {
@@ -376,6 +408,7 @@ func TestEventTypeClassification(t *testing.T) {
 		{TurnCommitted{}, true},
 		{ToolCallStart{}, true},
 		{ToolCallEnd{}, true},
+		{ToolEvent{}, true},
 		{TurnEnd{}, true},
 		{Done{}, true},
 		{Stopped{}, true},

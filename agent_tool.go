@@ -35,12 +35,15 @@ type delegatedTask struct {
 // only Go error this tool returns, and the loop turns that into an error
 // result too.
 //
-// Two things a nested run does not yet do: the child's events are not
-// forwarded to the parent's stream, so a UI watching the parent sees the tool
-// call and not the work behind it, and the child's usage and cost are reported
-// nowhere, so the parent's totals leave them out. Both are one core change,
-// tracked as its own task ("Nested events and per-call accounting"), because
-// the shape of a nested event belongs to the consumers that will draw it.
+// The delegation is visible while it runs: the tool implements [Reporter], so
+// every event of the child run reaches the parent's stream wrapped in a
+// [ToolEvent] naming this call, and a UI watching the parent can draw the
+// delegate's turns, text and tool calls under the call that started them. What
+// the child spent travels on the call's [ToolCallEnd] as the child's own
+// Result.Usage and Result.Cost — per call, not rolled into the parent's totals,
+// which stay the parent model's own tokens; the reason is the
+// "Ruled 2026-09-17, nested events and per-call accounting" block quote in
+// project/2026-09-14-architecture-plan.md.
 //
 // A hook inside the child that defers a tool call for approval is reported as
 // an error result too: a nested pause has no path back to the parent's caller,
@@ -65,37 +68,50 @@ func AgentTool(child *Agent, name, description string) (Tool, error) {
 	// change the model, the tools or the budget of a delegation already
 	// under way.
 	delegate := *child
-	return NewTool(name, description, func(ctx context.Context, in delegatedTask) (ToolResult, error) {
-		return runDelegate(ctx, &delegate, name, in.Prompt)
+	return NewReportingTool(name, description, func(ctx context.Context, in delegatedTask, report func(Event)) (ToolOutcome, error) {
+		return runDelegate(ctx, &delegate, name, in.Prompt, report)
 	})
 }
 
-// runDelegate runs one delegated conversation to its terminal event and turns
-// that event into the result the parent model reads.
+// runDelegate runs one delegated conversation to its terminal event, forwards
+// every event of it to the parent's stream, and turns the terminal event into
+// the result the parent model reads and the accounting the call carries.
 //
 // It reads the event rather than calling [Stream.CollectResult] because the
 // Result a terminal event carries does not say which event carried it: the
 // cause and the prose of an early ending live on Stopped itself.
-func runDelegate(ctx context.Context, child *Agent, name, prompt string) (ToolResult, error) {
-	var out ToolResult
+//
+// Every event is reported, the terminal one included, so a consumer watching
+// the parent sees the delegation end as well as begin. The usage and the cost
+// are the child's own run totals, which the terminal event carries whichever
+// way the run ended: a delegation that broke halfway still spent what it spent.
+func runDelegate(ctx context.Context, child *Agent, name, prompt string, report func(Event)) (ToolOutcome, error) {
+	var out ToolOutcome
 	var terminal bool
 	for ev, err := range child.Run(ctx, Conversation{}, Text{Text: prompt}) {
 		if err != nil {
-			return ToolResult{}, err
+			return ToolOutcome{}, err
 		}
+		report(ev)
 		switch e := ev.(type) {
 		case Done:
-			out, terminal = TextResult(delegatedAnswer(e.Result)), true
+			out, terminal = outcomeOf(TextResult(delegatedAnswer(e.Result)), e.Result), true
 		case Stopped:
-			out, terminal = ErrorResult(delegationEndedEarly(name, e)), true
+			out, terminal = outcomeOf(ErrorResult(delegationEndedEarly(name, e)), e.Result), true
 		}
 	}
 	if !terminal {
-		return ToolResult{}, &ProtocolError{
+		return ToolOutcome{}, &ProtocolError{
 			Reason: "the delegated run of " + strconv.Quote(name) + " ended without a done or stopped event",
 		}
 	}
 	return out, nil
+}
+
+// outcomeOf pairs the result the parent model reads with what the child run
+// spent.
+func outcomeOf(result ToolResult, child Result) ToolOutcome {
+	return ToolOutcome{Result: result, Usage: child.Usage, Cost: child.Cost}
 }
 
 // delegatedAnswer is the child's answer as text: the text blocks of its final

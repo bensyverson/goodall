@@ -91,6 +91,13 @@ type judgmentInput struct {
 // can correct the state and try again; a failure of the call itself is a Go
 // error, which the loop turns into an error result too.
 //
+// What a judgment spent travels on the call. The tool implements
+// [goodall.Reporter] for the accounting rather than for progress — one call is
+// one round trip with nothing to show along the way — so the judge's own tokens
+// reach a consumer on that call's [goodall.ToolCallEnd] and the cost stays
+// unreported, since TypeSafe publishes its prices on its website rather than on
+// the response.
+//
 // It returns an error for a nil client, for a question set [Client.Ask] would
 // refuse, and for a definition no provider would accept — the naming rules are
 // [goodall.NewTool]'s:
@@ -113,22 +120,34 @@ func Tool(client *Client, name, description string, questions Questions, opts ..
 	}
 	fixed := make(Questions, len(questions))
 	copy(fixed, questions)
-	return goodall.NewTool(name, description, func(ctx context.Context, in judgmentInput) (goodall.ToolResult, error) {
+	return goodall.NewReportingTool(name, description, func(ctx context.Context, in judgmentInput, _ func(goodall.Event)) (goodall.ToolOutcome, error) {
 		return judge(ctx, client, in.State, fixed, ask...)
 	})
 }
 
 // judge asks one question set about one state and turns the outcome into what
-// the model reads.
-func judge(ctx context.Context, client *Client, state any, questions Questions, opts ...AskOption) (goodall.ToolResult, error) {
+// the model reads and what the call declares it spent.
+//
+// It reports no events: one call to the judge is one round trip with nothing to
+// show along the way, so the tool implements [goodall.Reporter] for the
+// accounting alone. The tokens are the judge's own, on the call that spent
+// them, and the cost is TypeSafe's silence rather than a zero — the prices are
+// on its website and goodall keeps no price list, so an unreported cost is what
+// a consumer must read as "not known". A refusal spent nothing: the API either
+// declined the request or this package did, before it was sent.
+func judge(ctx context.Context, client *Client, state any, questions Questions, opts ...AskOption) (goodall.ToolOutcome, error) {
 	answers, err := client.Ask(ctx, state, questions, opts...)
 	if err != nil {
 		if text, ok := refusalText(err); ok {
-			return goodall.ErrorResult(text), nil
+			return goodall.ToolOutcome{Result: goodall.ErrorResult(text)}, nil
 		}
-		return goodall.ToolResult{}, err
+		return goodall.ToolOutcome{}, err
 	}
-	return goodall.JSONResult(answers)
+	result, err := goodall.JSONResult(answers)
+	if err != nil {
+		return goodall.ToolOutcome{}, err
+	}
+	return goodall.ToolOutcome{Result: result, Usage: answers.Usage, Cost: answers.Cost}, nil
 }
 
 // refusalText is what a model reads when the judgment was refused rather than
