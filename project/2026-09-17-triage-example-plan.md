@@ -34,12 +34,16 @@ The owner also runs Postfix on a server; whether it delivers to Maildir or mbox 
 - `list_inbox`, deterministic: the filtered records with stable ids, no model involved.
 - `triage_inbox`, a `goodall.NewReportingTool` over the mailbox and a `typesafe.Client`: the model names message ids, or all, and the tool asks the judge about each record and returns the typed answers. It is a hand-built tool rather than a `typesafe.Tool` because the state is already in the process and the model should name records, not echo fifty of them through its own output. It asks **one `Ask` per message, in parallel with bounded concurrency**, three questions each: `department` (a `Choice`), `needs_reply` and `is_urgent` (`Noul`s). One array state with questions addressed by id is the indirection TypeSafe's jaggedness page says degrades the model (the finding is recorded in the [TypeSafe findings](2026-09-17-typesafe-jev-findings.md)). Every question and every threshold lives in one file, `questions.go`. Usage is summed across the calls and declared on the call's `ToolCallEnd`; cost stays unreported.
 - `draft_reply`, a `goodall.AgentTool` on a cheaper model with its own system prompt and budget; its events render under the call as the nested `ToolEvent`s arrive.
-- `check_draft`, a `typesafe.Tool` with fixed questions: a `Score` on how well the draft answers the message and a `Noul` on whether it promises anything the sender was not asked for. The parent escalates a draft below threshold to the person instead of showing it as ready.
+- `check_draft`, a `typesafe.Tool` with fixed questions, several specific inspectors rather than one vague judge: `Noul`s asking whether the draft answers what the sender asked, whether it states a fact the message does not contain, whether it promises something the sender did not ask for, and whether its tone fits the sender's; the code, not the judge, combines them. A draft with any red flag over its threshold is not shown as ready: it goes back once to the parent's stronger model for a redraft, and a redraft that is still flagged is escalated to the person. That is the bouncer cascade: the cheap model does the bulk of the writing, the judge decides which pieces earn the expensive model, and the person sees only what neither could settle.
 - A `typesafe.Route` on the user's turn: a `Choice` between a question that a summary answers and a request for drafts, which picks the model and narrows the tools.
 
 **Output.** A plain-text report: each message's proposed department with its probability, urgency, whether it needs a reply, then each draft with its score and whether it is ready or escalated. Tool calls and the delegate's nested turns print through `examples/internal/render`, which is `examples/cli/print.go` moved so both commands share one renderer.
 
 **Tests.** Readers against synthetic fixtures under `examples/triage/mailbox/testdata` that copy the observed structures byte for byte, including a `.partial.emlx`, `>From ` quoting and a Maildir with both `cur` and `new`. The agent against `internal/fake` for both the parent and the delegate and an `httptest` judge, over the bundled `examples/triage/testdata/sample.mbox`, a synthetic inbox of about a dozen messages including a newsletter whose body carries instruction-looking text and a phishing message, so the offline suite proves the questions decide and the state is data. The sample inbox is also `-source sample`, the default.
+
+## Community heuristics, read 2026-09-17
+
+The owner passed on a Reddit post, [10 Jev Commandments](https://www.reddit.com/r/typesafe_ai/comments/1wiguah/10_jev_commandments), which Reddit would not serve to this session so its text was pasted by the owner; it is one user's heuristics, not TypeSafe's guidance. Most of it restates the jaggedness page in the [TypeSafe findings](2026-09-17-typesafe-jev-findings.md) and the design above already follows it: the judge does not create, independent questions go in one call, the state is filtered in code and every threshold is policy in `questions.go`. Two of its rules changed the design and are in the paragraphs above. *Several specific inspectors rather than one vague judge*: the draft check was a `Score` on "how well the draft answers" and is now four `Noul`s a person could each answer in a second, combined in code. *The judge as a bouncer*: a flagged draft now earns the expensive model once before it earns the person, so the cascade is cheap model, judge, strong model, judge, person.
 
 ## Task tree
 
@@ -86,7 +90,8 @@ tasks:
           -n 50, -snippet 400, -provider, the instruction as the argument), questions.go
           (every question and threshold), tools.go (list_inbox, triage_inbox with one
           Ask per record in parallel and summed usage, check_draft as a typesafe.Tool),
-          draft.go (the AgentTool delegate), route.go (the BeforeSend route), report.go,
+          draft.go (the AgentTool delegate on the cheap model and the redraft on the
+          strong one), route.go (the BeforeSend route), report.go,
           and tests against internal/fake and an httptest judge over
           examples/triage/testdata/sample.mbox, a synthetic dozen-message inbox with a
           newsletter carrying instruction-looking text and a phishing message.
@@ -95,6 +100,7 @@ tasks:
           - "The offline test drives a whole run through internal/fake for both agents and an httptest judge and asserts the report's routes, drafts and escalations"
           - "The judge receives Records only: a test asserts no request body carries a full message body or an attachment"
           - "triage_inbox declares the summed judge usage on its ToolCallEnd and the delegate's events render nested under its call"
+          - "check_draft asks several Nouls combined in code, a flagged draft is redrafted once by the strong model, and a still-flagged redraft is escalated to the person, all asserted offline"
       - title: Live verification against Apple Mail and the docs
         ref: live
         blockedBy: [agent]
