@@ -1,4 +1,4 @@
-package main
+package render
 
 import (
 	"bytes"
@@ -12,9 +12,9 @@ import (
 // transcript, which is what a person reading the terminal sees.
 func printAll(events ...goodall.Event) string {
 	out := &bytes.Buffer{}
-	p := newPrinter(out)
+	p := NewPrinter(out)
 	for _, ev := range events {
-		p.event(ev)
+		p.Event(ev)
 	}
 	return out.String()
 }
@@ -44,7 +44,7 @@ func TestPrinterIndentsAToolsOwnEvents(t *testing.T) {
 	for _, want := range []string{
 		nestedIndent + "checking the sources",
 		nestedIndent + toolLabel + " search",
-		nestedIndent + toolLabel + " search " + string(statusOK) + ": three papers",
+		nestedIndent + toolLabel + " search " + string(StatusOK) + ": three papers",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("the transcript does not contain %q; it was:\n%s", want, got)
@@ -55,7 +55,7 @@ func TestPrinterIndentsAToolsOwnEvents(t *testing.T) {
 			t.Errorf("the parent's own line %q is indented as a child's", line)
 		}
 	}
-	if !strings.Contains(got, toolLabel+" research "+string(statusOK)+": 1960") {
+	if !strings.Contains(got, toolLabel+" research "+string(StatusOK)+": 1960") {
 		t.Errorf("the parent's tool result is missing or indented; the transcript was:\n%s", got)
 	}
 }

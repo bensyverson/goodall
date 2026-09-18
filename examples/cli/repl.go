@@ -9,6 +9,7 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/chat"
+	"github.com/bensyverson/goodall/examples/internal/render"
 )
 
 // maxLineBytes is the longest line the loop will read. A pasted document is a
@@ -90,13 +91,13 @@ func turn(ctx context.Context, svc *chat.Service, out io.Writer, opts Options, l
 		}
 	}()
 
-	p := newPrinter(out)
+	p := render.NewPrinter(out)
 	for ev, err := range run.Events {
 		if err != nil {
-			p.fail(err)
+			p.Fail(err)
 			continue
 		}
-		p.event(ev)
+		p.Event(ev)
 	}
 	return nil
 }

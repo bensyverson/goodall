@@ -11,6 +11,7 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/chat"
+	"github.com/bensyverson/goodall/examples/internal/render"
 	"github.com/bensyverson/goodall/internal/fake"
 )
 
@@ -98,13 +99,13 @@ func TestLoopStreamsThinkingTextAndUsage(t *testing.T) {
 	// The transcript under -v is this example's preview: the rendering is
 	// the thing being built, and a human should be able to look at it.
 	t.Logf("transcript:\n%s", got)
-	for _, want := range []string{"> ", thinkingLabel, "weighing it up", "hello there", "12 in", "34 out"} {
+	for _, want := range []string{"> ", render.ThinkingLabel, "weighing it up", "hello there", "12 in", "34 out"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("the output does not contain %q; it was:\n%s", want, got)
 		}
 	}
-	if !strings.Contains(got, thinkingPrefix+"weighing it up") {
-		t.Errorf("the thinking text is not marked with %q; the output was:\n%s", thinkingPrefix, got)
+	if !strings.Contains(got, render.ThinkingPrefix+"weighing it up") {
+		t.Errorf("the thinking text is not marked with %q; the output was:\n%s", render.ThinkingPrefix, got)
 	}
 }
 
@@ -125,7 +126,7 @@ func TestLoopShowsToolCallsAsTheyStartAndEnd(t *testing.T) {
 
 	got := out.String()
 	t.Logf("transcript:\n%s", got)
-	for _, want := range []string{"roll_dice", `{"sides":6,"count":2}`, string(statusOK), "there you go"} {
+	for _, want := range []string{"roll_dice", `{"sides":6,"count":2}`, string(render.StatusOK), "there you go"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("the output does not contain %q; it was:\n%s", want, got)
 		}
@@ -176,7 +177,7 @@ func TestLoopStopsMidAnswerAndTheNextTurnContinues(t *testing.T) {
 	// stop cancels a run that is under way rather than one about to start.
 	out.waitFor(t, "starting to answer")
 	interrupt <- struct{}{}
-	out.waitFor(t, cutShort)
+	out.waitFor(t, render.CutShort)
 
 	if _, err := io.WriteString(writer, "second\n"); err != nil {
 		t.Fatalf("writing the second line: %v", err)
