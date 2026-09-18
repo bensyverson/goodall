@@ -1,0 +1,30 @@
+392       
+Return-path: <ops@lighthouse.example>
+From: "Ops Desk" <ops@lighthouse.example>
+To: you@example.test
+Subject: Disk space warning
+Date: Wed, 6 Mar 2024 20:51:00 +0000
+Message-ID: <apple-partial@lighthouse.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary-2"
+
+--mixed-boundary-2
+Content-Type: text/plain; charset="us-ascii"
+
+The backup volume is at 91 percent.
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>conversation-id</key>
+	<integer>8802</integer>
+	<key>date-last-viewed</key>
+	<integer>1709761860</integer>
+	<key>date-received</key>
+	<integer>1709758260</integer>
+	<key>flags</key>
+	<integer>8623489089</integer>
+	<key>remote-id</key>
+	<string>102</string>
+</dict>
+</plist>

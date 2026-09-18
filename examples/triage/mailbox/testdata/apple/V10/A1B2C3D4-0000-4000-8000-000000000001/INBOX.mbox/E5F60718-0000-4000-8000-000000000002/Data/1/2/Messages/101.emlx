@@ -1,0 +1,49 @@
+924       
+Return-path: <ann@northwind.example>
+Received: from mx.northwind.example by mail.example.test with SMTP id 42
+	for <you@example.test>; Tue, 5 Mar 2024 20:51:10 +0000
+From: Ann Example <ann@northwind.example>
+To: You <you@example.test>
+Subject: =?utf-8?Q?Quarterly_caf=C3=A9_budget?=
+Date: Tue, 5 Mar 2024 20:51:00 +0000
+Message-ID: <apple-one@northwind.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="alt-boundary-1"
+
+--alt-boundary-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Can you approve the budget before Friday?
+
+On Mon, 4 Mar 2024 at 09:15, You <you@example.test> wrote:
+> What is the deadline on this?
+> Any time next week works for me.
+
+--
+Ann Example
+Northwind, Ltd.
+
+--alt-boundary-1
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+<html><body><p>Can you approve the budget before Friday?</p></body></html>
+
+--alt-boundary-1--
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>conversation-id</key>
+	<integer>8801</integer>
+	<key>date-last-viewed</key>
+	<integer>1709675460</integer>
+	<key>date-received</key>
+	<integer>1709671860</integer>
+	<key>flags</key>
+	<integer>8623489089</integer>
+	<key>remote-id</key>
+	<string>101</string>
+</dict>
+</plist>

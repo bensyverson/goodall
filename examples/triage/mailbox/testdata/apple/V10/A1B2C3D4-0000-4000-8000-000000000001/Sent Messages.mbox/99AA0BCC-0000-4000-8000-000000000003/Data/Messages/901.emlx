@@ -1,0 +1,27 @@
+290       
+Return-path: <you@example.test>
+From: You <you@example.test>
+To: Ann Example <ann@northwind.example>
+Subject: Re: Quarterly budget
+Date: Thu, 7 Mar 2024 20:51:00 +0000
+Message-ID: <apple-sent@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+
+Approved, go ahead.
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>conversation-id</key>
+	<integer>8801</integer>
+	<key>date-last-viewed</key>
+	<integer>1709848260</integer>
+	<key>date-received</key>
+	<integer>1709844660</integer>
+	<key>flags</key>
+	<integer>8623489089</integer>
+	<key>remote-id</key>
+	<string>901</string>
+</dict>
+</plist>

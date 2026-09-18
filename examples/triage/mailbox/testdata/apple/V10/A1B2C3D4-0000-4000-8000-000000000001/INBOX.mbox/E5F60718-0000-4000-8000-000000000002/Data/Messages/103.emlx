@@ -1,0 +1,28 @@
+390       
+Return-path: <news@brightwater.example>
+From: Brightwater Weekly <news@brightwater.example>
+To: you@example.test
+Subject: Five things this week
+Date: Mon, 4 Mar 2024 20:51:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Five things worth reading, including a note on caf=C3=A9 culture and a=
+ long line the encoder wrapped.
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>conversation-id</key>
+	<integer>8803</integer>
+	<key>date-last-viewed</key>
+	<integer>1709589060</integer>
+	<key>date-received</key>
+	<integer>1709585460</integer>
+	<key>flags</key>
+	<integer>8623489089</integer>
+	<key>remote-id</key>
+	<string>103</string>
+</dict>
+</plist>

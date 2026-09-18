@@ -1,0 +1,10 @@
+Return-path: <billing@sandpiper.example>
+From: Sandpiper Billing <billing@sandpiper.example>
+To: you@example.test
+Subject: Invoice 2024-014
+Date: Mon, 4 Mar 2024 10:00:00 +0000
+Message-ID: <maildir-cur@sandpiper.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+
+Invoice 2024-014 is attached to your account and due in thirty days.

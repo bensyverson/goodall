@@ -1,0 +1,9 @@
+Return-path: <notices@parcelworks.example>
+From: Parcelworks <notices@parcelworks.example>
+To: you@example.test
+Subject: Package delivered
+Message-ID: <maildir-new@parcelworks.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+
+Your package was left in the porch.

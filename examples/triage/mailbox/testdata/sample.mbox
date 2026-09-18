@@ -1,0 +1,40 @@
+From alice@example.test Wed Mar  6 08:00:00 2024
+Return-path: <alice@example.test>
+From: Alice Example <alice@example.test>
+To: you@example.test
+Subject: Trail notes
+Date: Wed, 6 Mar 2024 08:00:00 +0000
+Message-ID: <mbox-one@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+
+>From the top of the hill you can see the whole valley.
+We should go back in spring.
+
+--
+Alice
+
+From bob@example.test Thu Mar  7 09:30:00 2024
+Return-path: <bob@example.test>
+From: Bob Example <bob@example.test>
+To: you@example.test
+Subject: =?ISO-8859-1?Q?Caf=E9_meeting?=
+Date: Thu, 7 Mar 2024 09:30:00 +0000
+Message-ID: <mbox-two@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Let's meet at the caf=C3=A9 on Thursday to go over the numbers=
+ before the board call.
+
+From carol@example.test Tue Mar  5 07:15:00 2024
+Return-path: <carol@example.test>
+From: Carol Example <carol@example.test>
+To: you@example.test
+Subject: Bring the projector
+Message-ID: <mbox-three@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+
+The room has no HDMI cable either.
