@@ -103,9 +103,19 @@ func (n Noul) validate() error {
 }
 
 // Option is one named choice in a [Choice] question. Options hold their key
-// because they live in a slice: the wire shape is an object, and a map would
-// sort them, while the order the options are presented in is the author's and
-// measurably changes how a model weighs them.
+// because they live in a slice: the wire shape is an object, a map would sort
+// them, and the order is the author's — goodall sends it exactly as written,
+// because two identical requests must marshal to identical bytes.
+//
+// That order is part of the question where the call is close. Measured against
+// jev-1.13.0 on 2026-09-17 by scripts/probe-option-order, three samples per
+// order: on a ticket whose department was genuinely ambiguous, reversing three
+// options moved the leading option from 0.85–0.86 to 0.72–0.78 — a cross-order
+// spread of 0.14 against a same-order spread of 0.06, each time favoring
+// whichever option was listed first — while on a ticket with an obvious answer
+// both orders returned the same distribution. So on a close call read
+// [ChoiceAnswer.Probabilities] rather than the pick, and keep the order fixed
+// across runs that are meant to be comparable.
 type Option struct {
 	// Key is the option's name, which is what a [ChoiceAnswer] reports and
 	// what its probabilities are keyed by.
