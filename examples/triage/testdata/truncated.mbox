@@ -1,0 +1,13 @@
+From ops@harbourworks.example Fri Mar 13 18:20:00 2026
+From: Harbour Ops <ops@harbourworks.example>
+To: you@harbourworks.example
+Subject: Nightly backup completed
+Date: Fri, 13 Mar 2026 18:20:00 +0000
+Message-ID: <t01-backup@harbourworks.example>
+Content-Type: text/plain; charset="us-ascii"
+
+Backup 2026-03-13 completed in 11 minutes, no errors.
+
+From nobody@example.test Fri Mar 13 19:00:00 2026
+this line is not a header and the rest of the message was lost when the
+file was cut short

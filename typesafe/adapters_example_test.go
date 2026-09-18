@@ -113,7 +113,7 @@ func ExampleRoute() {
 
 	assistant := &goodall.Agent{
 		Provider: anthropic.New(os.Getenv("ANTHROPIC_API_KEY")),
-		Model:    "claude-haiku-5",
+		Model:    "claude-haiku-4-5-20251001",
 		Hooks: goodall.Hooks{
 			BeforeSend: typesafe.Route(client, routing,
 				func(ctx context.Context, req *goodall.Request, newTurn *goodall.Message, answers *typesafe.Answers) error {

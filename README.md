@@ -89,15 +89,18 @@ Both compile as `ExampleService_Send` and `ExampleWriteSSE` in the `chat` packag
 
 ## The examples
 
-Two runnable previews live under `examples/`, both against the keys in `.env`:
+Three runnable previews live under `examples/`, all against the keys in `.env`:
 
 ```sh
 source .env
 go run ./examples/cli -provider anthropic      # a terminal chat with a dice tool
 go run ./examples/web -provider openrouter     # a web chat on http://127.0.0.1:8080
+go run ./examples/triage                       # triage a mailbox: a judge, a delegate and a report
 ```
 
 In the terminal, type a line and press return. Ctrl-C while the answer is streaming stops it and keeps what had arrived, so the next line carries on from there; Ctrl-C at the prompt exits. `-model` names another model and `-thinking high` asks for more reasoning and shows its summary. The web page streams the answer over server-sent events and, reloaded mid-answer, catches up with the partial message and keeps streaming; it never receives the system prompt.
+
+The triage example is the delegation one. It reads a mailbox, Apple Mail's store, a Maildir, an mbox, or a synthetic inbox bundled in the binary, which is the default so it runs with no mail on the machine, and asks TypeSafe's Jev about every message in parallel: which department it belongs to, whether it is waiting on a reply, whether it is waiting today. Replies are drafted by a cheaper model through `goodall.AgentTool`, checked by four small inspectors rather than one vague judge, sent back to the strong model once if any inspector fires, and escalated to you if the rewrite is still flagged. It moves nothing: the output is a report of proposed routes and drafts. The judge and both models only ever see a filtered record of each message, sender, subject, date and a bounded snippet with quoted replies and markup stripped and attachments never decoded, and every question and threshold lives in one file, `examples/triage/questions.go`. It needs `TYPESAFE_API_KEY` alongside the provider key; `-source apple -path ~/Library/Mail/V10 -n 30` runs it on real mail. The plan is [project/2026-09-17-triage-example-plan.md](project/2026-09-17-triage-example-plan.md).
 
 ## What is in the box
 

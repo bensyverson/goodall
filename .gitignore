@@ -16,6 +16,10 @@ vendor/
 # is never committed by accident. Regenerate the list with:
 #   go list -f '{{if eq .Name "main"}}/{{.Dir}}{{end}}' ./... | sed 's|.*/|/|'
 /record-fixtures
+/probe-option-order
+/cli
+/web
+/triage
 
 # job: cache and its sidecars (-shm, -wal, .lock, .pre-adopt) are disposable, rebuilt from .jobs/log
 .jobs.db*
