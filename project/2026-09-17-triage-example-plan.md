@@ -21,6 +21,8 @@ Read from `~/Library/Mail/V10` on the owner's machine with `find`, `head -c` and
 
 The owner also runs Postfix on a server; whether it delivers to Maildir or mbox is unknown at the time of writing (`postconf home_mailbox` answers it: empty means mbox under `/var/mail/<user>`, `Maildir/` means Maildir). Both readers ship regardless, built against fixtures; whichever the server uses gets a live verification when that is known.
 
+> **Answered 2026-09-17 by the owner.** `postconf home_mailbox` prints an empty value on the server, so Postfix delivers to mbox under `/var/mail/<user>`. The mbox reader gets the second live verification, on a copy of that file; the Maildir reader ships on fixtures alone.
+
 ## Design
 
 `examples/triage` is a command, and `examples/triage/mailbox` is the one piece of infrastructure it needs, kept as a package so its readers are testable and reusable by the separate mail-triage repo the owner may build later.
