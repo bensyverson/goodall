@@ -7,17 +7,17 @@ Plan, 2026-09-17, for a third runnable example, `examples/triage`: an agent that
 - **It runs on real mail or on demo data.** Sources are Apple Mail's store, a Maildir, an mbox file, and a bundled synthetic mbox that is the default, so the example runs with no mail at all. Gmail's API is out: `gmail.readonly` is a restricted scope, so a shipped example could never carry credentials and a published app would need Google's paid security assessment (both verified on Google's pages, 2026-09-17). A Gmail Takeout export is an mbox and needs nothing from us.
 - **Read-only, always.** The output is a report of proposed routes and drafts. No message is moved, flagged or sent.
 - **The judge sees a filtered record, never a message.** Sender, subject, date and a snippet of the text body, bounded in length, with quoted replies and HTML markup stripped and attachments never read. That is both the privacy line, since real mail goes to two third parties, and what Jev wants: it degrades on state full of detail no question asks about.
-- **Agents never touch real mail.** They build against synthetic fixtures whose structure copies what was observed below; the integrator verifies against the owner's Apple Mail store on this machine, with the sandbox off for that one call.
+- **Agents never touch real mail, and real mail never enters the repository.** Agents build against synthetic fixtures whose structure copies what was observed below, with invented names and `.example` domains. The integrator verifies against the owner's Apple Mail store on this machine, with the sandbox off for that one call, and writes the run's output only under a gitignored `local/` directory or the session scratchpad. What reaches the plan's block quote and the `job` log (which is tracked) is aggregate: counts, what the report got right and wrong in kind, the spend. Never a sender, a subject, a snippet, a timestamp or a byte count of a real message. Every integration read of an agent's diff checks its fixtures for the same.
 
 ## The Apple Mail store, observed 2026-09-17
 
-Read from `~/Library/Mail/V10` on the owner's machine with `find`, `head -c` and a Python offset check; no message content was read beyond the first header name. Reproduce with the commands in the session, or with the reader's own tests once they exist.
+Read from `~/Library/Mail/V10` on the owner's machine with `find`, `head -c` and a Python offset check; no message content was read beyond the first header name, and **no value taken from a real message appears in this repository**: the byte counts and timestamp below are made up to show the shape, and the store's counts are rounded. Reproduce with the reader's own tests once they exist.
 
 - Layout: `V10/<account uuid>/<Folder>.mbox/<mailbox uuid>/Data/[<n>/[<m>/]]Messages/<N>.emlx`, nested up to three numeric levels under `Data`. Folder names include `INBOX.mbox`, `Sent Messages.mbox`, `Junk.mbox`, `Drafts.mbox` and Gmail's `[Gmail].mbox/All Mail.mbox`. Account names are in binary plists elsewhere and are not needed: the example takes a mailbox path, or scans every `INBOX.mbox` under the store.
-- Counts on this machine: 55,233 `.emlx` files of which 7,159 end in `.partial.emlx`; the largest inbox holds 8,629.
-- A `.emlx` file is: a first line of exactly ten characters, the decimal byte count of the message left-aligned and space-padded (`b'4622      '`), a newline, exactly that many bytes of RFC 822 message, then an XML property list. Observed: total 5,073 bytes, count 4,622, plist 440 bytes, message starting `Return-path:` and ending in a newline, plist starting `<?xml version="1.0" encoding="UTF-8"?>`.
-- The plist carries `conversation-id`, `date-last-viewed`, `date-received` (an `<integer>`, Unix seconds: `1705179119`), `flags` (an integer bitfield) and `remote-id`. `date-received` is the recency key; file mtime is not.
-- A `.partial.emlx` has the same shape (observed count 2,939 of 3,444 bytes) with a message whose large parts were left out by Mail; it still carries the headers and a `Content-Type`. The reader treats it as a message with whatever body it has.
+- Scale on this machine: tens of thousands of `.emlx` files, roughly one in eight of them `.partial.emlx`, and one inbox of several thousand, so a reader must not parse every body to sort by date.
+- A `.emlx` file is: a first line of exactly ten characters, the decimal byte count of the message left-aligned and space-padded (for a 1,234-byte message, `b'1234      '`), a newline, exactly that many bytes of RFC 822 message, then an XML property list. Observed: the count is exact (the byte after the message is the `<` of `<?xml version="1.0" encoding="UTF-8"?>`), the message starts with a `Return-path:` header and ends in a newline, and the plist is a few hundred bytes.
+- The plist carries `conversation-id`, `date-last-viewed`, `date-received` (an `<integer>` of Unix seconds, so `<integer>1700000000</integer>` would be November 2023), `flags` (an integer bitfield) and `remote-id`. `date-received` is the recency key; file mtime is not.
+- A `.partial.emlx` has the same shape, with a message whose large parts were left out by Mail; it still carries the headers and a `Content-Type`. The reader treats it as a message with whatever body it has.
 
 The owner also runs Postfix on a server; whether it delivers to Maildir or mbox is unknown at the time of writing (`postconf home_mailbox` answers it: empty means mbox under `/var/mail/<user>`, `Maildir/` means Maildir). Both readers ship regardless, built against fixtures; whichever the server uses gets a live verification when that is known.
 
@@ -101,6 +101,9 @@ tasks:
           sandbox off, records what worked and what did not as a dated block quote in
           project/2026-09-17-triage-example-plan.md, adds the example to README.md's
           examples section, and files any reader defect found on real mail as a leaf.
+          Real mail never enters the repository: the run's output goes under a gitignored
+          local/ directory, and the block quote and every job note carry aggregates only,
+          never a sender, subject, snippet, timestamp or byte count of a real message.
         criteria:
           - "A block quote in the plan records a live run: source, count, what the report got right and wrong, and the judge's spend"
           - "README.md names the example and how to run it on demo data and on real mail"
