@@ -115,6 +115,7 @@ In the terminal, type a line and press return. Ctrl-C while the answer is stream
 - [project/2026-09-14-research-findings.md](project/2026-09-14-research-findings.md): the verified facts about both provider APIs the code is built on.
 - [project/2026-09-14-architecture-plan.md](project/2026-09-14-architecture-plan.md): the design, its invariants and every decision made while building, in place and dated.
 - [project/2026-09-17-typesafe-jev-findings.md](project/2026-09-17-typesafe-jev-findings.md): what TypeSafe's Jev is, where a judgment model fits beside the providers, and the options for subagents.
+- [project/2026-09-17-typesafe-go-comparison.md](project/2026-09-17-typesafe-go-comparison.md): how `goodall/typesafe` differs from 2389's typesafe-go, and what was taken from it.
 - [project/backlog.md](project/backlog.md): what was decided against, and what would change that.
 - `go test -short ./...` is the offline suite. With a `.env` present, a plain `go test ./...` also runs the live tests against both providers and spends real tokens.
 

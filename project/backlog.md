@@ -69,3 +69,11 @@ The one live run of `typesafe.AuthoredTool` (findings doc, "Observed 2026-09-17 
 ## 2026-09-17 One model option across the typesafe client, tools and route
 
 `typesafe.WithModel` is an `AskOption`; the tools take `WithToolModel` and the route `WithRouteModel`, because a construction-time option cannot share the per-call func type. Parked as a naming wart. Revive if the three spellings confuse a consumer; the fix is a small interface-based option type the three constructors share, which is a change to `typesafe/options.go`.
+
+## 2026-09-17 Structured instructions and criteria on a typesafe question
+
+The API accepts a JSON object or array wherever a question takes text: instructions, an option's description, a score level, a noul's true and false. `goodall/typesafe` sends strings only, which every documented example uses; 2389's typesafe-go types the slot as `any` ([comparison](2026-09-17-typesafe-go-comparison.md)). Parked because no consumer has asked for a rubric object and a `string` field cannot become `any` without touching every question type. Revive when a consumer needs a structured rubric; the shape is a new field beside `Instructions`, such as `Rubric any`, marshaled in its place when set, so the string form stays the simple one.
+
+## 2026-09-17 Typed question handles with a generic Choice
+
+typesafe-go's `Choice[T ~string]` returns a `ChoiceAnswer[T]` keyed by the caller's own type, and every question is a handle whose `From(res)` reads its own answer, so an id appears once and a mismatched read is a compile error ([comparison](2026-09-17-typesafe-go-comparison.md)). Parked because the two adapters that make goodall's package different cannot use it: `AuthoredTool`'s ids are written by the model at call time and `Answers` must round-trip through JSON as a tool result, both of which need ids as data. Revive if the fixed-questions path gets enough consumers to want compile-time matching; it would be a thin layer above `Questions` and `Answers`, not a replacement.
