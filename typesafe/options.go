@@ -27,9 +27,12 @@ func WithHTTPClient(h *http.Client) ClientOption {
 
 // WithMaxRetries caps how many extra attempts a retryable failure — a rate
 // limit, an overload, a server fault — earns. The default is two, so three
-// attempts in all; a negative value disables retrying. TypeSafe sends
-// Retry-After on a 429 and a 529, and the transport waits the time it asks for
-// rather than its own backoff.
+// attempts in all; a negative value disables retrying, which is how to get
+// at-most-once behavior: the client cannot tell a request that never reached
+// the server from a response lost after the server already evaluated it, so
+// retrying either one may bill TypeSafe twice for the same evaluation.
+// TypeSafe sends Retry-After on a 429 and a 529, and the transport waits the
+// time it asks for rather than its own backoff.
 func WithMaxRetries(n int) ClientOption {
 	return func(c *Client) { c.http.MaxRetries = n }
 }

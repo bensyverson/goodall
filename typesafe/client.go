@@ -77,6 +77,12 @@ func New(apiKey string, opts ...ClientOption) *Client {
 // carry [goodall.KindInvalidRequest]. A failing status comes back as a
 // *[goodall.APIError], and a body that is not a well-formed answer set as a
 // *[goodall.ProtocolError].
+//
+// The transport cannot tell a request that never reached the server from a
+// response lost after the server already evaluated it, so a retried call may
+// be billed twice for one evaluation; pass [WithMaxRetries] a negative value
+// for at-most-once behavior, at the cost of surfacing that failure instead of
+// retrying it.
 func (c *Client) Ask(ctx context.Context, state any, questions Questions, opts ...AskOption) (*Answers, error) {
 	cfg := askConfig{model: DefaultModel}
 	for _, opt := range opts {

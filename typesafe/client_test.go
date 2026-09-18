@@ -286,6 +286,20 @@ func TestAskRefusesABadRequestBeforeTheNetwork(t *testing.T) {
 	}
 }
 
+// TestNegativeMaxRetriesMakesOneAttempt is the regression guard for the
+// double-billing warning on [Client.Ask] and [WithMaxRetries]: a negative
+// WithMaxRetries must turn off retrying, not just cap it lower, or
+// "at-most-once" in the doc comment is a lie.
+func TestNegativeMaxRetriesMakesOneAttempt(t *testing.T) {
+	client, seen := serveJSON(t, http.StatusInternalServerError, `{"message":"boom"}`, WithMaxRetries(-1))
+	if _, err := client.Ask(t.Context(), "hi", documentedQuestions()); err == nil {
+		t.Fatal("Ask succeeded against a server that only ever returns 500")
+	}
+	if seen.Requests != 1 {
+		t.Errorf("Requests = %d, want 1: WithMaxRetries(-1) must not retry a retryable failure", seen.Requests)
+	}
+}
+
 func TestNewTakesTheDocumentedDefaults(t *testing.T) {
 	if ProviderName != "typesafe" {
 		t.Errorf("ProviderName = %q, want typesafe", ProviderName)
