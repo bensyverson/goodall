@@ -24,7 +24,7 @@ Minimal — ideally zero — dependencies, brought in only with a strong case. M
 - **The pre-commit hook is `scripts/git-hooks/pre-commit`**; install it once per clone with `git config core.hooksPath scripts/git-hooks`. It runs `go vet`, `go fix` (refusing a commit whose staged files it changed, with a re-stage hint), `gofmt` over tracked files only (never `gofmt -w .`: it recurses into `.claude/worktrees/`), `go mod tidy`, `go test -short -race ./...`, `go build ./...` and `agents check`. Run the same steps yourself before staging, since a `go fix` rewrite is otherwise a second commit.
 - `git` refuses inside the Bash sandbox (`~/.gitconfig` is unreadable there); re-run git commands with the sandbox disabled, one call at a time — see `project/agents/harness.md`.
 
-<!-- agents:begin core@3a7a5e -->
+<!-- agents:begin core@d4e43a -->
 ## Working rules
 
 **Understand the why.** If the goal behind a request isn't clear, ask before solving — beware the XY problem.
@@ -55,6 +55,13 @@ Minimal — ideally zero — dependencies, brought in only with a strong case. M
 
 **Local rulings.** A repo-local ruling, or an override of a shared rule, lives in the project-owned head of `AGENTS.md`, above the generated regions — say plainly that it overrides, and link a dated project doc for the why.
 
+## A session
+
+- **Start from the handoff doc in `project/`, if the last session left one, and `job orient`.** A handoff is current only if nothing has been committed since it (`git log` after its date); an older one is history, not a starting point. A handoff the user pastes wins.
+- **Unless the user says they're around, assume they aren't.** Make the call yourself when it's safe and a two-way door, queue the rest, and report every decision at the end. While they're around, bring questions as they come up, including ones an agent raises mid-flight.
+- **Before starting, say what needs the user's eyes.**
+- **The session ends at the user's budget, or when your context passes 40%, whichever comes first.** Then integrate what's in flight, persist what the next session needs in the repo rather than memory, and write the handoff. Where the repo delegates, `project/agents/delegation.md` covers how.
+
 ## Git
 
 - Offer to commit when a unit of work is complete and accepted. Rebase onto upstream; ask on real conflicts, explaining the conflict in plain terms first.
@@ -63,6 +70,7 @@ Minimal — ideally zero — dependencies, brought in only with a strong case. M
 - Pass the message with `-F <file>`, not inline `-m`; the shell interprets `-m` first. Same for `job`: `note`, `done`, `add` and `edit` all take `-F <file>` (`-F -` reads stdin).
 - Pre-commit hooks run the formatter and tests. Run them yourself first (see the stack rules).
 - Never pipe a gating command (`git commit … | tail`) — the pipe swallows its exit status, so a following `&&` runs even after a failure.
+- Before pushing a repo you haven't been working in, check what's ahead of upstream (`git log @{u}..`). Push only commits you made, or ask.
 <!-- agents:end core -->
 
 <!-- agents:begin principles@7a5b19 -->
