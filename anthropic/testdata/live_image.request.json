@@ -1,5 +1,5 @@
 {
-  "model": "claude-sonnet-5",
+  "model": "claude-sonnet-5-5",
   "max_tokens": 2048,
   "cache_control": {
     "type": "ephemeral"
@@ -19,7 +19,7 @@
         },
         {
           "type": "text",
-          "text": "Answer with one word: what colour is this image?"
+          "text": "Answer with one word: what color is this image?"
         }
       ]
     }

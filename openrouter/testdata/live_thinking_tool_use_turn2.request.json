@@ -1,12 +1,12 @@
 {
-  "model": "anthropic/claude-opus-5",
+  "model": "anthropic/claude-sonnet-5.5",
   "messages": [
     {
       "role": "user",
       "content": [
         {
           "type": "text",
-          "text": "A cyclist in Paris will ride 40 km at 24 km/h, starting at 14:00. Work out when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+          "text": "A cyclist in Paris will ride 137 km at 23.4 km/h with two 18-minute stops, starting at 13:47. Work out to the minute when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
         }
       ]
     },
@@ -15,7 +15,7 @@
       "content": null,
       "tool_calls": [
         {
-          "id": "toolu_016RrYdiUtaMAXkbjwh5Ae6C",
+          "id": "toolu_01UrpYMgWB7RC6pJ34T6odfU",
           "type": "function",
           "function": {
             "name": "get_weather",
@@ -26,17 +26,17 @@
       "reasoning_details": [
         {
           "type": "reasoning.text",
-          "text": "40 divided by 24 gives 1.667 hours, or 1 hour 40 minutes, so it finishes at 15:40. Now let me check the weather.",
+          "text": "137 divided by 23.4 gives roughly 5 hours 51 minutes of travel time, plus a 36-minute stop brings the total to about 6 hours 27 minutes. Adding that to a 13:47 start lands the arrival around 20:14, so I should check the weather for that time.\n\n",
           "format": "anthropic-claude-v1",
           "index": 0,
-          "signature": "CAISyQIKrgEIERgCKkCmOQ/XwouJCa5pxgQksWN2F9VCtQNqiMxVHMk8KzFGsj2gOM0CBhm/gvZu5vS76xLoiOinM2jVGQipwTwgveteMg1jbGF1ZGUtb3B1cy01OAFCCHRoaW5raW5nWiQ0YzBmMDQ2Zi0yNWZkLTQ1ZmItYmZiMy1hMDhhOGUyNDljYTd6HnVwcm9mXzAxMUNmNUJ2Z1ZwanFUS1VES1FGemNzSqgBoYul1QYSDGlMqRkCvFePDe3aUxoMUqJIh6DxqOFyamFoIjBjN+U+qrkD9O+cJ0qhyQfAF0uJmGQREcvEShMGjjvSfhULqhE2IJOX/xFsnWdkjeYqSOdb1Wb26UuQMRvympgweShaLKO+14qRKdcHev9giG/4bBoeC3JHkNbelplpU+odzZb5sDxLQ1sAY+QYtle4NjyPmN7oPRCGrBgB"
+          "signature": "CAQSpQYKEAgTGAI4AUIIdGhpbmtpbmcSDCobgbTjInfcZBPRHBoMuAB2xEEmrIMN1z3SIjD4O8U63QrcChA3CAmFso67BVJJEJUCWPO5+Vo97dnnPF7EJj8NMw32d59XBmxBG80qwgXpcdY4bTIUFih8SvfW7w7SJfhmKuq0JvjnowQHIw293zsyehV1iVBYpkn1k2FsK4pZ31ddc0nYUgSEs09GSLNElnhie4OqI//opoNYstLz1bRrj1cDOXvbNGvsvRPe9VuTFGilRwE05Hd7/buAjo/2uVDVta/+jPaBnWeZj1PQHsWuPcwbnehkAiHvV4V9Jkneqn8UyNlWhCXv5b5XhaeeD+gJHxNi+hfc7yCq5XK/HK6d+6hkj3ksaEzqpN7zss0OoM7jrOyeKWOiJncLJzeVcLBam0orTsu515dbuoarXlCmzaQCu9Bkfj7bZBQbQcKJ5u1XBNiblUbFvsydLkBDBNTc9u2m5VbJSah1XsmGRFPKyPIRT928mOPqrqj6p9AS3NIg/gh73zQMMSB4EPDOTs9JozNDpDp9TBdBw6x6ia6Yx2EMJsUxsVbY+r77v/3vQ6YMq+Ea/4Pu3H2+WrY1UUIWA3TSk08igBl1N8bJAgadaUHfG5xrSQ58ibk4SRJUuJAOKo+eqIKnL4wsiEj4MFk/1aBjt4FeO+t6ngefnTV7GGlSN9rYLZyiEqUeb1/17juZ5r9YQqec/e+Xn6O/vHnbuHRHcJL/L1tkG0TtveRdWvRJtgoNPVk+V/IEnV/It6+ePzgI8+zWMV2J2FFR97P8REmBarFBOvXql5W+I0/a7NNpXya27x6hLfF7C0S4/2voNK0OkqcT6XIdf8L7WX+DJ3ystRRaCk8udH0j7ZClguUua/UCtG8jKYAi1fXZ6AVYAaYc34jxJghORC3JGQT75xigusb6ABiknLjnR/eigteuKeLKj8xzuzePI+7k1IKnoHHh+IVQd3Hu4AmlaAZD0XDRvDqP3y+ac58PAAAWRrsPVgw37yVxJInlO1BGcK/YqOe0BIQmQ3FZdSfrkV3KiOTq02psapt/57pqLRIwGAE=.eyJlbmRwb2ludF9zbHVnIjoiYW50aHJvcGljL2NsYXVkZS1zb25uZXQtNS41LTIwMjYwOTI4fGNsYXVkZS1vbi1hd3MifQ"
         }
       ]
     },
     {
       "role": "tool",
       "content": "{\"city\":\"Paris\",\"temperature_c\":18,\"conditions\":\"light rain\"}",
-      "tool_call_id": "toolu_016RrYdiUtaMAXkbjwh5Ae6C"
+      "tool_call_id": "toolu_01UrpYMgWB7RC6pJ34T6odfU"
     }
   ],
   "tools": [
@@ -72,7 +72,7 @@
   "max_tokens": 2048,
   "stream": true,
   "reasoning": {
-    "effort": "low"
+    "effort": "high"
   },
   "cache_control": {
     "type": "ephemeral"

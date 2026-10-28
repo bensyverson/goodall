@@ -90,11 +90,16 @@ func TestLiveThinkingToolCallRoundTrip(t *testing.T) {
 	first := &goodall.Request{
 		Model:     livemodel.OpenRouterClaude,
 		MaxTokens: liveMaxTokens,
-		Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortLow, Display: goodall.DisplaySummarized},
-		Tools:     []goodall.Tool{tool},
+		// High, and a ride with real arithmetic in it: on 2026-10-28
+		// claude-sonnet-5-5, whose effort levels are recalibrated from
+		// Sonnet 5's, thought before the tool call on the old 40 km
+		// question in 0 of 1 runs at low and medium and 4 of 5 at high;
+		// on this one it thought in 15 of 15 at high.
+		Thinking: goodall.ThinkingConfig{Effort: goodall.EffortHigh, Display: goodall.DisplaySummarized},
+		Tools:    []goodall.Tool{tool},
 		Messages: []goodall.Message{goodall.UserMessage(
-			goodall.Text{Text: "A cyclist in " + liveCity + " will ride 40 km at 24 km/h, " +
-				"starting at 14:00. Work out when they finish, look up the weather there, " +
+			goodall.Text{Text: "A cyclist in " + liveCity + " will ride 137 km at 23.4 km/h with two 18-minute stops, " +
+				"starting at 13:47. Work out to the minute when they finish, look up the weather there, " +
 				"and tell me whether they should expect rain during the ride."},
 		)},
 	}

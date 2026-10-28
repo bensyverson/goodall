@@ -14,7 +14,7 @@ import (
 // goroutine in a process and two runs never see each other. Configure it once
 // and call Run as often as you like:
 //
-//	agent := &goodall.Agent{Provider: p, Model: "claude-opus-5", Tools: tools}
+//	agent := &goodall.Agent{Provider: p, Model: "claude-opus-5-5", Tools: tools}
 //	for ev, err := range agent.Run(ctx, conv, goodall.Text{Text: "hello"}) {
 //	    …
 //	}

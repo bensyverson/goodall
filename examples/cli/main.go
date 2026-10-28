@@ -46,16 +46,16 @@ const (
 	openRouterProvider providerName = "openrouter"
 )
 
-// The default model for each provider, as of 2026-09-15.
+// The default model for each provider, as of 2026-10-28.
 //
-// Anthropic's is claude-sonnet-5, the model the live tests and the fixture
+// Anthropic's is claude-sonnet-5-5, the model the live tests and the fixture
 // recorder use (internal/livemodel). OpenRouter's is the same model under the
-// name the OpenRouter catalog listed it by on 2026-09-15, so that switching
+// name the OpenRouter catalog listed it by on 2026-10-28, so that switching
 // providers changes the route and not the correspondent. An example may not
 // import internal/livemodel, so these are deliberate copies.
 const (
-	defaultAnthropicModel  = "claude-sonnet-5"
-	defaultOpenRouterModel = "anthropic/claude-sonnet-5"
+	defaultAnthropicModel  = "claude-sonnet-5-5"
+	defaultOpenRouterModel = "anthropic/claude-sonnet-5.5"
 )
 
 // The environment variables each provider's key is read from. The keys are

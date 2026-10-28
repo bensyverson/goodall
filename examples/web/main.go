@@ -38,17 +38,17 @@ import (
 
 // The model each provider answers with when -model is not given.
 const (
-	// defaultAnthropicModel is Anthropic's newest model as of 2026-09-15,
-	// confirmed against GET /v1/models/claude-sonnet-5 that day: adaptive
+	// defaultAnthropicModel is the current Sonnet as of 2026-10-28,
+	// confirmed against GET /v1/models/claude-sonnet-5-5 that day: adaptive
 	// thinking, a 1,000,000-token context, a 128,000-token output limit.
-	defaultAnthropicModel = "claude-sonnet-5"
+	defaultAnthropicModel = "claude-sonnet-5-5"
 	// defaultOpenRouterModel is the same model on OpenRouter, in
 	// OpenRouter's own "vendor/model" spelling as its catalog listed it
-	// on 2026-09-15, so that switching providers changes the route and not
+	// on 2026-10-28, so that switching providers changes the route and not
 	// the correspondent; pass -model to name any other of OpenRouter's
 	// models. An example imports only the public packages, so this is a
 	// deliberate copy of what internal/livemodel records.
-	defaultOpenRouterModel = "anthropic/claude-sonnet-5"
+	defaultOpenRouterModel = "anthropic/claude-sonnet-5.5"
 )
 
 // defaultSystem is the standing instruction, which the page never sees: the

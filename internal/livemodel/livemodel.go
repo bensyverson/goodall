@@ -14,35 +14,43 @@ package livemodel
 // Anthropic is the model the Anthropic live tests and
 // scripts/record-fixtures use by default.
 //
-// It is claude-sonnet-5 because that is the newest model the live catalog
-// confirms: GET /v1/models/claude-sonnet-5 on 2026-09-15 answered "Claude
-// Sonnet 5", adaptive thinking, the effort ladder from low to max, a
-// 1,000,000-token context and a 128,000-token output limit
-// (TestLiveModelReportsImageAndPDFSupport makes the call and logs it). It is
-// also the style the provider prefers to send: a budget-only model such as
-// claude-sonnet-4-5-20250929 has no wire slot for the thinking display
-// setting, so a recording from one would not exercise the adaptive path at
-// all. Override it on the recorder with -model.
-const Anthropic = "claude-sonnet-5"
+// It is claude-sonnet-5-5, the current Sonnet: GET /v1/models/claude-sonnet-5-5
+// on 2026-10-28 answered "Claude Sonnet 5.5", adaptive thinking, the effort
+// ladder from low to max, a 1,000,000-token context and a 128,000-token output
+// limit. Recording from a 5.5 model is the point: it thinks by default, ties
+// each thinking block to the conversation before it, and refuses a replay
+// that has drifted, so a recorded second turn proves goodall's replay against
+// the rules the current models enforce. It refuses a forced tool_choice, which
+// is why the forced recordings use [AnthropicForcing]. Override it on the
+// recorder with -model.
+const Anthropic = "claude-sonnet-5-5"
+
+// AnthropicForcing is the model the forced tool_choice recordings use.
+//
+// It is claude-haiku-5-5 because it is the current model that still accepts a
+// forced tool_choice: on 2026-10-28 claude-opus-5-5 and claude-sonnet-5-5
+// answered tool_choice "tool" and "any" with a 400, and claude-haiku-5-5
+// answered both with a tool call.
+const AnthropicForcing = "claude-haiku-5-5"
 
 // OpenRouterClaude is the Claude model the OpenRouter live tests and
 // recordings run against, named the way OpenRouter names it.
 //
-// It is anthropic/claude-opus-5 because that is the newest Claude in the
-// OpenRouter catalog that advertises tool_choice. GET
-// https://openrouter.ai/api/v1/models on 2026-09-15 listed 446 models, of
-// which the three newest Claudes were anthropic/claude-fable-5.1 (created
-// 2026-08-31), anthropic/claude-opus-5 (2026-07-24) and
-// anthropic/claude-sonnet-5 (2026-06-30). claude-fable-5.1 is newer still but
-// its supported_parameters name neither tool_choice nor temperature and its
-// reasoning is mandatory, so the forced-tool recordings would silently not be
-// forced and the plain recordings could not turn thinking off; OpenRouter
-// drops a parameter the endpoint does not support rather than refusing it, so
-// that failure would be invisible in the fixture. claude-opus-5 reads text,
-// images and files, supports tools, tool_choice and the effort ladder from low
-// to max, and reports a 1,000,000-token context with a 128,000-token output
-// limit.
-const OpenRouterClaude = "anthropic/claude-opus-5"
+// It is anthropic/claude-sonnet-5.5, the same model as [Anthropic], so the two
+// providers' recordings answer the same correspondent. GET
+// https://openrouter.ai/api/v1/models on 2026-10-28 listed it with tools,
+// tool_choice, reasoning and the effort ladder from low to max, a
+// 1,000,000-token context, and reasoning that is mandatory: effort "none" is a
+// 400 ("Reasoning is mandatory for this endpoint and cannot be disabled"), and
+// goodall's translation leaves the effort out instead when the catalog entry
+// is attached. Like the Anthropic model it refuses a forced tool_choice,
+// relayed as a 400, so the forced recordings use [OpenRouterClaudeForcing].
+const OpenRouterClaude = "anthropic/claude-sonnet-5.5"
+
+// OpenRouterClaudeForcing is the Claude model the OpenRouter forced
+// tool_choice recordings use: anthropic/claude-haiku-5.5, for the reason
+// [AnthropicForcing] gives, confirmed through OpenRouter on 2026-10-28.
+const OpenRouterClaudeForcing = "anthropic/claude-haiku-5.5"
 
 // OpenRouterOpenAI is the OpenAI reasoning model the OpenRouter recordings use
 // for the encrypted-reasoning round trip, which is the other shape a

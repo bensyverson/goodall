@@ -27,7 +27,7 @@ if err != nil {
 
 agent := &goodall.Agent{
 	Provider: anthropic.New(os.Getenv("ANTHROPIC_API_KEY")),
-	Model:    "claude-sonnet-5",
+	Model:    "claude-sonnet-5-5",
 	System:   "You are a terse weather assistant.",
 	Tools:    []goodall.Tool{weather},
 	Thinking: goodall.ThinkingConfig{Effort: goodall.EffortLow, Display: goodall.DisplaySummarized},
@@ -49,14 +49,14 @@ for ev, _ := range agent.Run(ctx, conv, goodall.Text{Text: "Will it rain in Pari
 }
 ```
 
-The tool's JSON schema is inferred from the handler's input type. `goodall.AgentTool` wraps a second agent, on any model or provider, as a tool, so a model can delegate a task and read its answer; the delegated run inherits the caller's cancellation, keeps its own budget, streams its own events to the caller wrapped as `ToolEvent`s under the call that started it, and reports what it spent on that call's `ToolCallEnd`. It compiles as `ExampleAgentTool`. A tool that calls a model of its own is built with `goodall.NewReportingTool` rather than `NewTool`, which is what lets it show progress and declare its tokens. A run ends in exactly one `Done` or `Stopped` event carrying the conversation so far and the usage, on every path including cancellation. Swap `anthropic.New(...)` for `openrouter.New(openrouter.WithAPIKey(...))` and a model such as `anthropic/claude-sonnet-5` to run the same agent through OpenRouter; `openrouter.WithBaseURL` and `openrouter.WithDialect` point it at OpenAI or a local server. This example compiles as `ExampleAgent_Run` in the root package.
+The tool's JSON schema is inferred from the handler's input type. `goodall.AgentTool` wraps a second agent, on any model or provider, as a tool, so a model can delegate a task and read its answer; the delegated run inherits the caller's cancellation, keeps its own budget, streams its own events to the caller wrapped as `ToolEvent`s under the call that started it, and reports what it spent on that call's `ToolCallEnd`. It compiles as `ExampleAgentTool`. A tool that calls a model of its own is built with `goodall.NewReportingTool` rather than `NewTool`, which is what lets it show progress and declare its tokens. A run ends in exactly one `Done` or `Stopped` event carrying the conversation so far and the usage, on every path including cancellation. Swap `anthropic.New(...)` for `openrouter.New(openrouter.WithAPIKey(...))` and a model such as `anthropic/claude-sonnet-5.5` to run the same agent through OpenRouter; `openrouter.WithBaseURL` and `openrouter.WithDialect` point it at OpenAI or a local server. This example compiles as `ExampleAgent_Run` in the root package.
 
 ## Quick start: a chat back end
 
 ```go
 agent := &goodall.Agent{
 	Provider: openrouter.New(openrouter.WithAPIKey(os.Getenv("OPENROUTER_API_KEY"))),
-	Model:    "anthropic/claude-sonnet-5",
+	Model:    "anthropic/claude-sonnet-5.5",
 	System:   "You are a friendly assistant.",
 }
 svc := chat.NewService(agent, chat.NewMemoryStore())

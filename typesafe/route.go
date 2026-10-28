@@ -119,7 +119,7 @@ func WithFallthrough() RouteOption {
 //	            return err
 //	        }
 //	        if intent.Choice == "hard" && intent.Confidence > 0.8 {
-//	            req.Model = "claude-opus-5"
+//	            req.Model = "claude-opus-5-5"
 //	        }
 //	        return nil
 //	    })

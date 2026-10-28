@@ -23,27 +23,24 @@ type modelSet struct {
 	Cheap string
 }
 
-// The parent and strong ids are the ones the repository's live tests and
-// recordings use (claude-sonnet-5 and claude-opus-5, both confirmed against the
-// live catalogs on 2026-09-15). The cheap id is Haiku 4.5, the newest Haiku
-// either catalog listed on 2026-09-17: GET /v1/models on the Anthropic API
-// named claude-haiku-4-5-20251001 and no Haiku 5, and OpenRouter's catalog
-// named anthropic/claude-haiku-4.5. A run that is refused for an unknown
-// model changes one line here.
+// The three are the current Sonnet, Opus and Haiku, each confirmed against
+// both live catalogs on 2026-10-28: claude-sonnet-5-5 (the model the
+// repository's live tests use), claude-opus-5-5 and claude-haiku-5-5. A run
+// that is refused for an unknown model changes one line here.
 
 // anthropicModels is the three roles as the Anthropic API names them.
 var anthropicModels = modelSet{
-	Parent: "claude-sonnet-5",
-	Strong: "claude-opus-5",
-	Cheap:  "claude-haiku-4-5-20251001",
+	Parent: "claude-sonnet-5-5",
+	Strong: "claude-opus-5-5",
+	Cheap:  "claude-haiku-5-5",
 }
 
 // openRouterModels is the same three as the OpenRouter catalog names them, so
 // switching provider changes the route and not the correspondent.
 var openRouterModels = modelSet{
-	Parent: "anthropic/claude-sonnet-5",
-	Strong: "anthropic/claude-opus-5",
-	Cheap:  "anthropic/claude-haiku-4.5",
+	Parent: "anthropic/claude-sonnet-5.5",
+	Strong: "anthropic/claude-opus-5.5",
+	Cheap:  "anthropic/claude-haiku-5.5",
 }
 
 // defaultJudgeModel is the Jev version every judgment is asked of. It is the

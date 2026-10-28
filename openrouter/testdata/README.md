@@ -3,7 +3,9 @@
 Two sets live here, and the file names say which is which.
 
 - **`live_*` — recorded**, by `go run ./scripts/record-fixtures -provider openrouter` and
-  `-provider openai`, from the live API on **2026-09-15**. Every byte of a `live_*.sse` or
+  `-provider openai`, from the live API. The Claude recordings were re-recorded on
+  **2026-10-28**; the OpenAI ones (`live_encrypted_reasoning_*`, `live_openai_*`) date from
+  **2026-09-15**, and their request bodies show the older, easier cyclist question. Every byte of a `live_*.sse` or
   `live_*.json` came off the wire; the `live_*.request.json` beside each one is the body
   goodall sent to get it, indented for reading but otherwise unchanged. No headers are
   captured, so no key can be in one.
@@ -16,7 +18,8 @@ Two sets live here, and the file names say which is which.
 
 | Recording | Endpoint | Model |
 |---|---|---|
-| `live_*` (no prefix) | `openrouter.ai/api/v1` | `anthropic/claude-opus-5` |
+| `live_*` (no prefix) | `openrouter.ai/api/v1` | `anthropic/claude-sonnet-5.5` |
+| `live_tool_use*` | `openrouter.ai/api/v1` | `anthropic/claude-haiku-5.5`, which still accepts a forced `tool_choice` |
 | `live_encrypted_reasoning_tool_use*` | `openrouter.ai/api/v1` | `openai/gpt-6-astra` |
 | `live_openai_*` | `api.openai.com/v1`, `Dialect: OpenAI` | `gpt-5.6-terra` |
 
@@ -77,10 +80,12 @@ Two smaller facts worth keeping:
 - OpenRouter **adds to the upstream body**. `live_debug_echo.sse` shows it sending Anthropic a
   `thinking: {type: "adaptive", display: "summarized"}` object and a `cache_control` breakpoint
   that goodall's request did not set, and a `metadata.user_id` of `<redacted>`.
-- **`anthropic/claude-fable-5.1` is newer than the model recorded here** but its
-  `supported_parameters` name no `tool_choice` and its reasoning is mandatory. OpenRouter drops
+- **`anthropic/claude-fable-5.1` was passed over on 2026-09-15** because its
+  `supported_parameters` named no `tool_choice` and its reasoning is mandatory. OpenRouter drops
   a parameter the endpoint does not support rather than refusing it, so a forced-tool recording
   against it would have been silently unforced.
+- **Opus 5.5 and Sonnet 5.5 do list `tool_choice`, yet refuse the forced forms**: on 2026-10-28
+  OpenRouter relayed Anthropic's 400 for both, which is why the forced recordings moved to Haiku 5.5.
 
 ## Hand-authored files
 

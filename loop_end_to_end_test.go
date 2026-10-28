@@ -170,8 +170,15 @@ func TestTheLoopRunsTwoRecordedAnthropicTurns(t *testing.T) {
 	}
 
 	// The two recorded message_deltas, summed: a Result reports the whole
-	// run, not the last turn.
-	wantUsage := goodall.Usage{Input: 570 + 728, Output: 124 + 144, Reasoning: 50}
+	// run, not the last turn. The second turn reads from the cache what the
+	// first one wrote, which is CacheAuto working on a replayed turn.
+	wantUsage := goodall.Usage{
+		Input:      4 + 2,
+		Output:     236 + 289,
+		CacheRead:  0 + 515,
+		CacheWrite: 515 + 271,
+		Reasoning:  161 + 0,
+	}
 	if result.Usage != wantUsage {
 		t.Errorf("summed usage = %+v, want %+v", result.Usage, wantUsage)
 	}

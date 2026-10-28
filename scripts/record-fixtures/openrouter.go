@@ -80,7 +80,7 @@ func openAIExchanges(rec *recorder, key, model string) ([]exchange, error) {
 			name: "openai_tool_use",
 			what: "a forced tool call, which this endpoint serves only with reasoning turned off",
 			run: func(ctx context.Context) error {
-				req := toolUseRequest(model, weather)
+				req := toolUseRequest(livemodel.OpenRouterClaudeForcing, weather)
 				req.Thinking = goodall.ThinkingConfig{Effort: goodall.EffortOff}
 				_, err := rec.stream(ctx, client, "openai_tool_use", req)
 				return err
@@ -140,7 +140,7 @@ func chatCompletionExchanges(rec *recorder, client *openrouter.Client, model, re
 			name: "tool_use",
 			what: "a forced tool call, streamed as arguments fragments keyed by index",
 			run: func(ctx context.Context) error {
-				_, err := rec.stream(ctx, client, "tool_use", toolUseRequest(model, weather))
+				_, err := rec.stream(ctx, client, "tool_use", toolUseRequest(livemodel.OpenRouterClaudeForcing, weather))
 				return err
 			},
 		},
@@ -148,7 +148,7 @@ func chatCompletionExchanges(rec *recorder, client *openrouter.Client, model, re
 			name: "tool_use_blocking",
 			what: "the same forced tool call through Complete",
 			run: func(ctx context.Context) error {
-				_, err := rec.complete(ctx, client, "tool_use_blocking", toolUseRequest(model, weather))
+				_, err := rec.complete(ctx, client, "tool_use_blocking", toolUseRequest(livemodel.OpenRouterClaudeForcing, weather))
 				return err
 			},
 		},
@@ -156,7 +156,12 @@ func chatCompletionExchanges(rec *recorder, client *openrouter.Client, model, re
 			name: "thinking_tool_use",
 			what: "thinking plus a tool call on the Claude model, then a second turn replaying the reasoning_details with the tool result",
 			run: func(ctx context.Context) error {
-				return recordReasoningTurns(ctx, rec, client, "thinking_tool_use", model, goodall.EffortLow, 2, weather)
+				// High, not low: on 2026-10-28 claude-sonnet-5-5
+				// thought nothing before this tool call at low or
+				// medium (on the Anthropic API), leaving no signed
+				// entry for the second turn to replay; see
+				// recordThinkingTurns in anthropic.go for the rates.
+				return recordReasoningTurns(ctx, rec, client, "thinking_tool_use", model, goodall.EffortHigh, 2, weather)
 			},
 		},
 		{
@@ -258,7 +263,9 @@ func textRequest(model string) *goodall.Request {
 	}
 }
 
-// toolUseRequest is the forced weather call.
+// toolUseRequest is the forced weather call. Its callers pass
+// livemodel.OpenRouterClaudeForcing whatever -model says: the current Opus and
+// Sonnet refuse a forced tool_choice.
 func toolUseRequest(model string, weather goodall.Tool) *goodall.Request {
 	return &goodall.Request{
 		Model:      model,
@@ -300,8 +307,8 @@ func recordReasoningTurns(ctx context.Context, rec *recorder, client *openrouter
 		Thinking:  goodall.ThinkingConfig{Effort: effort, Display: goodall.DisplaySummarized},
 		Tools:     []goodall.Tool{weather},
 		Messages: []goodall.Message{goodall.UserMessage(
-			goodall.Text{Text: "A cyclist in " + weatherCity + " will ride 40 km at 24 km/h, " +
-				"starting at 14:00. Work out when they finish, look up the weather there, " +
+			goodall.Text{Text: "A cyclist in " + weatherCity + " will ride 137 km at 23.4 km/h with two 18-minute stops, " +
+				"starting at 13:47. Work out to the minute when they finish, look up the weather there, " +
 				"and tell me whether they should expect rain during the ride."},
 		)},
 	}

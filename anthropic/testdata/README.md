@@ -3,8 +3,10 @@
 Two kinds of file live here.
 
 **Recorded** files are named `live_*`. They were captured from the live
-Messages API by `scripts/record-fixtures` on **2026-09-15** against
-**`claude-sonnet-5`**, and they are exactly the bytes the API returned: no
+Messages API by `scripts/record-fixtures` on **2026-10-28** against
+**`claude-sonnet-5-5`** (the forced tool calls against **`claude-haiku-5-5`**,
+since the current Opus and Sonnet refuse a forced `tool_choice`; see
+`internal/livemodel`), and they are exactly the bytes the API returned: no
 headers, no status line, no key. Refresh them with
 
     go run ./scripts/record-fixtures -env .env -out anthropic/testdata
@@ -25,9 +27,9 @@ leaves absent.
 | --- | --- | --- |
 | `live_text.sse` | recorded | A one-line answer, streamed. |
 | `live_text_blocking.json` | recorded | The same question through `Complete`, so the two paths can be compared. |
-| `live_tool_use.sse` | recorded | A forced `tool_choice`, streamed as `input_json_delta` fragments. |
+| `live_tool_use.sse` | recorded | A forced `tool_choice` on Haiku 5.5, streamed as `input_json_delta` fragments. |
 | `live_tool_use_blocking.json` | recorded | The same forced tool call through `Complete`. |
-| `live_thinking_tool_use.sse` | recorded | Adaptive thinking at effort low with summarized display, producing a signed thinking block and a tool call. |
+| `live_thinking_tool_use.sse` | recorded | Adaptive thinking at effort high with summarized display, on a question with real arithmetic in it (Sonnet 5.5 skipped thinking at lower efforts and on an easier question), producing a signed thinking block and a tool call. |
 | `live_thinking_tool_use_turn2.sse` | recorded | The next turn, sent with that thinking block replayed and the tool result appended. The answer, rather than an error, is the proof that goodall's replay is accepted. |
 | `live_image.sse` | recorded | A generated 8×8 PNG the model was asked to name the color of. |
 | `live_pdf.sse` | recorded | A generated one-page PDF the model was asked to quote. |

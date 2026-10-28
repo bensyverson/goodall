@@ -1,12 +1,12 @@
 {
-  "model": "anthropic/claude-opus-5",
+  "model": "anthropic/claude-sonnet-5.5",
   "messages": [
     {
       "role": "user",
       "content": [
         {
           "type": "text",
-          "text": "A cyclist in Paris will ride 40 km at 24 km/h, starting at 14:00. Work out when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+          "text": "A cyclist in Paris will ride 137 km at 23.4 km/h with two 18-minute stops, starting at 13:47. Work out to the minute when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
         }
       ]
     }
@@ -44,7 +44,7 @@
   "max_tokens": 2048,
   "stream": true,
   "reasoning": {
-    "effort": "low"
+    "effort": "high"
   },
   "cache_control": {
     "type": "ephemeral"

@@ -31,7 +31,7 @@ const (
 	// recordedThinkingTokens is the thinking_tokens the recorded thinking
 	// turn reported. Anthropic breaks the count out under
 	// output_tokens_details, and goodall.Usage has a field for it.
-	recordedThinkingTokens = 50
+	recordedThinkingTokens = 161
 )
 
 // recordedStreams is every streamed recording, by fixture name.

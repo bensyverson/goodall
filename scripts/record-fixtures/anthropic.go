@@ -6,6 +6,7 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/anthropic"
+	"github.com/bensyverson/goodall/internal/livemodel"
 )
 
 // The Anthropic recordings. Each exchange is one question chosen so that the
@@ -53,9 +54,11 @@ func anthropicExchanges(rec *recorder, key, model string) ([]exchange, error) {
 			)},
 		}
 	}
+	// The forced call runs on livemodel.AnthropicForcing whatever -model
+	// says: the current Opus and Sonnet refuse a forced tool_choice.
 	toolUse := func() *goodall.Request {
 		return &goodall.Request{
-			Model:      model,
+			Model:      livemodel.AnthropicForcing,
 			MaxTokens:  recordedMaxTokens,
 			Tools:      []goodall.Tool{weather},
 			ToolChoice: goodall.ChooseTool(weather.Name()),
@@ -171,14 +174,21 @@ func recordThinkingTurns(ctx context.Context, rec *recorder, client *anthropic.C
 	// straight onto the tool call. Forcing the call would buy determinism
 	// at the cost of the one thing this recording exists to capture, so
 	// the prompt does the forcing instead.
+	//
+	// The effort is high and the ride needs real arithmetic. Recorded
+	// 2026-10-28: claude-sonnet-5-5 answered the earlier 40 km question at
+	// low and medium with thinking_tokens zero and no thinking block,
+	// which would leave the second turn nothing signed to replay, and at
+	// high it thought in only 4 of 5 runs; this question at high thought
+	// in 15 of 15.
 	first := &goodall.Request{
 		Model:     model,
 		MaxTokens: recordedMaxTokens,
-		Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortLow, Display: goodall.DisplaySummarized},
+		Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortHigh, Display: goodall.DisplaySummarized},
 		Tools:     []goodall.Tool{weather},
 		Messages: []goodall.Message{goodall.UserMessage(
-			goodall.Text{Text: "A cyclist in " + weatherCity + " will ride 40 km at 24 km/h, " +
-				"starting at 14:00. Work out when they finish, look up the weather there, " +
+			goodall.Text{Text: "A cyclist in " + weatherCity + " will ride 137 km at 23.4 km/h with two 18-minute stops, " +
+				"starting at 13:47. Work out to the minute when they finish, look up the weather there, " +
 				"and tell me whether they should expect rain during the ride."},
 		)},
 	}
