@@ -35,6 +35,7 @@ func TestModelReadsTheCapabilityTree(t *testing.T) {
 			ThinkingStyle:    goodall.ThinkingAdaptive,
 			CacheControl:     goodall.Supported,
 			StructuredOutput: goodall.Supported,
+			ForcedToolChoice: goodall.Supported,
 			ThinkingEfforts:  []goodall.Effort{goodall.EffortLow, goodall.EffortMedium, goodall.EffortHigh, goodall.EffortXHigh},
 			ContextWindow:    200000,
 			MaxOutput:        64000,
@@ -67,6 +68,30 @@ func TestModelReadsHowThinkingTurnsOff(t *testing.T) {
 			}
 			if got.Capabilities.ThinkingOff != want {
 				t.Errorf("ThinkingOff = %q, want %q", got.Capabilities.ThinkingOff, want)
+			}
+		})
+	}
+}
+
+// TestModelReadsWhetherAToolCanBeForced checks the fact no catalog leaf
+// carries: on 2026-10-28 Opus 5.5 and Sonnet 5.5 answered a forced tool_choice
+// with a 400 while Opus 5 and Haiku 5.5 accepted it.
+func TestModelReadsWhetherAToolCanBeForced(t *testing.T) {
+	cases := map[string]goodall.Support{
+		"claude-opus-5":     goodall.Supported,
+		"claude-opus-5-5":   goodall.Unsupported,
+		"claude-sonnet-5-5": goodall.Unsupported,
+		"claude-haiku-5-5":  goodall.Supported,
+	}
+	for model, want := range cases {
+		t.Run(model, func(t *testing.T) {
+			c, _ := serveFixture(t, "catalog_"+model+".json", "application/json")
+			got, err := c.Model(t.Context(), model)
+			if err != nil {
+				t.Fatalf("Model: %v", err)
+			}
+			if got.Capabilities.ForcedToolChoice != want {
+				t.Errorf("ForcedToolChoice = %v, want %v", got.Capabilities.ForcedToolChoice, want)
 			}
 		})
 	}

@@ -81,6 +81,9 @@ func requiredCapabilities(req *Request) []Capability {
 	if len(req.Tools) > 0 {
 		need(CapTools)
 	}
+	if m := req.ToolChoice.Mode; m == ToolChoiceAny || m == ToolChoiceNamed {
+		need(CapForcedToolChoice)
+	}
 	// EffortOff asks the model not to think, which no model needs a
 	// thinking capability to obey; the default asks for nothing at all.
 	if e := req.Thinking.Effort; e != EffortDefault && e != EffortOff {

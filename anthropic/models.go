@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/internal/claudename"
 	"github.com/bensyverson/goodall/internal/transport"
 )
 
@@ -157,15 +158,18 @@ func (c *Client) fetchModel(ctx context.Context, id string) (*goodall.ModelInfo,
 // Tools and cache control are reported as supported without asking the
 // catalog: every model the Messages API serves takes tool definitions and
 // cache_control breakpoints, and Anthropic publishes no leaf for either, so
-// the honest answer is the one every model gives. Pricing stays nil —
+// the honest answer is the one every model gives. A forced tool choice has no
+// leaf either; every model took it until Fable 5.1, so it reads as supported
+// unless the name says otherwise. Pricing stays nil —
 // Anthropic publishes prices on its website, not on this endpoint, and a
 // price of zero would read as "free".
 func neutralModel(w *wireModel) *goodall.ModelInfo {
 	caps := goodall.Capabilities{
-		Tools:         goodall.Supported,
-		CacheControl:  goodall.Supported,
-		ContextWindow: w.MaxInputTokens,
-		MaxOutput:     w.MaxTokens,
+		Tools:            goodall.Supported,
+		CacheControl:     goodall.Supported,
+		ForcedToolChoice: claudename.ForcedToolChoice(w.ID, goodall.Supported),
+		ContextWindow:    w.MaxInputTokens,
+		MaxOutput:        w.MaxTokens,
 	}
 	if c := w.Capabilities; c != nil {
 		caps.ImageInput = c.ImageInput.support()

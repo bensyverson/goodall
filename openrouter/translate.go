@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/internal/claudename"
 )
 
 // maxCacheBreakpoints is how many explicit prompt-cache breakpoints one
@@ -39,6 +40,9 @@ type translator struct {
 // is ignored.
 func translateRequest(req *goodall.Request, d Dialect, stream bool) (*chatRequest, error) {
 	if err := req.ToolChoice.Validate(); err != nil {
+		return nil, err
+	}
+	if err := claudename.RefuseForcing(ProviderName, req); err != nil {
 		return nil, err
 	}
 	ext, err := extensionsOf(req)

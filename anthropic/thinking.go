@@ -2,10 +2,10 @@ package anthropic
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/internal/claudename"
 )
 
 // minThinkingBudget is the smallest budget_tokens Anthropic accepts on a
@@ -42,8 +42,8 @@ const (
 // It is a guess, and only the guess: where the request carries the
 // catalog's answer, [styleFor] prefers it.
 func thinkingStyleFor(model string) thinkingStyle {
-	major, minor, ok := modelVersion(strings.ToLower(model))
-	if !ok || atLeast(major, minor, 4, 6) {
+	major, minor, ok := claudename.Version(strings.ToLower(model))
+	if !ok || claudename.AtLeast(major, minor, 4, 6) {
 		return styleAdaptive
 	}
 	return styleBudget
@@ -84,8 +84,8 @@ func thinkingOffFor(model string) goodall.ThinkingOff {
 	if strings.Contains(name, "fable") || strings.Contains(name, "mythos") {
 		return goodall.ThinkingOffNever
 	}
-	major, minor, ok := modelVersion(name)
-	newer := !ok || atLeast(major, minor, 5, 5)
+	major, minor, ok := claudename.Version(name)
+	newer := !ok || claudename.AtLeast(major, minor, 5, 5)
 	switch {
 	case newer && strings.Contains(name, "opus"):
 		return goodall.ThinkingOffNever
@@ -106,32 +106,6 @@ func offFor(model string, info *goodall.ModelInfo) goodall.ThinkingOff {
 		}
 	}
 	return thinkingOffFor(model)
-}
-
-// atLeast reports whether major.minor is at or above the given version.
-func atLeast(major, minor, wantMajor, wantMinor int) bool {
-	return major > wantMajor || (major == wantMajor && minor >= wantMinor)
-}
-
-// modelVersion reads the first major.minor version out of a hyphenated model
-// name. The minor part is only taken from a one- or two-digit component, so
-// the release date in claude-opus-5-20260214 is not read as a minor version.
-func modelVersion(name string) (major, minor int, ok bool) {
-	parts := strings.Split(name, "-")
-	for i, part := range parts {
-		n, err := strconv.Atoi(part)
-		if err != nil || part == "" {
-			continue
-		}
-		major = n
-		if i+1 < len(parts) && len(parts[i+1]) <= 2 {
-			if m, err := strconv.Atoi(parts[i+1]); err == nil {
-				minor = m
-			}
-		}
-		return major, minor, true
-	}
-	return 0, 0, false
 }
 
 // budgetPercent is the share of max_tokens an effort rung spends on thinking

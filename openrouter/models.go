@@ -12,6 +12,7 @@ import (
 	"slices"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/internal/claudename"
 	"github.com/bensyverson/goodall/internal/transport"
 )
 
@@ -33,6 +34,8 @@ type parameter string
 const (
 	// paramTools is tool definitions and tool calls.
 	paramTools parameter = "tools"
+	// paramToolChoice is a tool_choice, the forced forms included.
+	paramToolChoice parameter = "tool_choice"
 	// paramReasoning is OpenRouter's reasoning object.
 	paramReasoning parameter = "reasoning"
 	// paramReasoningEffort is OpenAI's top-level reasoning_effort string,
@@ -218,6 +221,7 @@ func modelInfo(entry *catalogModel) *goodall.ModelInfo {
 	}
 	if params := entry.SupportedParameters; len(params) > 0 {
 		caps.Tools = supportFor(params, paramTools)
+		caps.ForcedToolChoice = claudename.ForcedToolChoice(entry.ID, supportFor(params, paramToolChoice))
 		caps.Thinking = supportFor(params, paramReasoning, paramReasoningEffort)
 		caps.StructuredOutput = supportFor(params, paramStructuredOutputs)
 	}

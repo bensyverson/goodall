@@ -83,6 +83,29 @@ func TestModelReadsHowThinkingTurnsOff(t *testing.T) {
 	}
 }
 
+// TestModelReadsWhetherAToolCanBeForced: OpenRouter lists tool_choice for
+// every one of these, but on 2026-10-28 it relayed Anthropic's 400 for a
+// forced choice on Opus 5.5 and Sonnet 5.5.
+func TestModelReadsWhetherAToolCanBeForced(t *testing.T) {
+	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write(fixture(t, "models_claude_5_5.json"))
+	})
+	for model, want := range map[string]goodall.Support{
+		"anthropic/claude-opus-5":     goodall.Supported,
+		"anthropic/claude-opus-5.5":   goodall.Unsupported,
+		"anthropic/claude-sonnet-5.5": goodall.Unsupported,
+		"anthropic/claude-haiku-5.5":  goodall.Supported,
+	} {
+		info, err := c.Model(t.Context(), model)
+		if err != nil {
+			t.Fatalf("Model(%q): %v", model, err)
+		}
+		if got := info.Capabilities.ForcedToolChoice; got != want {
+			t.Errorf("Model(%q).ForcedToolChoice = %v, want %v", model, got, want)
+		}
+	}
+}
+
 func TestModelPricesAreExactDecimals(t *testing.T) {
 	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Write(fixture(t, "models.json"))

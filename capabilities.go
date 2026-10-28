@@ -69,6 +69,9 @@ const (
 	CapCacheControl Capability = "cache_control"
 	// CapStructuredOutput is a schema-constrained response.
 	CapStructuredOutput Capability = "structured_output"
+	// CapForcedToolChoice is a tool choice that obliges the model to call a
+	// tool: any of them, or one by name.
+	CapForcedToolChoice Capability = "forced_tool_choice"
 )
 
 // String names the capability.
@@ -105,6 +108,9 @@ type Capabilities struct {
 	// StructuredOutput is whether the model constrains its answer to a
 	// schema.
 	StructuredOutput Support `json:"structured_output,omitzero"`
+	// ForcedToolChoice is whether the model accepts a tool choice that
+	// obliges it to call a tool.
+	ForcedToolChoice Support `json:"forced_tool_choice,omitzero"`
 	// ThinkingStyle is which form of thinking the model takes, where the
 	// provider distinguishes them; the zero value means it did not say,
 	// which leaves a provider's own heuristic in charge.
@@ -195,6 +201,8 @@ func (c Capabilities) Get(name Capability) Support {
 		return c.CacheControl
 	case CapStructuredOutput:
 		return c.StructuredOutput
+	case CapForcedToolChoice:
+		return c.ForcedToolChoice
 	}
 	return SupportUnknown
 }

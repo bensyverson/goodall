@@ -90,6 +90,28 @@ func TestCheckCapabilitiesRefusesEachUnsupportedInput(t *testing.T) {
 	}
 }
 
+func TestCheckCapabilitiesRefusesAForcedToolChoice(t *testing.T) {
+	for name, choice := range map[string]ToolChoice{"any": ChooseAny(), "named": ChooseTool("echo")} {
+		t.Run(name, func(t *testing.T) {
+			req := textRequest()
+			req.Tools = []Tool{&stubTool{name: "echo"}}
+			req.ToolChoice = choice
+			req.ModelInfo = &ModelInfo{
+				ID:           "text-only",
+				Provider:     "testprovider",
+				Capabilities: Capabilities{Tools: Supported, ForcedToolChoice: Unsupported},
+			}
+			err := checkCapabilities(req)
+			if err == nil {
+				t.Fatal("a forced tool choice was allowed through to a model that rejects it")
+			}
+			if err.Capability != CapForcedToolChoice {
+				t.Errorf("capability = %q, want %q", err.Capability, CapForcedToolChoice)
+			}
+		})
+	}
+}
+
 func TestCheckCapabilitiesLetsUnknownSupportThrough(t *testing.T) {
 	// Invariant 11: unknown means try. Nobody has said anything about this
 	// model, so nothing about it may refuse a call that would have worked.

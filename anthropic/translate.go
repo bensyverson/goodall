@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/internal/claudename"
 )
 
 // maxCacheBreakpoints is the number of explicit cache_control markers
@@ -34,6 +35,9 @@ func translateRequest(req *goodall.Request) (*wireRequest, []Beta, error) {
 		return nil, nil, err
 	}
 	if err := req.ToolChoice.Validate(); err != nil {
+		return nil, nil, err
+	}
+	if err := claudename.RefuseForcing(ProviderName, req); err != nil {
 		return nil, nil, err
 	}
 
