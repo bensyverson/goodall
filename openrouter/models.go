@@ -224,8 +224,11 @@ func modelInfo(entry *catalogModel) *goodall.ModelInfo {
 	if top := entry.TopProvider; top != nil {
 		caps.MaxOutput = top.MaxCompletionTokens
 	}
-	if r := entry.Reasoning; r != nil && len(r.SupportedEfforts) > 0 {
-		caps.ThinkingEfforts = efforts(r.SupportedEfforts)
+	if r := entry.Reasoning; r != nil {
+		if len(r.SupportedEfforts) > 0 {
+			caps.ThinkingEfforts = efforts(r.SupportedEfforts)
+		}
+		caps.ThinkingOff = reasoningOff(r)
 	}
 	return &goodall.ModelInfo{
 		ID:           entry.ID,
@@ -245,6 +248,20 @@ func supportFor[T comparable](list []T, wanted ...T) goodall.Support {
 		}
 	}
 	return goodall.Unsupported
+}
+
+// reasoningOff reads how the model's reasoning is turned off. Mandatory
+// reasoning cannot be, and OpenRouter answers effort "none" with a 400; an
+// effort ladder that includes "none" can. A model that says neither has not
+// said, since an absent rung is not a refusal.
+func reasoningOff(r *modelReasoning) goodall.ThinkingOff {
+	switch {
+	case r.Mandatory:
+		return goodall.ThinkingOffNever
+	case slices.Contains(r.SupportedEfforts, wireEffortNone):
+		return goodall.ThinkingOffDisabled
+	}
+	return goodall.ThinkingOffUnknown
 }
 
 // efforts maps the catalog's effort rungs onto goodall's. The two ladders

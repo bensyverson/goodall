@@ -32,10 +32,12 @@ func (s *wireSupported) support() goodall.Support {
 
 // wireThinkingTypes is which thinking configurations a model accepts:
 // "adaptive" is the effort-driven form on 4.6 and above, "enabled" the older
-// budget form.
+// budget form, and "disabled" and "between_tools" the two ways to turn it off.
 type wireThinkingTypes struct {
-	Adaptive *wireSupported `json:"adaptive,omitzero"`
-	Enabled  *wireSupported `json:"enabled,omitzero"`
+	Adaptive     *wireSupported `json:"adaptive,omitzero"`
+	Enabled      *wireSupported `json:"enabled,omitzero"`
+	Disabled     *wireSupported `json:"disabled,omitzero"`
+	BetweenTools *wireSupported `json:"between_tools,omitzero"`
 }
 
 // wireThinkingCapability is the thinking branch: a "supported" member of its
@@ -171,6 +173,7 @@ func neutralModel(w *wireModel) *goodall.ModelInfo {
 		caps.StructuredOutput = c.StructuredOutputs.support()
 		caps.Thinking = thinkingSupport(c.Thinking)
 		caps.ThinkingStyle = catalogThinkingStyle(c.Thinking)
+		caps.ThinkingOff = catalogThinkingOff(c.Thinking)
 		caps.ThinkingEfforts = supportedEfforts(c.Effort)
 	}
 	return &goodall.ModelInfo{
@@ -196,6 +199,26 @@ func catalogThinkingStyle(t *wireThinkingCapability) goodall.ThinkingStyle {
 		return goodall.ThinkingBudget
 	}
 	return goodall.ThinkingStyleUnknown
+}
+
+// catalogThinkingOff reads how the model's thinking is turned off. Disabled
+// wins when both forms are offered, since it is the plainer one. A model that
+// published disabled as unsupported and offers no between_tools cannot turn
+// thinking off at all; a catalog that published neither leaf has not said,
+// which leaves the name heuristic in charge.
+func catalogThinkingOff(t *wireThinkingCapability) goodall.ThinkingOff {
+	if t == nil {
+		return goodall.ThinkingOffUnknown
+	}
+	switch {
+	case t.Types.Disabled.support() == goodall.Supported:
+		return goodall.ThinkingOffDisabled
+	case t.Types.BetweenTools.support() == goodall.Supported:
+		return goodall.ThinkingOffBetweenTools
+	case t.Types.Disabled.support() == goodall.Unsupported:
+		return goodall.ThinkingOffNever
+	}
+	return goodall.ThinkingOffUnknown
 }
 
 // thinkingSupport reads whether the model thinks. The branch's own "supported"

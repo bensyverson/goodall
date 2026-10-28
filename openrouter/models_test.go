@@ -60,6 +60,29 @@ func TestModelMapsTheCatalogEntry(t *testing.T) {
 	}
 }
 
+// TestModelReadsHowThinkingTurnsOff reads catalog entries captured from
+// GET /models on 2026-10-28. A model whose reasoning is mandatory cannot turn
+// it off; one whose supported efforts include "none" can.
+func TestModelReadsHowThinkingTurnsOff(t *testing.T) {
+	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Write(fixture(t, "models_claude_5_5.json"))
+	})
+	for model, want := range map[string]goodall.ThinkingOff{
+		"anthropic/claude-opus-5":     goodall.ThinkingOffDisabled,
+		"anthropic/claude-opus-5.5":   goodall.ThinkingOffNever,
+		"anthropic/claude-sonnet-5.5": goodall.ThinkingOffNever,
+		"anthropic/claude-haiku-5.5":  goodall.ThinkingOffDisabled,
+	} {
+		info, err := c.Model(t.Context(), model)
+		if err != nil {
+			t.Fatalf("Model(%q): %v", model, err)
+		}
+		if got := info.Capabilities.ThinkingOff; got != want {
+			t.Errorf("Model(%q).ThinkingOff = %q, want %q", model, got, want)
+		}
+	}
+}
+
 func TestModelPricesAreExactDecimals(t *testing.T) {
 	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Write(fixture(t, "models.json"))

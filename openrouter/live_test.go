@@ -13,7 +13,7 @@ import (
 
 // These are the live tests: they call the real OpenRouter API, and one calls
 // api.openai.com, with the keys in the repository's .env. They cost real
-// money, so there are five calls in the whole file. They skip, saying what
+// money, so there are eight paid calls in the whole file. They skip, saying what
 // they skipped and why, when the key is absent and under -short, which is what
 // makes `go test -short ./...` the offline suite.
 //
@@ -285,5 +285,35 @@ func TestLiveOpenAIDialectRoundTrip(t *testing.T) {
 	}
 	if resp.Cost.Reported {
 		t.Error("a cost was reported, though api.openai.com charges no figure on this API")
+	}
+}
+
+// TestLiveThinkingOffIsAccepted asks each 5.5 Claude for no reasoning the way
+// the agent does, with the catalog entry attached. On 2026-10-28 OpenRouter
+// answered effort "none" on Opus 5.5 and Sonnet 5.5 with a 400 ("Reasoning is
+// mandatory for this endpoint and cannot be disabled").
+func TestLiveThinkingOffIsAccepted(t *testing.T) {
+	client := liveClient(t)
+	for _, model := range []string{"anthropic/claude-opus-5.5", "anthropic/claude-sonnet-5.5", "anthropic/claude-haiku-5.5"} {
+		t.Run(model, func(t *testing.T) {
+			info, err := client.Model(t.Context(), model)
+			if err != nil {
+				t.Fatalf("the catalog lookup failed: %v", err)
+			}
+			resp, err := client.Complete(t.Context(), &goodall.Request{
+				Model:     model,
+				MaxTokens: liveMaxTokens,
+				Messages:  []goodall.Message{goodall.UserMessage(goodall.Text{Text: "Reply with the single word: ok"})},
+				Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortOff},
+				ModelInfo: info,
+			})
+			if err != nil {
+				t.Fatalf("thinking off (%s) was refused: %v", info.Capabilities.ThinkingOff, err)
+			}
+			t.Logf("%s: off=%s stop=%s output=%d", model, info.Capabilities.ThinkingOff, resp.StopReason, resp.Usage.Output)
+			if resp.Message.Text() == "" {
+				t.Error("the call returned no text")
+			}
+		})
 	}
 }

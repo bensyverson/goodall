@@ -345,6 +345,9 @@ const (
 	thinkingAdaptive thinkingType = "adaptive"
 	thinkingEnabled  thinkingType = "enabled"
 	thinkingDisabled thinkingType = "disabled"
+	// thinkingBetweenTools turns thinking off on a model that refuses
+	// disabled, and takes no other member beside it.
+	thinkingBetweenTools thinkingType = "between_tools"
 )
 
 // wireThinkingConfig is the request's thinking setting. Display belongs to

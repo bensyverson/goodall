@@ -1,0 +1,643 @@
+{
+ "data": [
+  {
+   "id": "anthropic/claude-haiku-5.5",
+   "canonical_slug": "anthropic/claude-haiku-5.5-20261007",
+   "hugging_face_id": null,
+   "name": "Anthropic: Claude Haiku 5.5",
+   "created": 1791397883,
+   "description": "Claude Haiku 5.5 is Anthropic's small, fast model for high-volume, cost-sensitive work such as summarization, subagents, and browser use. It succeeds Claude Haiku 4.5 with stronger coding, computer use, and...",
+   "context_length": 1000000,
+   "architecture": {
+    "modality": "text+image+file->text",
+    "input_modalities": [
+     "text",
+     "image",
+     "file"
+    ],
+    "output_modalities": [
+     "text"
+    ],
+    "tokenizer": "Claude",
+    "instruct_type": null
+   },
+   "pricing": {
+    "prompt": "0.0000001",
+    "completion": "0.0000005",
+    "web_search": "0.01",
+    "input_cache_read": "0.00000001",
+    "input_cache_write": "0.000000125",
+    "input_cache_write_1h": "0.0000002",
+    "overrides": [
+     {
+      "min_prompt_tokens": 100000,
+      "prompt": "0.0000005",
+      "completion": "0.0000025",
+      "input_cache_read": "0.00000005",
+      "input_cache_write": "0.000000625",
+      "input_cache_write_1h": "0.000001"
+     }
+    ]
+   },
+   "top_provider": {
+    "context_length": 1000000,
+    "max_completion_tokens": 128000,
+    "is_moderated": true
+   },
+   "per_request_limits": null,
+   "supported_parameters": [
+    "include_reasoning",
+    "max_completion_tokens",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "stop",
+    "structured_outputs",
+    "tool_choice",
+    "tools",
+    "verbosity"
+   ],
+   "default_parameters": {},
+   "supported_voices": null,
+   "knowledge_cutoff": null,
+   "expiration_date": null,
+   "links": {
+    "details": "/api/v1/models/anthropic/claude-haiku-5.5-20261007/endpoints"
+   },
+   "benchmarks": {
+    "design_arena": [
+     {
+      "arena": "models",
+      "category": "3d",
+      "elo": 1343,
+      "win_rate": 58.1,
+      "rank": 11
+     },
+     {
+      "arena": "models",
+      "category": "codecategories",
+      "elo": 1280,
+      "win_rate": 50.6,
+      "rank": 24
+     },
+     {
+      "arena": "models",
+      "category": "dataviz",
+      "elo": 1286,
+      "win_rate": 53,
+      "rank": 16
+     },
+     {
+      "arena": "models",
+      "category": "gamedev",
+      "elo": 1321,
+      "win_rate": 54.7,
+      "rank": 12
+     },
+     {
+      "arena": "models",
+      "category": "svg",
+      "elo": 1200,
+      "win_rate": 44,
+      "rank": 29
+     },
+     {
+      "arena": "models",
+      "category": "uicomponent",
+      "elo": 1277,
+      "win_rate": 50.8,
+      "rank": 27
+     },
+     {
+      "arena": "models",
+      "category": "website",
+      "elo": 1262,
+      "win_rate": 48.7,
+      "rank": 37
+     }
+    ],
+    "artificial_analysis": {
+     "intelligence_index": 36.2,
+     "coding_index": null,
+     "agentic_index": null
+    }
+   },
+   "reasoning": {
+    "mandatory": false,
+    "supported_efforts": [
+     "max",
+     "xhigh",
+     "high",
+     "medium",
+     "low",
+     "none"
+    ],
+    "default_effort": "medium"
+   }
+  },
+  {
+   "id": "anthropic/claude-sonnet-5.5",
+   "canonical_slug": "anthropic/claude-sonnet-5.5-20260928",
+   "hugging_face_id": null,
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "created": 1790618686,
+   "description": "Claude Sonnet 5.5 is Anthropic's Sonnet-class model for well-scoped everyday work, succeeding Claude Sonnet 5 as a direct upgrade. It is especially strong at building features, fixing bugs, and producing...",
+   "context_length": 1000000,
+   "architecture": {
+    "modality": "text+image+file->text",
+    "input_modalities": [
+     "text",
+     "image",
+     "file"
+    ],
+    "output_modalities": [
+     "text"
+    ],
+    "tokenizer": "Claude",
+    "instruct_type": null
+   },
+   "pricing": {
+    "prompt": "0.000002",
+    "completion": "0.00001",
+    "web_search": "0.01",
+    "input_cache_read": "0.0000001",
+    "input_cache_write": "0.0000025",
+    "input_cache_write_1h": "0.000004"
+   },
+   "top_provider": {
+    "context_length": 1000000,
+    "max_completion_tokens": 128000,
+    "is_moderated": true
+   },
+   "per_request_limits": null,
+   "supported_parameters": [
+    "include_reasoning",
+    "max_completion_tokens",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "stop",
+    "structured_outputs",
+    "tool_choice",
+    "tools",
+    "verbosity"
+   ],
+   "default_parameters": {},
+   "supported_voices": null,
+   "knowledge_cutoff": null,
+   "expiration_date": null,
+   "links": {
+    "details": "/api/v1/models/anthropic/claude-sonnet-5.5-20260928/endpoints"
+   },
+   "benchmarks": {
+    "design_arena": [
+     {
+      "arena": "agents",
+      "category": "blender3d",
+      "elo": 1285,
+      "win_rate": 63.1,
+      "rank": 3
+     },
+     {
+      "arena": "agents",
+      "category": "mobileapps",
+      "elo": 1288,
+      "win_rate": 60.4,
+      "rank": 3
+     },
+     {
+      "arena": "agents",
+      "category": "spreadsheet",
+      "elo": 1292,
+      "win_rate": 53.7,
+      "rank": 4
+     },
+     {
+      "arena": "agents",
+      "category": "webapps",
+      "elo": 1305,
+      "win_rate": 60.3,
+      "rank": 4
+     },
+     {
+      "arena": "models",
+      "category": "3d",
+      "elo": 1399,
+      "win_rate": 51.3,
+      "rank": 5
+     },
+     {
+      "arena": "models",
+      "category": "codecategories",
+      "elo": 1354,
+      "win_rate": 56.4,
+      "rank": 5
+     },
+     {
+      "arena": "models",
+      "category": "dataviz",
+      "elo": 1366,
+      "win_rate": 64.7,
+      "rank": 2
+     },
+     {
+      "arena": "models",
+      "category": "gamedev",
+      "elo": 1414,
+      "win_rate": 62.3,
+      "rank": 2
+     },
+     {
+      "arena": "models",
+      "category": "uicomponent",
+      "elo": 1373,
+      "win_rate": 63.1,
+      "rank": 4
+     },
+     {
+      "arena": "models",
+      "category": "website",
+      "elo": 1323,
+      "win_rate": 54.8,
+      "rank": 6
+     }
+    ],
+    "artificial_analysis": {
+     "intelligence_index": 54.2,
+     "coding_index": null,
+     "agentic_index": null
+    }
+   },
+   "reasoning": {
+    "mandatory": true,
+    "supported_efforts": [
+     "max",
+     "xhigh",
+     "high",
+     "medium",
+     "low"
+    ],
+    "default_effort": "high"
+   }
+  },
+  {
+   "id": "anthropic/claude-opus-5.5",
+   "canonical_slug": "anthropic/claude-opus-5.5-20260921",
+   "hugging_face_id": null,
+   "name": "Anthropic: Claude Opus 5.5",
+   "created": 1790094732,
+   "description": "Claude Opus 5.5 is Anthropic's flagship model for demanding reasoning, coding, and long-horizon agentic work, succeeding Claude Opus 5. It is particularly strong at multi-step changes in large codebases, code...",
+   "context_length": 1000000,
+   "architecture": {
+    "modality": "text+image+file->text",
+    "input_modalities": [
+     "text",
+     "image",
+     "file"
+    ],
+    "output_modalities": [
+     "text"
+    ],
+    "tokenizer": "Claude",
+    "instruct_type": null
+   },
+   "pricing": {
+    "prompt": "0.000004",
+    "completion": "0.00002",
+    "web_search": "0.01",
+    "input_cache_read": "0.0000002",
+    "input_cache_write": "0.000005",
+    "input_cache_write_1h": "0.000008"
+   },
+   "top_provider": {
+    "context_length": 1000000,
+    "max_completion_tokens": 128000,
+    "is_moderated": true
+   },
+   "per_request_limits": null,
+   "supported_parameters": [
+    "include_reasoning",
+    "max_completion_tokens",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "stop",
+    "structured_outputs",
+    "tool_choice",
+    "tools",
+    "verbosity"
+   ],
+   "default_parameters": {},
+   "supported_voices": null,
+   "knowledge_cutoff": null,
+   "expiration_date": null,
+   "links": {
+    "details": "/api/v1/models/anthropic/claude-opus-5.5-20260921/endpoints"
+   },
+   "benchmarks": {
+    "design_arena": [
+     {
+      "arena": "agents",
+      "category": "blender3d",
+      "elo": 1261,
+      "win_rate": 58.3,
+      "rank": 4
+     },
+     {
+      "arena": "agents",
+      "category": "mobileapps",
+      "elo": 1308,
+      "win_rate": 62.5,
+      "rank": 2
+     },
+     {
+      "arena": "agents",
+      "category": "spreadsheet",
+      "elo": 1395,
+      "win_rate": 69.3,
+      "rank": 2
+     },
+     {
+      "arena": "agents",
+      "category": "webapps",
+      "elo": 1320,
+      "win_rate": 61.3,
+      "rank": 1
+     },
+     {
+      "arena": "models",
+      "category": "3d",
+      "elo": 1466,
+      "win_rate": 64.9,
+      "rank": 1
+     },
+     {
+      "arena": "models",
+      "category": "asciiart",
+      "elo": 1351,
+      "win_rate": 65,
+      "rank": 2
+     },
+     {
+      "arena": "models",
+      "category": "codecategories",
+      "elo": 1385,
+      "win_rate": 61.5,
+      "rank": 1
+     },
+     {
+      "arena": "models",
+      "category": "dataviz",
+      "elo": 1395,
+      "win_rate": 64.6,
+      "rank": 1
+     },
+     {
+      "arena": "models",
+      "category": "gamedev",
+      "elo": 1437,
+      "win_rate": 66.2,
+      "rank": 1
+     },
+     {
+      "arena": "models",
+      "category": "svg",
+      "elo": 1323,
+      "win_rate": 52.2,
+      "rank": 3
+     },
+     {
+      "arena": "models",
+      "category": "uicomponent",
+      "elo": 1377,
+      "win_rate": 63.5,
+      "rank": 3
+     },
+     {
+      "arena": "models",
+      "category": "website",
+      "elo": 1326,
+      "win_rate": 55.6,
+      "rank": 4
+     }
+    ],
+    "artificial_analysis": {
+     "intelligence_index": 58.4,
+     "coding_index": null,
+     "agentic_index": null
+    }
+   },
+   "reasoning": {
+    "mandatory": true,
+    "supported_efforts": [
+     "max",
+     "xhigh",
+     "high",
+     "medium",
+     "low"
+    ],
+    "default_effort": "high"
+   }
+  },
+  {
+   "id": "anthropic/claude-opus-5",
+   "canonical_slug": "anthropic/claude-opus-5-20260723",
+   "hugging_face_id": null,
+   "name": "Anthropic: Claude Opus 5",
+   "created": 1784912544,
+   "description": "Claude Opus 5 is Anthropic\u2019s flagship model for demanding reasoning, coding, and long-horizon agentic work. It is particularly strong at end-to-end software tasks, code review and bug finding, visual analysis...",
+   "context_length": 1000000,
+   "architecture": {
+    "modality": "text+image+file->text",
+    "input_modalities": [
+     "text",
+     "image",
+     "file"
+    ],
+    "output_modalities": [
+     "text"
+    ],
+    "tokenizer": "Claude",
+    "instruct_type": null
+   },
+   "pricing": {
+    "prompt": "0.000005",
+    "completion": "0.000025",
+    "web_search": "0.01",
+    "input_cache_read": "0.0000005",
+    "input_cache_write": "0.00000625",
+    "input_cache_write_1h": "0.00001"
+   },
+   "top_provider": {
+    "context_length": 1000000,
+    "max_completion_tokens": 128000,
+    "is_moderated": true
+   },
+   "per_request_limits": null,
+   "supported_parameters": [
+    "include_reasoning",
+    "max_completion_tokens",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "stop",
+    "structured_outputs",
+    "tool_choice",
+    "tools",
+    "verbosity"
+   ],
+   "default_parameters": {},
+   "supported_voices": null,
+   "knowledge_cutoff": null,
+   "expiration_date": null,
+   "links": {
+    "details": "/api/v1/models/anthropic/claude-opus-5-20260723/endpoints"
+   },
+   "benchmarks": {
+    "design_arena": [
+     {
+      "arena": "agents",
+      "category": "agenticgamedev",
+      "elo": 1222,
+      "win_rate": 53.3,
+      "rank": 2
+     },
+     {
+      "arena": "agents",
+      "category": "androidnative",
+      "elo": 1247,
+      "win_rate": 55,
+      "rank": 5
+     },
+     {
+      "arena": "agents",
+      "category": "blender3d",
+      "elo": 1196,
+      "win_rate": 58.4,
+      "rank": 8
+     },
+     {
+      "arena": "agents",
+      "category": "fullstack",
+      "elo": 1306,
+      "win_rate": 57.3,
+      "rank": 4
+     },
+     {
+      "arena": "agents",
+      "category": "godotgamedev",
+      "elo": 1279,
+      "win_rate": 54.2,
+      "rank": 3
+     },
+     {
+      "arena": "agents",
+      "category": "mobileapps",
+      "elo": 1348,
+      "win_rate": 67.1,
+      "rank": 1
+     },
+     {
+      "arena": "agents",
+      "category": "python-pptxslides",
+      "elo": 1219,
+      "win_rate": 54.1,
+      "rank": 6
+     },
+     {
+      "arena": "agents",
+      "category": "spreadsheet",
+      "elo": 1163,
+      "win_rate": 52.4,
+      "rank": 12
+     },
+     {
+      "arena": "agents",
+      "category": "webapps",
+      "elo": 1267,
+      "win_rate": 54.5,
+      "rank": 10
+     },
+     {
+      "arena": "models",
+      "category": "3d",
+      "elo": 1331,
+      "win_rate": 59.7,
+      "rank": 15
+     },
+     {
+      "arena": "models",
+      "category": "asciiart",
+      "elo": 1358,
+      "win_rate": 68.9,
+      "rank": 1
+     },
+     {
+      "arena": "models",
+      "category": "codecategories",
+      "elo": 1323,
+      "win_rate": 57.4,
+      "rank": 10
+     },
+     {
+      "arena": "models",
+      "category": "dataviz",
+      "elo": 1331,
+      "win_rate": 58.5,
+      "rank": 9
+     },
+     {
+      "arena": "models",
+      "category": "gamedev",
+      "elo": 1338,
+      "win_rate": 58.3,
+      "rank": 10
+     },
+     {
+      "arena": "models",
+      "category": "svg",
+      "elo": 1307,
+      "win_rate": 58.1,
+      "rank": 5
+     },
+     {
+      "arena": "models",
+      "category": "uicomponent",
+      "elo": 1345,
+      "win_rate": 60.9,
+      "rank": 6
+     },
+     {
+      "arena": "models",
+      "category": "website",
+      "elo": 1309,
+      "win_rate": 56,
+      "rank": 11
+     }
+    ],
+    "artificial_analysis": {
+     "intelligence_index": null,
+     "coding_index": 78,
+     "agentic_index": 56.5
+    }
+   },
+   "reasoning": {
+    "mandatory": false,
+    "default_enabled": true,
+    "supported_efforts": [
+     "max",
+     "xhigh",
+     "high",
+     "medium",
+     "low",
+     "none"
+    ],
+    "default_effort": "high"
+   }
+  }
+ ]
+}

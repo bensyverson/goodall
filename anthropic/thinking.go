@@ -14,32 +14,25 @@ import (
 const minThinkingBudget = 1024
 
 // thinkingStyle is how a model takes its thinking settings. It is a typed
-// fact about the model rather than a pair of booleans, because the three
-// cases are mutually exclusive and each one shapes the whole thinking object.
+// fact about the model rather than a boolean, because the two forms are
+// mutually exclusive and each one shapes the whole thinking object. How a
+// model turns thinking off is a separate fact, [goodall.ThinkingOff].
 type thinkingStyle string
 
 const (
 	// styleAdaptive takes thinking {type: "adaptive", display} with the
-	// effort rung in output_config, and accepts {type: "disabled"}.
+	// effort rung in output_config.
 	styleAdaptive thinkingStyle = "adaptive"
-	// styleAlwaysOn is adaptive but refuses to be turned off, so
-	// EffortOff omits the thinking settings entirely.
-	styleAlwaysOn thinkingStyle = "always_on"
 	// styleBudget is the older form: thinking {type: "enabled",
 	// budget_tokens} with no display and no effort rung.
 	styleBudget thinkingStyle = "budget"
 )
 
 // thinkingStyleFor classifies a model by its name, which is all goodall has
-// before a call. The heuristic, in order:
-//
-//   - a name containing "fable" is styleAlwaysOn: Fable 5.x always thinks and
-//     rejects an explicit disabled;
-//   - otherwise the first major.minor version in the name decides — 4.6 and
-//     above is styleAdaptive, anything below (Haiku 4.5, Opus 4.5 and every
-//     3.x) is styleBudget;
-//   - a name with no version in it is styleAdaptive, because an unrecognized
-//     name is far more likely to be newer than older.
+// before a call. The first major.minor version in the name decides: 4.6 and
+// above is styleAdaptive, anything below (Haiku 4.5, Opus 4.5 and every 3.x)
+// is styleBudget. A name with no version in it is styleAdaptive, because an
+// unrecognized name is far more likely to be newer than older.
 //
 // The version is read from hyphen-separated components, so both spellings
 // work — claude-opus-4-6 and claude-3-7-sonnet-20250219 — and a trailing date
@@ -49,15 +42,8 @@ const (
 // It is a guess, and only the guess: where the request carries the
 // catalog's answer, [styleFor] prefers it.
 func thinkingStyleFor(model string) thinkingStyle {
-	name := strings.ToLower(model)
-	if strings.Contains(name, "fable") {
-		return styleAlwaysOn
-	}
-	major, minor, ok := modelVersion(name)
-	if !ok {
-		return styleAdaptive
-	}
-	if major > 4 || (major == 4 && minor >= 6) {
+	major, minor, ok := modelVersion(strings.ToLower(model))
+	if !ok || atLeast(major, minor, 4, 6) {
 		return styleAdaptive
 	}
 	return styleBudget
@@ -67,26 +53,64 @@ func thinkingStyleFor(model string) thinkingStyle {
 // catalog's published fact to the name heuristic. The loop puts the
 // catalog entry on the request; a caller who builds one by hand may too,
 // and nil simply leaves the heuristic in charge.
-//
-// The catalog reports which thinking *form* a model accepts and nothing
-// about whether it may be turned off, so a name that reads as always-on keeps
-// saying so on top of a published "adaptive": Fable rejects an explicit
-// disabled, and the models endpoint has no leaf that says it.
 func styleFor(model string, info *goodall.ModelInfo) thinkingStyle {
-	heuristic := thinkingStyleFor(model)
-	if info == nil {
-		return heuristic
-	}
-	switch info.Capabilities.ThinkingStyle {
-	case goodall.ThinkingAdaptive:
-		if heuristic == styleAlwaysOn {
-			return styleAlwaysOn
+	if info != nil {
+		switch info.Capabilities.ThinkingStyle {
+		case goodall.ThinkingAdaptive:
+			return styleAdaptive
+		case goodall.ThinkingBudget:
+			return styleBudget
 		}
-		return styleAdaptive
-	case goodall.ThinkingBudget:
-		return styleBudget
 	}
-	return heuristic
+	return thinkingStyleFor(model)
+}
+
+// thinkingOffFor guesses from a model's name how its thinking is turned off.
+// The heuristic, in order:
+//
+//   - Fable and Mythos always think and reject an explicit disabled;
+//   - Opus 5.5 and above cannot turn thinking off either;
+//   - Sonnet 5.5 and above refuse disabled and take between_tools instead;
+//   - everything else, Haiku 5.5 included, accepts disabled.
+//
+// An Opus or Sonnet name with no version in it, such as claude-opus-latest,
+// reads as the newest of its line, for the same reason [thinkingStyleFor]
+// reads an unversioned name as adaptive.
+//
+// It is a guess, and only the guess: where the request carries the
+// catalog's answer, [offFor] prefers it.
+func thinkingOffFor(model string) goodall.ThinkingOff {
+	name := strings.ToLower(model)
+	if strings.Contains(name, "fable") || strings.Contains(name, "mythos") {
+		return goodall.ThinkingOffNever
+	}
+	major, minor, ok := modelVersion(name)
+	newer := !ok || atLeast(major, minor, 5, 5)
+	switch {
+	case newer && strings.Contains(name, "opus"):
+		return goodall.ThinkingOffNever
+	case newer && strings.Contains(name, "sonnet"):
+		return goodall.ThinkingOffBetweenTools
+	}
+	return goodall.ThinkingOffDisabled
+}
+
+// offFor decides how a model's thinking is turned off, preferring the
+// catalog's published fact to the name heuristic. An off form goodall does
+// not define is treated as unpublished rather than sent.
+func offFor(model string, info *goodall.ModelInfo) goodall.ThinkingOff {
+	if info != nil {
+		switch off := info.Capabilities.ThinkingOff; off {
+		case goodall.ThinkingOffDisabled, goodall.ThinkingOffBetweenTools, goodall.ThinkingOffNever:
+			return off
+		}
+	}
+	return thinkingOffFor(model)
+}
+
+// atLeast reports whether major.minor is at or above the given version.
+func atLeast(major, minor, wantMajor, wantMinor int) bool {
+	return major > wantMajor || (major == wantMajor && minor >= wantMinor)
 }
 
 // modelVersion reads the first major.minor version out of a hyphenated model
@@ -169,10 +193,14 @@ func thinkingFor(req *goodall.Request, maxTokens int) (*wireThinkingConfig, *wir
 	style := styleFor(model, req.ModelInfo)
 
 	if cfg.Effort == goodall.EffortOff {
-		if style == styleAlwaysOn {
+		switch offFor(model, req.ModelInfo) {
+		case goodall.ThinkingOffNever:
 			// The model thinks whatever it is told, and sending
 			// disabled is a 400, so the setting is left out.
 			return nil, nil, nil
+		case goodall.ThinkingOffBetweenTools:
+			// A display or any other member beside it is a 400.
+			return &wireThinkingConfig{Type: thinkingBetweenTools}, nil, nil
 		}
 		return &wireThinkingConfig{Type: thinkingDisabled}, nil, nil
 	}

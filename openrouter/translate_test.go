@@ -424,6 +424,42 @@ func TestTranslateReasoningConfig(t *testing.T) {
 	}
 }
 
+func TestTranslateOffOnAModelThatAlwaysThinks(t *testing.T) {
+	// OpenRouter answers effort "none" on such a model with a 400
+	// ("Reasoning is mandatory for this endpoint and cannot be disabled"),
+	// so off leaves the effort out and the model thinks at its default.
+	for _, tc := range []struct {
+		name    string
+		display goodall.ThinkingDisplay
+		want    string
+		absent  string
+	}{
+		{name: "off sends no reasoning", absent: `"reasoning"`},
+		{name: "an omitted display still excludes", display: goodall.DisplayOmitted, want: `"reasoning":{"exclude":true}`, absent: `"effort"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := &goodall.Request{
+				Model:    "anthropic/claude-opus-5.5",
+				Messages: []goodall.Message{goodall.UserMessage(goodall.Text{Text: "hi"})},
+				Thinking: goodall.ThinkingConfig{Effort: goodall.EffortOff, Display: tc.display},
+				Cache:    goodall.CacheOff,
+				ModelInfo: &goodall.ModelInfo{
+					ID:           "anthropic/claude-opus-5.5",
+					Provider:     ProviderName,
+					Capabilities: goodall.Capabilities{Thinking: goodall.Supported, ThinkingOff: goodall.ThinkingOffNever},
+				},
+			}
+			body := marshalWire(t, req, OpenRouter, false)
+			if tc.want != "" && !bytes.Contains(body, []byte(tc.want)) {
+				t.Errorf("body = %s\nwant to contain %s", body, tc.want)
+			}
+			if bytes.Contains(body, []byte(tc.absent)) {
+				t.Errorf("body = %s\nwant no %s", body, tc.absent)
+			}
+		})
+	}
+}
+
 func TestTranslateCachePolicy(t *testing.T) {
 	system := []goodall.Text{{Text: "static"}, {Text: "also static", Cache: &goodall.CacheControl{TTL: goodall.CacheTTL1h}}}
 	user := goodall.UserMessage(goodall.Text{Text: "hi", Cache: &goodall.CacheControl{}})

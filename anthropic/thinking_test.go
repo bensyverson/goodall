@@ -23,9 +23,9 @@ func TestThinkingStyleFor(t *testing.T) {
 		"claude-3-7-sonnet-20250219":          styleBudget,
 		"claude-3-5-haiku-latest":             styleBudget,
 		"us.anthropic.claude-sonnet-4-5-v1:0": styleBudget,
-		"claude-fable-5-1":                    styleAlwaysOn,
-		"anthropic/claude-fable-5-1":          styleAlwaysOn,
-		"Claude-Fable-5-2-20260301":           styleAlwaysOn,
+		"claude-fable-5-1":                    styleAdaptive,
+		"anthropic/claude-fable-5-1":          styleAdaptive,
+		"Claude-Fable-5-2-20260301":           styleAdaptive,
 	}
 	for model, want := range cases {
 		if got := thinkingStyleFor(model); got != want {
@@ -163,6 +163,26 @@ func TestThinkingWire(t *testing.T) {
 			maxTokens: 8000,
 		},
 		{
+			name:      "off is between_tools on a model that refuses disabled but offers it",
+			model:     "claude-sonnet-5-5",
+			cfg:       goodall.ThinkingConfig{Effort: goodall.EffortOff},
+			maxTokens: 8000,
+			want:      `"thinking":{"type":"between_tools"}`,
+		},
+		{
+			name:      "between_tools carries no display, which the API refuses beside it",
+			model:     "claude-sonnet-5-5",
+			cfg:       goodall.ThinkingConfig{Effort: goodall.EffortOff, Display: goodall.DisplaySummarized},
+			maxTokens: 8000,
+			want:      `"thinking":{"type":"between_tools"}`,
+		},
+		{
+			name:      "off is omitted on a model whose thinking cannot be turned off",
+			model:     "claude-opus-5-5",
+			cfg:       goodall.ThinkingConfig{Effort: goodall.EffortOff},
+			maxTokens: 8000,
+		},
+		{
 			name:      "off is disabled on a budget model",
 			model:     "claude-haiku-4-5",
 			cfg:       goodall.ThinkingConfig{Effort: goodall.EffortOff},
@@ -181,6 +201,78 @@ func TestThinkingWire(t *testing.T) {
 			}
 			if !strings.Contains(got, c.want) {
 				t.Errorf("got  %s\nwant it to contain %s", got, c.want)
+			}
+			if strings.Count(got, `"thinking"`) != 1 || (strings.Contains(c.want, "between_tools") && strings.Contains(got, `"display"`)) {
+				t.Errorf("got  %s\nwant exactly %s and nothing else in the thinking object", got, c.want)
+			}
+		})
+	}
+}
+
+func TestThinkingOffFor(t *testing.T) {
+	cases := map[string]goodall.ThinkingOff{
+		"claude-opus-5":                       goodall.ThinkingOffDisabled,
+		"claude-opus-5-20260214":              goodall.ThinkingOffDisabled,
+		"claude-sonnet-5":                     goodall.ThinkingOffDisabled,
+		"claude-opus-4-6":                     goodall.ThinkingOffDisabled,
+		"claude-haiku-4-5":                    goodall.ThinkingOffDisabled,
+		"claude-haiku-5-5":                    goodall.ThinkingOffDisabled,
+		"claude-opus-latest":                  goodall.ThinkingOffNever,
+		"claude-sonnet-latest":                goodall.ThinkingOffBetweenTools,
+		"claude-haiku-latest":                 goodall.ThinkingOffDisabled,
+		"":                                    goodall.ThinkingOffDisabled,
+		"claude-opus-5-5":                     goodall.ThinkingOffNever,
+		"us.anthropic.claude-opus-5-5":        goodall.ThinkingOffNever,
+		"claude-opus-6":                       goodall.ThinkingOffNever,
+		"claude-sonnet-5-5":                   goodall.ThinkingOffBetweenTools,
+		"claude-sonnet-5-5-20260928":          goodall.ThinkingOffBetweenTools,
+		"claude-sonnet-6":                     goodall.ThinkingOffBetweenTools,
+		"claude-fable-5-1":                    goodall.ThinkingOffNever,
+		"anthropic/claude-fable-5-1":          goodall.ThinkingOffNever,
+		"claude-mythos-5-1":                   goodall.ThinkingOffNever,
+		"us.anthropic.claude-sonnet-4-5-v1:0": goodall.ThinkingOffDisabled,
+	}
+	for model, want := range cases {
+		if got := thinkingOffFor(model); got != want {
+			t.Errorf("thinkingOffFor(%q) = %q, want %q", model, got, want)
+		}
+	}
+}
+
+func TestTheCatalogOffFormOverridesTheNameHeuristic(t *testing.T) {
+	cases := []struct {
+		name      string
+		model     string
+		published goodall.ThinkingOff
+		want      string // the exact thinking object, empty when none is sent
+	}{
+		{"a catalog between_tools beats a name that reads as disabled", "claude-opus-5", goodall.ThinkingOffBetweenTools, `"thinking":{"type":"between_tools"}`},
+		{"a catalog disabled beats a name that reads as never", "claude-fable-5-1", goodall.ThinkingOffDisabled, `"thinking":{"type":"disabled"}`},
+		{"a catalog never beats a name that reads as disabled", "claude-haiku-5-5", goodall.ThinkingOffNever, ""},
+		{"an off form nobody published leaves the heuristic in charge", "claude-sonnet-5-5", goodall.ThinkingOffUnknown, `"thinking":{"type":"between_tools"}`},
+		{"an off form goodall does not define leaves the heuristic in charge", "claude-opus-5-5", goodall.ThinkingOff("sleep"), ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			body := bodyJSON(t, &goodall.Request{
+				Model:     c.model,
+				MaxTokens: 8000,
+				Messages:  []goodall.Message{goodall.UserMessage(goodall.Text{Text: "Hi"})},
+				Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortOff},
+				ModelInfo: &goodall.ModelInfo{
+					ID:           c.model,
+					Provider:     ProviderName,
+					Capabilities: goodall.Capabilities{ThinkingStyle: goodall.ThinkingAdaptive, ThinkingOff: c.published},
+				},
+			})
+			if c.want == "" {
+				if strings.Contains(body, `"thinking"`) {
+					t.Errorf("got %s, want no thinking object", body)
+				}
+				return
+			}
+			if !strings.Contains(body, c.want) {
+				t.Errorf("got  %s\nwant it to contain %s", body, c.want)
 			}
 		})
 	}
@@ -238,10 +330,6 @@ func TestTheCatalogOverridesTheNameHeuristic(t *testing.T) {
 		{"a catalog budget beats a name that reads as adaptive", "claude-opus-4-6", goodall.ThinkingBudget, styleBudget},
 		{"a style nobody published leaves the heuristic in charge", "claude-haiku-4-5", goodall.ThinkingStyleUnknown, styleBudget},
 		{"a style goodall does not define leaves the heuristic in charge", "claude-opus-4-6", goodall.ThinkingStyle("telepathy"), styleAdaptive},
-		// The catalog says which *form* the model takes, never that it
-		// refuses to be turned off, so a name that says always-on keeps
-		// saying it on top of a catalog "adaptive".
-		{"a catalog adaptive does not turn fable off", "claude-fable-5-1", goodall.ThinkingAdaptive, styleAlwaysOn},
 		{"a catalog budget still overrides fable", "claude-fable-5-1", goodall.ThinkingBudget, styleBudget},
 	}
 	for _, c := range cases {

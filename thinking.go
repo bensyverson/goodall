@@ -12,7 +12,8 @@ const (
 	// thinks as much as the provider's default says.
 	EffortDefault Effort = ""
 	// EffortOff asks for no thinking. Some models refuse to turn it off,
-	// in which case the provider omits the setting rather than failing.
+	// in which case the provider omits the setting rather than failing;
+	// [Capabilities.ThinkingOff] says how each model takes it.
 	EffortOff Effort = "off"
 	// EffortLow is the shallowest deliberate setting.
 	EffortLow Effort = "low"

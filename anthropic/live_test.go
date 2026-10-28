@@ -12,7 +12,7 @@ import (
 )
 
 // These are the live tests: they call the real Anthropic API with the key in
-// the repository's .env and cost real money, so there are four calls in the
+// the repository's .env and cost real money, so there are seven paid calls in the
 // whole file. They skip, saying what they skipped and why, when the key is
 // absent and under -short, which is what makes `go test -short ./...` the
 // offline suite.
@@ -204,5 +204,35 @@ func TestLiveCompleteAnswersWithoutStreaming(t *testing.T) {
 	}
 	if resp.Usage.Output == 0 {
 		t.Error("the live blocking call reported no output tokens")
+	}
+}
+
+// TestLiveThinkingOffIsAccepted asks each 5.5 model for no thinking the way
+// the agent does, with the catalog entry attached. On 2026-10-28 Opus 5.5 and
+// Sonnet 5.5 answered thinking "disabled" with a 400, so this is the proof that
+// goodall sends each one a form it accepts.
+func TestLiveThinkingOffIsAccepted(t *testing.T) {
+	client := liveClient(t)
+	for _, model := range []string{"claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"} {
+		t.Run(model, func(t *testing.T) {
+			info, err := client.Model(t.Context(), model)
+			if err != nil {
+				t.Fatalf("the catalog lookup failed: %v", err)
+			}
+			resp, err := client.Complete(t.Context(), &goodall.Request{
+				Model:     model,
+				MaxTokens: liveMaxTokens,
+				Messages:  []goodall.Message{goodall.UserMessage(goodall.Text{Text: "Reply with the single word: ok"})},
+				Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortOff},
+				ModelInfo: info,
+			})
+			if err != nil {
+				t.Fatalf("thinking off (%s) was refused: %v", info.Capabilities.ThinkingOff, err)
+			}
+			t.Logf("%s: off=%s stop=%s output=%d", model, info.Capabilities.ThinkingOff, resp.StopReason, resp.Usage.Output)
+			if resp.Message.Text() == "" {
+				t.Error("the call returned no text")
+			}
+		})
 	}
 }

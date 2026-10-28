@@ -69,7 +69,7 @@ func translateRequest(req *goodall.Request, d Dialect, stream bool) (*chatReques
 	if out.Messages, err = t.messages(req); err != nil {
 		return nil, err
 	}
-	t.applyReasoning(req.Thinking, out)
+	t.applyReasoning(req.Thinking, req.ModelInfo, out)
 	t.applyMetadata(req.Metadata, out)
 	t.applyExtensions(ext, out)
 	if t.policy == goodall.CacheAuto {
@@ -174,10 +174,17 @@ func (t *translator) applyOutputCap(max int, out *chatRequest) {
 // goodall does not define is passed through: the ladder keeps growing, and a
 // clamped value would quietly buy less thinking than the caller asked for.
 //
+// A model whose catalog entry says its reasoning cannot be turned off gets no
+// effort for EffortOff, as [goodall.EffortOff] promises: OpenRouter answers
+// "none" on such a model with a 400.
+//
 // The exclude flag has no equivalent in OpenAI's top-level reasoning_effort
 // string, so a display setting is ignored on those dialects.
-func (t *translator) applyReasoning(cfg goodall.ThinkingConfig, out *chatRequest) {
+func (t *translator) applyReasoning(cfg goodall.ThinkingConfig, info *goodall.ModelInfo, out *chatRequest) {
 	effort := effortString(cfg.Effort)
+	if cfg.Effort == goodall.EffortOff && info != nil && info.Capabilities.ThinkingOff == goodall.ThinkingOffNever {
+		effort = ""
+	}
 	switch t.quirks.Reasoning {
 	case ReasoningObject:
 		exclude := cfg.Display == goodall.DisplayOmitted

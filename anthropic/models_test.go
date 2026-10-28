@@ -48,6 +48,30 @@ func TestModelReadsTheCapabilityTree(t *testing.T) {
 	}
 }
 
+// TestModelReadsHowThinkingTurnsOff reads catalog bodies captured from
+// GET /v1/models/{id} on 2026-10-28, which publish whether each model accepts
+// thinking "disabled" or "between_tools".
+func TestModelReadsHowThinkingTurnsOff(t *testing.T) {
+	cases := map[string]goodall.ThinkingOff{
+		"claude-opus-5":     goodall.ThinkingOffDisabled,
+		"claude-opus-5-5":   goodall.ThinkingOffNever,
+		"claude-sonnet-5-5": goodall.ThinkingOffBetweenTools,
+		"claude-haiku-5-5":  goodall.ThinkingOffDisabled,
+	}
+	for model, want := range cases {
+		t.Run(model, func(t *testing.T) {
+			c, _ := serveFixture(t, "catalog_"+model+".json", "application/json")
+			got, err := c.Model(t.Context(), model)
+			if err != nil {
+				t.Fatalf("Model: %v", err)
+			}
+			if got.Capabilities.ThinkingOff != want {
+				t.Errorf("ThinkingOff = %q, want %q", got.Capabilities.ThinkingOff, want)
+			}
+		})
+	}
+}
+
 func TestModelReportsImageAndPDFAsSeparateFacts(t *testing.T) {
 	c, _ := serveFixture(t, "model_image_only.json", "application/json")
 	got, err := c.Model(t.Context(), "claude-3-haiku-20240307")

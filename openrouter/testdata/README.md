@@ -89,4 +89,5 @@ Two smaller facts worth keeping:
 | `stream-reasoning-tools.txt` | A stream with a thinking entry (text fragments then a signature-only fragment), a text block, two tool calls interleaved by index, a `finish_reason` frame, a usage frame that repeats `finish_reason`, a comment keep-alive and `[DONE]`. |
 | `blocking-reasoning-tools.json` | The same exchange as a blocking response. `Collect` over the stream must equal `Complete` over this. |
 | `stream-error-only.txt` | An HTTP 200 stream whose only frame is an error object — the "200 is not success" case. |
+| `models_claude_5_5.json` | Captured with curl from `GET /api/v1/models` on **2026-10-28**: the entries for `anthropic/claude-opus-5`, `-opus-5.5`, `-sonnet-5.5` and `-haiku-5.5`, unedited. Their `reasoning.mandatory` and `supported_efforts` say which can turn reasoning off. |
 | `models.json` | A two-model excerpt of `GET /api/v1/models`, one multimodal and one text-only, with the price strings the model tests assert on. |

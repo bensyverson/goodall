@@ -37,6 +37,7 @@ leaves absent.
 | `error_overloaded.sse` | authored | HTTP 200 whose stream carries an `overloaded_error` after `message_start`, which is how an overload mid-generation arrives. |
 | `unknown_events.sse` | authored | An SSE event name and two content-block delta types this version of goodall does not model, so the "surface, never drop" rule has something to surface. |
 | `model.json` | authored | A `GET /v1/models/{id}` body with the capability tree, including leaves (`effort.max`, `structured_outputs` on the second file) deliberately absent so the tri-state stays honest. |
+| `catalog_claude-*.json` | captured | `GET /v1/models/{id}` bodies for `claude-opus-5`, `claude-opus-5-5`, `claude-sonnet-5-5` and `claude-haiku-5-5`, fetched with curl on **2026-10-28**. Their `thinking.types` publish `disabled` and `between_tools`, which is how goodall reads that Opus 5.5 cannot turn thinking off and Sonnet 5.5 takes `between_tools`. |
 | `model_image_only.json` | authored | A model that reads images and refuses PDFs, which is what makes the two facts separate rather than one "vision" flag. Its `thinking` branch carries no `supported` member, so the fallback to the thinking *types* is exercised. |
 
 ## Why the hand-authored thinking pair stays

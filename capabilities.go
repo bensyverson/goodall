@@ -109,6 +109,10 @@ type Capabilities struct {
 	// provider distinguishes them; the zero value means it did not say,
 	// which leaves a provider's own heuristic in charge.
 	ThinkingStyle ThinkingStyle `json:"thinking_style,omitzero"`
+	// ThinkingOff is how the model's thinking is turned off, where the
+	// provider says; the zero value leaves a provider's own heuristic in
+	// charge.
+	ThinkingOff ThinkingOff `json:"thinking_off,omitzero"`
 	// ThinkingEfforts are the rungs of the effort ladder this model
 	// accepts; empty means the provider did not say.
 	ThinkingEfforts []Effort `json:"thinking_efforts,omitzero"`
@@ -142,6 +146,34 @@ func (s ThinkingStyle) String() string {
 		return "unknown"
 	}
 	return string(s)
+}
+
+// ThinkingOff is how a model's thinking is turned off, which is what a
+// provider sends for [EffortOff]. It is a fact from the catalog, separate from
+// ThinkingStyle, because models that take the same form of thinking differ in
+// whether, and how, they stop.
+type ThinkingOff string
+
+const (
+	// ThinkingOffUnknown is the zero value: the provider did not say.
+	ThinkingOffUnknown ThinkingOff = ""
+	// ThinkingOffDisabled turns thinking off outright.
+	ThinkingOffDisabled ThinkingOff = "disabled"
+	// ThinkingOffBetweenTools turns off thinking before the answer, but
+	// the short notes the model writes between tool calls still come back
+	// as thinking blocks.
+	ThinkingOffBetweenTools ThinkingOff = "between_tools"
+	// ThinkingOffNever means the model always thinks; a request for none
+	// leaves the setting out and the model thinks at its default effort.
+	ThinkingOffNever ThinkingOff = "never"
+)
+
+// String names the off form, calling the zero value "unknown".
+func (o ThinkingOff) String() string {
+	if o == ThinkingOffUnknown {
+		return "unknown"
+	}
+	return string(o)
 }
 
 // Get reads one capability by name, so a check can be written once over
