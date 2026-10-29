@@ -50,6 +50,8 @@ OpenRouter carries `input_audio`; Anthropic does not accept audio blocks. Not in
 
 The plan says the OpenRouter dialect decides whether `strict: true` tools need the `x-anthropic-beta: structured-outputs-2025-11-13` header, and `response_format{json_schema}` is the structured-output path. Neither is built: `goodall.Tool` carries no strict flag and `Request` has no output-format field, so there is nothing neutral to translate from. Parked because no consumer needs it for v1 and it is a root-package decision (a `Strict` fact on tools, an output schema on the request) before it is a provider one. Revive when a consumer needs schema-enforced tool arguments or JSON-schema output; it would be one leaf across the root and both providers.
 
+> **Strict tools un-parked 2026-10-29.** The 5.5 models reject a forced tool choice, so strict is now the only schema guarantee on the default models; it is a `job` leaf under goodall v1.4, ruled in the [architecture plan](2026-09-14-architecture-plan.md) beside the OpenRouter "Not built" note. Structured output is still parked here; revive it when a consumer needs JSON back without a tool call.
+
 ## 2026-09-17 A "delegate" or "judge" seam in the provider layer
 
 A second interface beside `Provider` that a judgment model (TypeSafe's Jev) and a nested agent would both satisfy, so the loop could call either through one seam. Parked in the [TypeSafe and subagents findings](2026-09-17-typesafe-jev-findings.md): nothing would call it but the two adapters that already exist as a `Tool` and a `BeforeSend` helper, and it is the second abstraction layer the plan rules out. Revive if a third kind of delegate appears that neither a tool nor a hook can express.

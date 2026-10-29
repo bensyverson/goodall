@@ -243,6 +243,15 @@ func (a *Agent) Run(ctx context.Context, conv Conversation, input ...Block) Stre
 > - **A cache marker with no wire slot is dropped, not refused** — on an assistant text, a tool use or a tool result — so a conversation shaped for Anthropic still sends on OpenRouter; only markers that become a content part count toward the four-breakpoint limit. This is the one place the wire leaves chose "quietly do less" over "fail loudly".
 > - **Thinking blocks re-emit `Raw` verbatim and in order**; a block with no `Raw` is rebuilt as `reasoning.text`. Coming back, entries decode to `Thinking` (text or summary) or `RedactedThinking` (encrypted), an unmodelled variant to a `Thinking` with only `Raw`; a `refusal` is a text block plus `StopRefusal`; `native_finish_reason` fills `NativeStopReason`; `usage.cost` decodes straight into `Decimal`.
 > - **Not built: `strict` tool schemas and `response_format`.** `goodall.Tool` has no strict flag to map from; parked in the backlog until the root package rules on it.
+>
+> > **Ruled 2026-10-29: strict tools are scheduled, opt-in per tool.** Two things changed. Strict tool use is now GA on Anthropic (no beta header; `BetaStructuredOutputs` in `anthropic/options.go` is stale on that point). And Opus 5.5, Sonnet 5.5 and Fable 5.1 reject a forced `tool_choice` with a 400, which goodall refuses in preflight since `01f8879`. Together those leave callers on the default models with no schema guarantee, and Anthropic's suggested replacement is `auto` plus `strict: true`. The rulings:
+> >
+> > - **Opt-in, not the default for `NewTool`.** Anthropic's strict limits are counted across the whole request: at most 20 strict tools, 24 optional parameters and 16 union-typed parameters, plus an unspecified "too complex for compilation" ceiling. Strict by default would make an agent start failing when it grows past one of those, with no change to any one tool. First use also adds grammar-compilation latency, cached 24 hours and reset by any change to the tool set, and the schema is cached outside HIPAA and ZDR protections. Source: platform.claude.com, the *Strict tool use* and *Structured outputs* pages, read 2026-10-29.
+> > - **Not a new method on `Tool`.** Most tools won't use it, so it is an option on the typed constructors read through a small optional interface, and hand-written tools keep compiling.
+> > - **Preflight counts the request-wide limits** and refuses with a message naming the limit, matching how it refuses a forced tool choice. A per-model capability gates it like `CapForcedToolChoice` does.
+> > - **The OpenAI dialect's strict rules are unverified.** OpenAI may require every property in `required`, with optional fields made nullable; the leaf settles that before writing OpenRouter tests.
+> >
+> > Structured output (`output_config.format` / `response_format`) stays parked in the backlog.
 
 > **Added 2026-09-15 while building the OpenRouter client, stream, models and errors.** Decided in code (`openrouter/client.go`, `stream.go`, `stream_blocks.go`, `models.go`, `errors.go`):
 >

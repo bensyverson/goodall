@@ -1,7 +1,7 @@
 sources:
   - name: agents-md
     git: https://github.com/bensyverson/agents-md
-    ref: 29162278d97c0a1741ba280a2a92b80e8c33ff92
+    ref: 00514163536d2223b145ed8be270dedb228d5da9
 modules:
   - core
   - principles
