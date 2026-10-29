@@ -2,9 +2,11 @@ package openrouter
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/internal/claudename"
+	"github.com/bensyverson/goodall/internal/strict"
 )
 
 // maxCacheBreakpoints is how many explicit prompt-cache breakpoints one
@@ -49,6 +51,10 @@ func translateRequest(req *goodall.Request, d Dialect, stream bool) (*chatReques
 	if err != nil {
 		return nil, err
 	}
+	strictTools, err := checkStrict(req, d)
+	if err != nil {
+		return nil, err
+	}
 
 	t := &translator{quirks: d.Quirks(), policy: req.Cache}
 	if !t.quirks.CacheControl {
@@ -61,6 +67,9 @@ func translateRequest(req *goodall.Request, d Dialect, stream bool) (*chatReques
 		ToolChoice: wireToolChoice(req.ToolChoice),
 		Stop:       req.StopSequences,
 		Stream:     stream,
+	}
+	if strictTools && t.quirks.StrictTools == StrictToolsWithAnthropicBeta {
+		out.anthropicBeta = anthropicStructuredOutputsBeta
 	}
 	t.applyOutputCap(req.MaxTokens, out)
 	if stream && t.quirks.StreamUsage {
@@ -105,6 +114,35 @@ func extensionsOf(req *goodall.Request) (Extensions, error) {
 	}
 }
 
+// checkStrict refuses, before sending, a request whose strict tools the
+// dialect cannot carry or the upstream model would refuse, and reports
+// whether the request carries any. The rules are the model family's:
+// api.openai.com serves only OpenAI's, and through OpenRouter the family is
+// read from the model name, so a model whose rules goodall has not measured
+// is sent as it is.
+func checkStrict(req *goodall.Request, d Dialect) (bool, error) {
+	if !slices.ContainsFunc(req.Tools, func(t goodall.Tool) bool {
+		return t != nil && goodall.StrictnessOf(t) == goodall.Strict
+	}) {
+		return false, nil
+	}
+	rules := strict.RulesFor(req.Model)
+	switch d.Quirks().StrictTools {
+	case StrictToolsRefused:
+		return true, &goodall.CapabilityError{
+			Provider:   ProviderName,
+			Model:      req.Model,
+			Capability: goodall.CapStrictTools,
+			Message:    "the " + d.String() + " dialect carries no strict flag; build the tool without goodall.Strict",
+		}
+	case StrictToolsMember:
+		if d == OpenAI {
+			rules = strict.RulesOpenAI
+		}
+	}
+	return true, strict.Check(ProviderName, req, rules)
+}
+
 // wireTools renders the request's tools. Order is preserved, because it is
 // part of the cached prefix, and each tool's schema marshals its properties
 // in declaration order for the same reason.
@@ -120,6 +158,7 @@ func wireTools(tools []goodall.Tool) []wireTool {
 				Name:        tool.Name(),
 				Description: tool.Description(),
 				Parameters:  tool.Schema(),
+				Strict:      goodall.StrictnessOf(tool) == goodall.Strict,
 			},
 		})
 	}

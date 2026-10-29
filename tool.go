@@ -49,7 +49,9 @@ const MaxToolNameLength = 64
 // It returns an error, never a panic, for a definition no provider would
 // accept: an empty name, a name over MaxToolNameLength or carrying anything
 // but letters, digits, underscore and hyphen, an empty description, a nil
-// handler, or an In that cannot be expressed as a schema.
+// handler, or an In that cannot be expressed as a schema. Options adjust the
+// tool; [WithStrictness] marks it [Strict], and a strict tool whose schema no
+// provider could enforce is refused here too.
 //
 //	tool, err := goodall.NewTool("get_weather", "Look up the weather in a city.",
 //	    func(ctx context.Context, in struct {
@@ -57,7 +59,7 @@ const MaxToolNameLength = 64
 //	    }) (goodall.ToolResult, error) {
 //	        return goodall.TextResult(lookUp(in.City)), nil
 //	    })
-func NewTool[In any](name, description string, run func(context.Context, In) (ToolResult, error)) (Tool, error) {
+func NewTool[In any](name, description string, run func(context.Context, In) (ToolResult, error), opts ...ToolOption) (Tool, error) {
 	if err := validateToolName(name); err != nil {
 		return nil, err
 	}
@@ -67,17 +69,17 @@ func NewTool[In any](name, description string, run func(context.Context, In) (To
 	if run == nil {
 		return nil, fmt.Errorf("goodall: tool %q has no handler function", name)
 	}
-	def, err := newToolDefinition[In](name, description)
+	def, err := newToolDefinition[In](name, description, opts)
 	if err != nil {
 		return nil, err
 	}
 	return &typedTool[In]{toolDefinition: def, run: run}, nil
 }
 
-// newToolDefinition validates what every typed tool needs and infers the
-// schema from In. It is shared by NewTool and NewReportingTool, which differ
-// only in the shape of the handler they wrap.
-func newToolDefinition[In any](name, description string) (toolDefinition[In], error) {
+// newToolDefinition validates what every typed tool needs, infers the schema
+// from In and applies the options. It is shared by NewTool and
+// NewReportingTool, which differ only in the shape of the handler they wrap.
+func newToolDefinition[In any](name, description string, opts []ToolOption) (toolDefinition[In], error) {
 	schema, err := SchemaFor[In]()
 	if err != nil {
 		return toolDefinition[In]{}, &toolDefinitionError{name: name, err: err}
@@ -85,7 +87,11 @@ func newToolDefinition[In any](name, description string) (toolDefinition[In], er
 	if err := schema.Validate(); err != nil {
 		return toolDefinition[In]{}, &toolDefinitionError{name: name, err: err}
 	}
-	return toolDefinition[In]{name: name, description: description, schema: schema}, nil
+	o, err := applyToolOptions(schema, opts)
+	if err != nil {
+		return toolDefinition[In]{}, &toolDefinitionError{name: name, err: err}
+	}
+	return toolDefinition[In]{name: name, description: description, schema: schema, strictness: o.strictness}, nil
 }
 
 // validateToolName applies the intersection of the two providers' rules.
@@ -128,6 +134,7 @@ type toolDefinition[In any] struct {
 	name        string
 	description string
 	schema      *Schema
+	strictness  Strictness
 }
 
 // Name is the name the model calls the tool by.

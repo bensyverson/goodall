@@ -175,6 +175,9 @@ func neutralModel(w *wireModel) *goodall.ModelInfo {
 		caps.ImageInput = c.ImageInput.support()
 		caps.PDFInput = c.PDFInput.support()
 		caps.StructuredOutput = c.StructuredOutputs.support()
+		// Anthropic documents strict tool use as part of structured
+		// outputs, and publishes one leaf for both.
+		caps.StrictTools = c.StructuredOutputs.support()
 		caps.Thinking = thinkingSupport(c.Thinking)
 		caps.ThinkingStyle = catalogThinkingStyle(c.Thinking)
 		caps.ThinkingOff = catalogThinkingOff(c.Thinking)

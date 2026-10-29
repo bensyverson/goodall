@@ -37,15 +37,18 @@ const (
 // a caller never has to check for an error before ranging.
 func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Stream {
 	return func(yield func(goodall.Event, error) bool) {
-		body, err := c.requestBody(req, true)
+		body, header, err := c.requestBody(req, true)
 		if err != nil {
 			yield(nil, err)
 			return
 		}
+		// The Accept is what lets a server choose the event-stream
+		// representation.
+		header.Set("Accept", "text/event-stream")
 		resp, err := c.http.Do(ctx, transport.Request{
 			Method: http.MethodPost,
 			URL:    c.baseURL + pathChatCompletions,
-			Header: c.streamHeader(),
+			Header: header,
 			Body:   body,
 		})
 		if err != nil {
@@ -84,14 +87,6 @@ func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Strea
 		// reports the missing message_stop as a *ProtocolError, which
 		// is the one place that judgment belongs.
 	}
-}
-
-// streamHeader is the per-call header set plus the Accept a server needs to
-// choose the event-stream representation.
-func (c *Client) streamHeader() http.Header {
-	h := c.header()
-	h.Set("Accept", "text/event-stream")
-	return h
 }
 
 // neutralizer turns OpenRouter's frames into goodall events. It owns the block

@@ -221,6 +221,15 @@ const (
 	HeaderTitle = "X-OpenRouter-Title"
 )
 
+// HeaderAnthropicBeta is the header OpenRouter forwards to Anthropic as
+// anthropic-beta. A request carrying a strict tool sends it under the
+// OpenRouter dialect; see [StrictToolsWithAnthropicBeta].
+const HeaderAnthropicBeta = "X-Anthropic-Beta"
+
+// anthropicStructuredOutputsBeta is the value that makes OpenRouter forward
+// a tool's strict flag to Anthropic.
+const anthropicStructuredOutputsBeta = "structured-outputs-2025-11-13"
+
 // Header is one HTTP header name and value.
 type Header struct {
 	// Name is the HTTP header's name.

@@ -72,6 +72,10 @@ const (
 	// CapForcedToolChoice is a tool choice that obliges the model to call a
 	// tool: any of them, or one by name.
 	CapForcedToolChoice Capability = "forced_tool_choice"
+	// CapStrictTools is a tool whose input schema the provider enforces by
+	// constraining the model's sampling, which a tool asks for with
+	// [WithStrictness].
+	CapStrictTools Capability = "strict_tools"
 )
 
 // String names the capability.
@@ -80,7 +84,8 @@ func (c Capability) String() string { return string(c) }
 // Known reports whether this is one of the capabilities goodall defines.
 func (c Capability) Known() bool {
 	switch c {
-	case CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput:
+	case CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput,
+		CapForcedToolChoice, CapStrictTools:
 		return true
 	}
 	return false
@@ -111,6 +116,9 @@ type Capabilities struct {
 	// ForcedToolChoice is whether the model accepts a tool choice that
 	// obliges it to call a tool.
 	ForcedToolChoice Support `json:"forced_tool_choice,omitzero"`
+	// StrictTools is whether the model takes a tool whose schema the
+	// provider enforces; see [Strict].
+	StrictTools Support `json:"strict_tools,omitzero"`
 	// ThinkingStyle is which form of thinking the model takes, where the
 	// provider distinguishes them; the zero value means it did not say,
 	// which leaves a provider's own heuristic in charge.
@@ -203,6 +211,8 @@ func (c Capabilities) Get(name Capability) Support {
 		return c.StructuredOutput
 	case CapForcedToolChoice:
 		return c.ForcedToolChoice
+	case CapStrictTools:
+		return c.StrictTools
 	}
 	return SupportUnknown
 }

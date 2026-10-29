@@ -319,6 +319,9 @@ type wireTool struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description,omitzero"`
 	InputSchema *goodall.Schema `json:"input_schema"`
+	// Strict asks for grammar-constrained sampling against InputSchema.
+	// It is generally available and needs no beta header.
+	Strict bool `json:"strict,omitzero"`
 }
 
 // toolChoiceType is the "type" tag of tool_choice.

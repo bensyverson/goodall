@@ -29,6 +29,7 @@ leaves absent.
 | `live_text_blocking.json` | recorded | The same question through `Complete`, so the two paths can be compared. |
 | `live_tool_use.sse` | recorded | A forced `tool_choice` on Haiku 5.5, streamed as `input_json_delta` fragments. |
 | `live_tool_use_blocking.json` | recorded | The same forced tool call through `Complete`. |
+| `live_strict_tool_use.sse` | recorded 2026-10-29 | A tool marked `strict: true` under `tool_choice` auto on Sonnet 5.5, sent with no beta header; the call's input matches the schema exactly. |
 | `live_thinking_tool_use.sse` | recorded | Adaptive thinking at effort high with summarized display, on a question with real arithmetic in it (Sonnet 5.5 skipped thinking at lower efforts and on an easier question), producing a signed thinking block and a tool call. |
 | `live_thinking_tool_use_turn2.sse` | recorded | The next turn, sent with that thinking block replayed and the tool result appended. The answer, rather than an error, is the proof that goodall's replay is accepted. |
 | `live_image.sse` | recorded | A generated 8×8 PNG the model was asked to name the color of. |

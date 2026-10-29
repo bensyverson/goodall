@@ -112,6 +112,31 @@ func TestCheckCapabilitiesRefusesAForcedToolChoice(t *testing.T) {
 	}
 }
 
+func TestCheckCapabilitiesRefusesAStrictToolOnAModelWithoutStrict(t *testing.T) {
+	info := &ModelInfo{
+		ID:           "text-only",
+		Provider:     "testprovider",
+		Capabilities: Capabilities{Tools: Supported, StrictTools: Unsupported},
+	}
+	req := textRequest()
+	req.Tools = []Tool{&stubTool{name: "echo"}, strictStub{stubTool: &stubTool{name: "pick"}, strictness: Strict}}
+	req.ModelInfo = info
+	err := checkCapabilities(req)
+	if err == nil {
+		t.Fatal("a strict tool was allowed through to a model that rejects strict")
+	}
+	if err.Capability != CapStrictTools {
+		t.Errorf("capability = %q, want %q", err.Capability, CapStrictTools)
+	}
+
+	guided := textRequest()
+	guided.Tools = []Tool{&stubTool{name: "echo"}}
+	guided.ModelInfo = info
+	if err := checkCapabilities(guided); err != nil {
+		t.Errorf("a request with no strict tool was refused: %v", err)
+	}
+}
+
 func TestCheckCapabilitiesLetsUnknownSupportThrough(t *testing.T) {
 	// Invariant 11: unknown means try. Nobody has said anything about this
 	// model, so nothing about it may refuse a call that would have worked.

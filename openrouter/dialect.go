@@ -63,6 +63,27 @@ const (
 	CapMaxCompletionTokens OutputCap = "max_completion_tokens"
 )
 
+// StrictToolStyle is how a dialect carries a tool marked [goodall.Strict]. The
+// zero value is [StrictToolsRefused]: a server never shown to take the flag
+// is not sent it, and a strict tool is refused rather than quietly sent
+// without the guarantee its author asked for.
+type StrictToolStyle string
+
+const (
+	// StrictToolsRefused sends no strict member, and a request carrying a
+	// strict tool is refused with a *goodall.CapabilityError.
+	StrictToolsRefused StrictToolStyle = ""
+	// StrictToolsMember sends function.strict.
+	StrictToolsMember StrictToolStyle = "member"
+	// StrictToolsWithAnthropicBeta sends function.strict and the
+	// [HeaderAnthropicBeta] header. OpenRouter drops the flag on its way to
+	// Anthropic without that header and routes the request anyway, so the
+	// tool would run unconstrained with no error: 21 strict tools on
+	// anthropic/claude-sonnet-5.5 succeeded without the header and drew
+	// Anthropic's "Too many strict tools" 400 with it (2026-10-29).
+	StrictToolsWithAnthropicBeta StrictToolStyle = "member_anthropic_beta"
+)
+
 // Quirks is what one dialect accepts. It is a struct rather than a map so the
 // set of questions is fixed, the answers are typed, and a new question is a
 // compile error in the table below rather than a silently missing key.
@@ -101,6 +122,9 @@ type Quirks struct {
 	// charged. Where it does not, goodall reports no cost rather than
 	// inventing one from a price list.
 	UsageCost bool
+	// StrictTools is how a strict tool is carried, or whether it is
+	// refused.
+	StrictTools StrictToolStyle
 }
 
 // Quirks is what this dialect accepts. The table:
@@ -117,6 +141,7 @@ type Quirks struct {
 //	Debug               yes         no                no          no
 //	Metadata            yes         yes               no          no
 //	UsageCost           yes         no                no          no
+//	StrictTools         + beta      member            refused     refused
 func (d Dialect) Quirks() Quirks {
 	switch d {
 	case OpenRouter:
@@ -130,6 +155,7 @@ func (d Dialect) Quirks() Quirks {
 			Debug:            true,
 			Metadata:         true,
 			UsageCost:        true,
+			StrictTools:      StrictToolsWithAnthropicBeta,
 		}
 	case OpenAI:
 		return Quirks{
@@ -137,6 +163,7 @@ func (d Dialect) Quirks() Quirks {
 			OutputCap:   CapMaxCompletionTokens,
 			StreamUsage: true,
 			Metadata:    true,
+			StrictTools: StrictToolsMember,
 		}
 	case LMStudio:
 		return Quirks{Reasoning: ReasoningEffortField, StreamUsage: true}

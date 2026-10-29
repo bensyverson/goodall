@@ -68,7 +68,8 @@ type ToolOutcome struct {
 // the reports dropped and the accounting left on the floor, because Execute has
 // nowhere to put either.
 //
-// It returns an error on the same definitions [NewTool] refuses:
+// It takes the same options and returns an error on the same definitions
+// [NewTool] refuses:
 //
 //	tool, err := goodall.NewReportingTool("research", "Hand a question to a specialist.",
 //	    func(ctx context.Context, in struct {
@@ -76,7 +77,7 @@ type ToolOutcome struct {
 //	    }, report func(goodall.Event)) (goodall.ToolOutcome, error) {
 //	        …
 //	    })
-func NewReportingTool[In any](name, description string, run func(context.Context, In, func(Event)) (ToolOutcome, error)) (Tool, error) {
+func NewReportingTool[In any](name, description string, run func(context.Context, In, func(Event)) (ToolOutcome, error), opts ...ToolOption) (Tool, error) {
 	if err := validateToolName(name); err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func NewReportingTool[In any](name, description string, run func(context.Context
 	if run == nil {
 		return nil, fmt.Errorf("goodall: tool %q has no handler function", name)
 	}
-	def, err := newToolDefinition[In](name, description)
+	def, err := newToolDefinition[In](name, description, opts)
 	if err != nil {
 		return nil, err
 	}

@@ -82,6 +82,11 @@ type chatRequest struct {
 	Debug             *Debug           `json:"debug,omitzero"`
 	User              string           `json:"user,omitzero"`
 	Metadata          metadata         `json:"metadata,omitzero"`
+
+	// anthropicBeta is the HeaderAnthropicBeta value the request needs, or
+	// empty. It travels beside the body rather than in it, so it is
+	// unexported and never marshalled.
+	anthropicBeta string
 }
 
 // streamOptions is what a streamed request asks for beyond the tokens. Only
@@ -233,6 +238,8 @@ type toolFunction struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description,omitzero"`
 	Parameters  *goodall.Schema `json:"parameters,omitzero"`
+	// Strict asks the server to constrain the arguments to Parameters.
+	Strict bool `json:"strict,omitzero"`
 }
 
 // toolChoice constrains the model's tool use. It is a JSON string for the

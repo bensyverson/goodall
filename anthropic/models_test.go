@@ -36,6 +36,7 @@ func TestModelReadsTheCapabilityTree(t *testing.T) {
 			CacheControl:     goodall.Supported,
 			StructuredOutput: goodall.Supported,
 			ForcedToolChoice: goodall.Supported,
+			StrictTools:      goodall.Supported,
 			ThinkingEfforts:  []goodall.Effort{goodall.EffortLow, goodall.EffortMedium, goodall.EffortHigh, goodall.EffortXHigh},
 			ContextWindow:    200000,
 			MaxOutput:        64000,

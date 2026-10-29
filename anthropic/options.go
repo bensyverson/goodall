@@ -29,8 +29,11 @@ const (
 	// in the response's input_transformations, instead of dropping them
 	// silently.
 	BetaThinkingBindingControls Beta = "thinking-binding-controls-2026-08-01"
-	// BetaStructuredOutputs turns on strict tool schemas and the structured
-	// output format.
+	// BetaStructuredOutputs is the beta that once gated strict tool schemas
+	// and the structured output format. Both are generally available on
+	// the Messages API now, so neither needs it: a tool built with
+	// goodall.Strict is sent strict without any header. It remains for a
+	// caller who wants to send it anyway.
 	BetaStructuredOutputs Beta = "structured-outputs-2025-11-13"
 )
 

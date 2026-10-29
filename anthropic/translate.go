@@ -9,6 +9,7 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/internal/claudename"
+	"github.com/bensyverson/goodall/internal/strict"
 )
 
 // maxCacheBreakpoints is the number of explicit cache_control markers
@@ -38,6 +39,9 @@ func translateRequest(req *goodall.Request) (*wireRequest, []Beta, error) {
 		return nil, nil, err
 	}
 	if err := claudename.RefuseForcing(ProviderName, req); err != nil {
+		return nil, nil, err
+	}
+	if err := strict.Check(ProviderName, req, strict.RulesClaude); err != nil {
 		return nil, nil, err
 	}
 
@@ -270,7 +274,12 @@ func translateTools(tools []goodall.Tool) ([]wireTool, error) {
 		if schema == nil {
 			return nil, fmt.Errorf("anthropic: %w: tool %q has no input schema", goodall.KindInvalidRequest, name)
 		}
-		out = append(out, wireTool{Name: name, Description: tool.Description(), InputSchema: schema})
+		out = append(out, wireTool{
+			Name:        name,
+			Description: tool.Description(),
+			InputSchema: schema,
+			Strict:      goodall.StrictnessOf(tool) == goodall.Strict,
+		})
 	}
 	return out, nil
 }

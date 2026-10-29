@@ -67,6 +67,10 @@ func openAIExchanges(rec *recorder, key, model string) ([]exchange, error) {
 	if err != nil {
 		return nil, err
 	}
+	strictWeather, err := strictWeatherTool()
+	if err != nil {
+		return nil, err
+	}
 	return []exchange{
 		{
 			name: "openai_text",
@@ -80,9 +84,21 @@ func openAIExchanges(rec *recorder, key, model string) ([]exchange, error) {
 			name: "openai_tool_use",
 			what: "a forced tool call, which this endpoint serves only with reasoning turned off",
 			run: func(ctx context.Context) error {
-				req := toolUseRequest(livemodel.OpenRouterClaudeForcing, weather)
+				// The OpenAI model, not the Claude forcing model: a Claude
+				// id means nothing to api.openai.com.
+				req := toolUseRequest(model, weather)
 				req.Thinking = goodall.ThinkingConfig{Effort: goodall.EffortOff}
 				_, err := rec.stream(ctx, client, "openai_tool_use", req)
+				return err
+			},
+		},
+		{
+			name: "openai_strict_tool_use",
+			what: "a strict tool call under tool_choice auto, every parameter required as OpenAI's strict mode demands",
+			run: func(ctx context.Context) error {
+				req := strictToolRequest(model, strictWeather)
+				req.Thinking = goodall.ThinkingConfig{Effort: goodall.EffortOff}
+				_, err := rec.stream(ctx, client, "openai_strict_tool_use", req)
 				return err
 			},
 		},
@@ -115,11 +131,23 @@ func chatCompletionExchanges(rec *recorder, client *openrouter.Client, model, re
 	if err != nil {
 		return nil, err
 	}
+	strictWeather, err := strictWeatherTool()
+	if err != nil {
+		return nil, err
+	}
 	png, err := tinyPNG()
 	if err != nil {
 		return nil, err
 	}
 	return []exchange{
+		{
+			name: "strict_tool_use",
+			what: "a strict tool call under tool_choice auto on the Claude model, sent with the Anthropic beta header OpenRouter needs to forward strict",
+			run: func(ctx context.Context) error {
+				_, err := rec.stream(ctx, client, "strict_tool_use", strictToolRequest(model, strictWeather))
+				return err
+			},
+		},
 		{
 			name: "text",
 			what: "a one-line answer, streamed",

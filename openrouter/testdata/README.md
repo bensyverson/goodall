@@ -38,6 +38,8 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_debug_echo.sse` | The same question with `debug.echo_upstream_body`, so the Anthropic-shaped body OpenRouter sent upstream is on disk. |
 | `live_error.json` | An unrecognized model id: HTTP 400, not 404. |
 | `live_openai_text.sse`, `live_openai_tool_use.sse`, `live_openai_reasoning.sse` | The OpenAI dialect against api.openai.com: text, a forced tool call, and a reasoning answer. |
+| `live_strict_tool_use.sse` | Recorded 2026-10-29: a tool sent with `function.strict` under `tool_choice` auto on Claude, with the `X-Anthropic-Beta` header OpenRouter needs before it forwards the flag (headers are not captured; the unit tests assert it). |
+| `live_openai_strict_tool_use.sse` | Recorded 2026-10-29: the same strict call against api.openai.com, every parameter required as OpenAI's strict mode demands, with reasoning off. |
 
 ## What the recordings confirmed, and what they corrected
 

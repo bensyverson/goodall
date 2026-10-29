@@ -121,14 +121,14 @@ func (c *Client) Dialect() Dialect { return c.dialect }
 // choice carrying one, or a body with no choices at all comes back as a
 // *[goodall.APIError].
 func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.Response, error) {
-	body, err := c.requestBody(req, false)
+	body, header, err := c.requestBody(req, false)
 	if err != nil {
 		return nil, err
 	}
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodPost,
 		URL:    c.baseURL + pathChatCompletions,
-		Header: c.header(),
+		Header: header,
 		Body:   body,
 	})
 	if err != nil {
@@ -156,20 +156,25 @@ func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.R
 	return translateResponse(&decoded)
 }
 
-// requestBody translates and marshals one request.
-func (c *Client) requestBody(req *goodall.Request, stream bool) ([]byte, error) {
+// requestBody translates and marshals one request, and builds the headers it
+// is sent with: the client's own, plus any the request itself needs.
+func (c *Client) requestBody(req *goodall.Request, stream bool) ([]byte, http.Header, error) {
 	if req == nil {
-		return nil, fmt.Errorf("openrouter: %w: the request is nil", goodall.KindInvalidRequest)
+		return nil, nil, fmt.Errorf("openrouter: %w: the request is nil", goodall.KindInvalidRequest)
 	}
 	wire, err := translateRequest(req, c.dialect, stream)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	body, err := json.Marshal(wire)
 	if err != nil {
-		return nil, fmt.Errorf("openrouter: encoding the request: %w", err)
+		return nil, nil, fmt.Errorf("openrouter: encoding the request: %w", err)
 	}
-	return body, nil
+	h := c.header()
+	if wire.anthropicBeta != "" {
+		h.Set(HeaderAnthropicBeta, wire.anthropicBeta)
+	}
+	return body, h, nil
 }
 
 // header builds the per-call headers: the bearer token when a key is set, the

@@ -37,6 +37,10 @@ func anthropicExchanges(rec *recorder, key, model string) ([]exchange, error) {
 	if err != nil {
 		return nil, err
 	}
+	strictWeather, err := strictWeatherTool()
+	if err != nil {
+		return nil, err
+	}
 	png, err := tinyPNG()
 	if err != nil {
 		return nil, err
@@ -98,6 +102,14 @@ func anthropicExchanges(rec *recorder, key, model string) ([]exchange, error) {
 			what: "the same forced tool call through Complete",
 			run: func(ctx context.Context) error {
 				_, err := rec.complete(ctx, client, "tool_use_blocking", toolUse())
+				return err
+			},
+		},
+		{
+			name: "strict_tool_use",
+			what: "a strict tool call under tool_choice auto on the default model, with no beta header",
+			run: func(ctx context.Context) error {
+				_, err := rec.stream(ctx, client, "strict_tool_use", strictToolRequest(model, strictWeather))
 				return err
 			},
 		},
@@ -235,4 +247,32 @@ func weatherTool() (goodall.Tool, error) {
 			// model made and sends back a canned result.
 			return goodall.TextResult(""), nil
 		})
+}
+
+// strictWeatherTool is the weather tool marked strict, with both parameters
+// required, which is the shape every strict upstream takes: OpenAI's strict
+// mode refuses an optional one.
+func strictWeatherTool() (goodall.Tool, error) {
+	return goodall.NewTool("get_weather", "Look up the current weather in a city.",
+		func(ctx context.Context, in struct {
+			City string `json:"city" desc:"the city to look up, such as Paris"`
+			Unit string `json:"unit" desc:"celsius or fahrenheit" enum:"celsius,fahrenheit"`
+		},
+		) (goodall.ToolResult, error) {
+			return goodall.TextResult(""), nil
+		}, goodall.WithStrictness(goodall.Strict))
+}
+
+// strictToolRequest asks for the weather with the strict tool and leaves the
+// choice to the model: the current Opus and Sonnet refuse a forced choice, and
+// auto plus strict is what replaces it.
+func strictToolRequest(model string, tool goodall.Tool) *goodall.Request {
+	return &goodall.Request{
+		Model:     model,
+		MaxTokens: recordedMaxTokens,
+		Tools:     []goodall.Tool{tool},
+		Messages: []goodall.Message{goodall.UserMessage(
+			goodall.Text{Text: "What is the weather in " + weatherCity + " right now, in celsius? Use the tool."},
+		)},
+	}
 }

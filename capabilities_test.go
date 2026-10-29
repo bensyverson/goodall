@@ -20,6 +20,8 @@ func sameCapabilities(a, b Capabilities) bool {
 		a.Thinking == b.Thinking &&
 		a.CacheControl == b.CacheControl &&
 		a.StructuredOutput == b.StructuredOutput &&
+		a.ForcedToolChoice == b.ForcedToolChoice &&
+		a.StrictTools == b.StrictTools &&
 		a.ContextWindow == b.ContextWindow &&
 		a.MaxOutput == b.MaxOutput
 }
@@ -84,6 +86,7 @@ func TestCapabilityString(t *testing.T) {
 		{CapThinking, "thinking"},
 		{CapCacheControl, "cache_control"},
 		{CapStructuredOutput, "structured_output"},
+		{CapStrictTools, "strict_tools"},
 		{Capability("video_input"), "video_input"},
 	}
 	for _, c := range cases {
@@ -94,7 +97,7 @@ func TestCapabilityString(t *testing.T) {
 }
 
 func TestCapabilityKnown(t *testing.T) {
-	for _, c := range []Capability{CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput} {
+	for _, c := range []Capability{CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput, CapForcedToolChoice, CapStrictTools} {
 		if !c.Known() {
 			t.Errorf("Capability(%q).Known() = false, want true", string(c))
 		}
@@ -115,6 +118,7 @@ func TestCapabilitiesGet(t *testing.T) {
 		Thinking:         Supported,
 		CacheControl:     Unsupported,
 		StructuredOutput: Supported,
+		StrictTools:      Unsupported,
 	}
 	cases := []struct {
 		in   Capability
@@ -127,6 +131,7 @@ func TestCapabilitiesGet(t *testing.T) {
 		{CapThinking, Supported},
 		{CapCacheControl, Unsupported},
 		{CapStructuredOutput, Supported},
+		{CapStrictTools, Unsupported},
 		{Capability("video_input"), SupportUnknown},
 		{Capability(""), SupportUnknown},
 	}
@@ -164,8 +169,9 @@ func TestCapabilitiesJSON(t *testing.T) {
 		ContextWindow:    200000,
 		MaxOutput:        64000,
 		StructuredOutput: Supported,
+		StrictTools:      Unsupported,
 	}
-	const want = `{"image_input":"supported","pdf_input":"unsupported","tools":"supported","thinking":"supported","structured_output":"supported","thinking_efforts":["low","high","max"],"context_window":200000,"max_output":64000}`
+	const want = `{"image_input":"supported","pdf_input":"unsupported","tools":"supported","thinking":"supported","structured_output":"supported","strict_tools":"unsupported","thinking_efforts":["low","high","max"],"context_window":200000,"max_output":64000}`
 	got, err = json.Marshal(caps)
 	if err != nil {
 		t.Fatal(err)

@@ -224,6 +224,11 @@ func modelInfo(entry *catalogModel) *goodall.ModelInfo {
 		caps.ForcedToolChoice = claudename.ForcedToolChoice(entry.ID, supportFor(params, paramToolChoice))
 		caps.Thinking = supportFor(params, paramReasoning, paramReasoningEffort)
 		caps.StructuredOutput = supportFor(params, paramStructuredOutputs)
+		// OpenRouter publishes no parameter for strict tools; the
+		// structured-outputs one tracks it, matching Anthropic's own list
+		// (every Claude from 4.5 on lists it, Opus 4.1 does not; read
+		// 2026-10-29).
+		caps.StrictTools = supportFor(params, paramStructuredOutputs)
 	}
 	if top := entry.TopProvider; top != nil {
 		caps.MaxOutput = top.MaxCompletionTokens
