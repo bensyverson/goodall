@@ -1,7 +1,7 @@
 sources:
   - name: agents-md
     git: https://github.com/bensyverson/agents-md
-    ref: 8824185fb4dfe929f7b32e5538cab2d9061abf01
+    ref: 29162278d97c0a1741ba280a2a92b80e8c33ff92
 modules:
   - core
   - principles
@@ -13,3 +13,4 @@ modules:
   - evidence
   - jobs
   - harness
+  - planning
