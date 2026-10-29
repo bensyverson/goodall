@@ -198,6 +198,10 @@ func (s *Service) persist(run *activeRun, thread *Thread, result *goodall.Result
 	ctx := context.WithoutCancel(s.ctx)
 	apply := func(t *Thread) {
 		t.Conversation = result.Conversation
+		// A paused turn's finished results belong to the conversation
+		// they were paused with, so every run replaces them, and only a
+		// run that paused again leaves any.
+		t.Finished = result.Finished
 		t.Usage = t.Usage.Add(result.Usage)
 		t.Cost = t.Cost.Add(result.Cost)
 	}

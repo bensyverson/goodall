@@ -206,6 +206,58 @@ func TestResolveContinuesADeferredRun(t *testing.T) {
 	}
 }
 
+// TestResolveCarriesTheFinishedResults: a call awaited beside one that ran
+// pauses the run, the thread keeps the finished result with the conversation,
+// and Resolve answers both calls with only the caller's answer given, so the
+// finished call is neither run again nor told it never happened.
+func TestResolveCarriesTheFinishedResults(t *testing.T) {
+	agent, _ := agentFor([]fake.Turn{
+		fake.Answer(goodall.StopToolUse,
+			fake.Use("tu_1", "echo", `{"text":"which?"}`),
+			fake.Use("tu_2", "echo", `{"text":"card"}`)),
+		fake.Answer(goodall.StopEndTurn, goodall.Text{Text: "done"}),
+	}, echoTool(t))
+	agent.Hooks = goodall.Hooks{
+		BeforeToolCall: func(ctx context.Context, use goodall.ToolUse) (goodall.Decision, error) {
+			if use.ID == "tu_1" {
+				return goodall.Await(), nil
+			}
+			return goodall.Allow(), nil
+		},
+	}
+	svc, _ := serviceFor(t, agent)
+	thread := newThread(t, svc)
+
+	send(t, svc, thread.ID, "please echo")
+	paused := waitForVersion(t, svc, thread.ID, 2)
+	if len(paused.Finished) != 1 || paused.Finished[0].ToolUseID != "tu_2" {
+		t.Fatalf("the paused thread keeps %+v, want the finished call's result", paused.Finished)
+	}
+
+	answer := goodall.TextResult("the person chose A")
+	answer.ToolUseID = "tu_1"
+	if _, err := svc.Resolve(t.Context(), thread.ID, answer); err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+
+	stored := waitForVersion(t, svc, thread.ID, 3)
+	if stored.Conversation.Len() != 4 {
+		t.Fatalf("the resolved thread has %d messages, want the question, the request, the results and the answer", stored.Conversation.Len())
+	}
+	var results []goodall.ToolResult
+	for _, b := range stored.Conversation.At(2).Content {
+		if r, ok := b.(goodall.ToolResult); ok {
+			results = append(results, r)
+		}
+	}
+	if len(results) != 2 || results[0].Text() != "the person chose A" || results[1].IsError {
+		t.Fatalf("the results message is %+v, want the caller's answer and the finished result", results)
+	}
+	if len(stored.Finished) != 0 {
+		t.Errorf("the resolved thread still keeps %d finished results, want none", len(stored.Finished))
+	}
+}
+
 // TestResolveOnAThreadThatIsNotWaitingFails names why rather than starting a
 // run that would only fail.
 func TestResolveOnAThreadThatIsNotWaitingFails(t *testing.T) {

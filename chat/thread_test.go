@@ -108,8 +108,11 @@ func TestThreadCloneIsDeep(t *testing.T) {
 	original := chat.NewThread()
 	original.Conversation = goodall.Conversation{}.Append(goodall.UserMessage(goodall.Text{Text: "one"}))
 
+	original.Finished = []goodall.ToolResult{{ToolUseID: "tu_1"}}
+
 	clone := original.Clone()
 	clone.Conversation = clone.Conversation.Append(goodall.UserMessage(goodall.Text{Text: "two"}))
+	clone.Finished[0].ToolUseID = "changed"
 	clone.Usage.Input = 99
 	clone.ID = "changed"
 
@@ -121,5 +124,8 @@ func TestThreadCloneIsDeep(t *testing.T) {
 	}
 	if original.ID == "changed" {
 		t.Error("the original's id changed")
+	}
+	if original.Finished[0].ToolUseID != "tu_1" {
+		t.Error("the original's finished results changed through the clone")
 	}
 }

@@ -11,10 +11,18 @@ import (
 // on its next turn, so it says plainly that the call did not happen.
 const noResult = "This tool was not run: no result was provided for the call."
 
-// Resume continues a run that paused for approval. The pending calls are the
-// tool_use blocks of conv's last message, which must be a model turn that
-// asked for tools — the state a [Defer] decision leaves behind, carried on the
-// terminal event's Result.Conversation and Result.Pending.
+// Resume continues a run that paused for approval or for an answer. The
+// calls to answer are the tool_use blocks of conv's last message, which must
+// be a model turn that asked for tools — the state a [Defer] or [Await]
+// decision leaves behind, carried on the terminal event's
+// Result.Conversation and Result.Pending.
+//
+// After an Await, the turn's other calls have already run and their results
+// are on Result.Finished; pass them here beside the answers to Pending, as in
+// Resume(ctx, res.Conversation, append(res.Finished, answers...)...), so the
+// resumed turn answers every call without running any of them again. The
+// agent keeps nothing between the pause and the resume, so the caller holds
+// them, as it holds the conversation.
 //
 // The results are matched to those calls by ToolUseID and assembled into one
 // user message in the order the model made the calls, whatever order they are

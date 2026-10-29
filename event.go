@@ -322,8 +322,10 @@ const (
 	StopCauseTimeout StopCause = "timeout"
 	// StopCauseHook is a hook short-circuiting the run.
 	StopCauseHook StopCause = "hook"
-	// StopCauseDeferred is a hook deferring a tool call for approval; the
-	// calls are in the result's Pending.
+	// StopCauseDeferred is a hook deferring a tool call for approval, or
+	// awaiting an answer to one; the calls waiting are in the result's
+	// Pending, and after an await the results of the turn's other calls
+	// are in its Finished.
 	StopCauseDeferred StopCause = "deferred"
 	// StopCauseRefusal is the model declining. Its tool calls are not run.
 	StopCauseRefusal StopCause = "refusal"

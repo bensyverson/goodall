@@ -13,10 +13,11 @@ import (
 // own tool_use, which is what the conversation keeps, and the call as it will
 // actually run, which is what the events report.
 type call struct {
-	use    ToolUse    // the model's call, verbatim
-	run    ToolUse    // the call as it runs, differing only when a hook modified the input
-	denied bool       // true when a hook refused it, in which case it never starts
-	result ToolResult // a denied call's error result, ready before anything runs
+	use     ToolUse    // the model's call, verbatim
+	run     ToolUse    // the call as it runs, differing only when a hook modified the input
+	denied  bool       // true when a hook refused it, in which case it never starts
+	awaited bool       // true when a hook holds it for the caller, in which case it never starts
+	result  ToolResult // a denied call's error result, ready before anything runs
 }
 
 // runTools runs every call of one turn, concurrently, and appends the turn
@@ -40,8 +41,12 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 	if !ok {
 		return false
 	}
+	awaited := 0
 	for _, c := range calls {
-		if c.denied {
+		if c.awaited {
+			awaited++
+		}
+		if c.denied || c.awaited {
 			continue
 		}
 		if !r.emit(ToolCallStart{ToolUse: c.run}) {
@@ -74,6 +79,11 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 	defer wg.Wait()
 	defer close(stopped)
 	for i, c := range calls {
+		if c.awaited {
+			// It waits for the caller; nothing runs and nothing
+			// arrives on done for it.
+			continue
+		}
 		if c.denied {
 			// A refused call still produces its result, so the
 			// bookkeeping below has one shape for every call.
@@ -87,7 +97,7 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 
 	results := make([]Block, len(calls))
 	var hookErr error
-	for remaining := len(calls); remaining > 0; {
+	for remaining := len(calls) - awaited; remaining > 0; {
 		var out finished
 		select {
 		case nested := <-reports:
@@ -132,11 +142,38 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 	if hookErr != nil {
 		for i, c := range calls {
 			if results[i] == nil {
-				results[i] = errorResultFor(c.use, unrunDropped)
+				text := unrunDropped
+				if c.awaited {
+					text = unrunAwaited
+				}
+				results[i] = errorResultFor(c.use, text)
 			}
 		}
 		r.conv = r.conv.Append(msg, UserMessage(results...))
 		r.stop(StopCauseHook, hookErr.Error())
+		return false
+	}
+
+	if awaited > 0 {
+		// The awaited calls hold the run, not the turn's other calls:
+		// those have run, and their results go to the caller, who hands
+		// them back to Resume beside its answers, so that one results
+		// message answers every call. The turn is committed without a
+		// results message, which is what Resume completes.
+		pending := make([]ToolUse, 0, awaited)
+		finished := make([]ToolResult, 0, len(calls)-awaited)
+		for i, c := range calls {
+			if c.awaited {
+				pending = append(pending, c.use)
+				continue
+			}
+			finished = append(finished, results[i].(ToolResult))
+		}
+		r.conv = r.conv.Append(msg)
+		r.deferred = pending
+		r.finished = finished
+		r.agent.log(ctx, slog.LevelInfo, "goodall: run awaiting", "turn", r.turn, "calls", awaited, "finished", len(finished))
+		r.stop(StopCauseDeferred, awaitedText(awaited))
 		return false
 	}
 
@@ -151,7 +188,9 @@ func (r *run) runTools(ctx context.Context, msg Message) bool {
 // decide asks the BeforeToolCall hook about every call of the turn before any
 // of them runs, and reports whether the run continues. It ends the run itself
 // on a hook error and on a deferral, because both are decisions about the
-// whole turn rather than about one call.
+// whole turn rather than about one call. An awaited call is a decision about
+// itself alone, so it is marked here and held by runTools once the turn's
+// other calls have finished.
 func (r *run) decide(ctx context.Context, msg Message) ([]call, bool) {
 	uses := msg.ToolUses()
 	calls := make([]call, 0, len(uses))
@@ -182,6 +221,8 @@ func (r *run) decide(ctx context.Context, msg Message) ([]call, bool) {
 			c.run.Input = decision.input
 		case decisionDefer:
 			deferred = true
+		case decisionAwait:
+			c.awaited = true
 		}
 		calls = append(calls, c)
 	}

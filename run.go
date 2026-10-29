@@ -45,6 +45,10 @@ type run struct {
 	// deferred is the turn's tool calls when a hook deferred them, which
 	// is what the terminal Result.Pending reports.
 	deferred []ToolUse
+	// finished is the results of the paused turn's calls that ran while
+	// others were awaited, which is what the terminal Result.Finished
+	// reports.
+	finished []ToolResult
 }
 
 // execute is the loop itself: check the budget, send, forward every event,
@@ -353,6 +357,7 @@ func (r *run) result() Result {
 		out.StopReason = r.last.StopReason
 	}
 	out.Pending = r.deferred
+	out.Finished = r.finished
 	return out
 }
 

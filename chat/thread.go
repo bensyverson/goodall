@@ -21,6 +21,7 @@
 package chat
 
 import (
+	"slices"
 	"time"
 	"uuid"
 
@@ -46,6 +47,12 @@ type Thread struct {
 	// Cost is the sum of every run's cost, reported only when every run's
 	// was.
 	Cost goodall.Cost `json:"cost,omitzero"`
+	// Finished is the results of the calls that ran in a turn paused on an
+	// awaited call ([goodall.Await]), which the conversation cannot hold
+	// until the awaited answers arrive. [Service.Resolve] hands them back
+	// to the agent beside the caller's answers. It is empty on a thread
+	// that is not paused, and when a Defer held the whole turn.
+	Finished []goodall.ToolResult `json:"finished,omitzero"`
 	// Version is the store's optimistic lock: the value a caller read, and
 	// what [ThreadStore.Put] checks before it writes. A thread that has
 	// never been stored is at version zero.
@@ -73,5 +80,6 @@ func (t *Thread) Clone() *Thread {
 	}
 	out := *t
 	out.Conversation = goodall.Conversation{}.Append(t.Conversation.Messages()...)
+	out.Finished = slices.Clone(t.Finished)
 	return &out
 }

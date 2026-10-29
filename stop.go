@@ -114,6 +114,20 @@ func deferredText(calls int) string {
 		" tool calls for approval; they are in the result's pending calls"
 }
 
+// unrunAwaited is the result text for an awaited call when a hook stopped the
+// run before it could pause: the call never ran and no answer will come.
+const unrunAwaited = "This tool was not run: a hook stopped the run while the call was waiting for its answer."
+
+// awaitedText says why a run paused on awaited calls, for a person reading a
+// log or a UI.
+func awaitedText(calls int) string {
+	if calls == 1 {
+		return "a hook is awaiting an answer to one of the turn's tool calls; it is in the result's pending calls"
+	}
+	return "a hook is awaiting answers to " + strconv.Itoa(calls) +
+		" of the turn's tool calls; they are in the result's pending calls"
+}
+
 // unrunReason is the result text for a tool call the stop reason forbade. It
 // is written for the model, which reads it on any later turn, so it says that
 // the call did not happen and why rather than apologizing.

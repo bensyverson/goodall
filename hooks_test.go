@@ -605,6 +605,7 @@ func TestDecisionString(t *testing.T) {
 		"deny":   goodall.Deny("no"),
 		"modify": goodall.Modify(jsontext.Value(`{}`)),
 		"defer":  goodall.Defer(),
+		"await":  goodall.Await(),
 	}
 	for want, decision := range cases {
 		if got := decision.String(); got != want {

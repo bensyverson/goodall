@@ -203,7 +203,8 @@ func redactResponse(response goodall.Response) goodall.Response {
 
 // redactResult drops the history from a terminal event: the conversation the
 // run produced, the message on its last response, and the input of every tool
-// call a hook deferred, which is the same input a ToolCallStart withholds.
+// call a hook deferred, which is the same input a ToolCallStart withholds, and
+// the content of every finished result, which is what a ToolCallEnd withholds.
 // The pointer and the slice are replaced rather than written through, since
 // the result belongs to the run and to every other subscriber reading it.
 func redactResult(result goodall.Result) goodall.Result {
@@ -218,6 +219,13 @@ func redactResult(result goodall.Result) goodall.Result {
 			pending[i] = redactToolUse(use)
 		}
 		result.Pending = pending
+	}
+	if len(result.Finished) > 0 {
+		finished := make([]goodall.ToolResult, len(result.Finished))
+		for i, r := range result.Finished {
+			finished[i] = goodall.ToolResult{ToolUseID: r.ToolUseID, IsError: r.IsError}
+		}
+		result.Finished = finished
 	}
 	return result
 }

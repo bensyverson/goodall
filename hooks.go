@@ -50,7 +50,8 @@ type Hooks struct {
 	AfterReceive func(ctx context.Context, resp *Response) error
 	// BeforeToolCall runs for every tool call of a turn, in the order the
 	// model made them and before any tool of that turn starts, and
-	// answers with a Decision: [Allow], [Deny], [Modify] or [Defer].
+	// answers with a Decision: [Allow], [Deny], [Modify], [Defer] or
+	// [Await].
 	//
 	// Asking about every call first is what makes approval possible: a
 	// decision cannot be taken back once a tool has had its side effect,
@@ -72,7 +73,7 @@ type Hooks struct {
 }
 
 // decisionKind is what a [Decision] decided. It is a typed constant rather
-// than a pair of booleans because the four outcomes are mutually exclusive,
+// than a pair of booleans because the five outcomes are mutually exclusive,
 // and its zero value is the one that behaves like no hook at all.
 type decisionKind int
 
@@ -86,6 +87,9 @@ const (
 	decisionModify
 	// decisionDefer pauses the turn for approval.
 	decisionDefer
+	// decisionAwait holds the one call for the caller's answer while the
+	// turn's other calls run.
+	decisionAwait
 )
 
 // String names the kind, for logs.
@@ -97,13 +101,15 @@ func (k decisionKind) String() string {
 		return "modify"
 	case decisionDefer:
 		return "defer"
+	case decisionAwait:
+		return "await"
 	default:
 		return "allow"
 	}
 }
 
 // Decision is what a [Hooks.BeforeToolCall] hook decided about one tool call.
-// Build one with [Allow], [Deny], [Modify] or [Defer]; the zero Decision
+// Build one with [Allow], [Deny], [Modify], [Defer] or [Await]; the zero Decision
 // allows, so a hook that has no opinion about a call can return one.
 type Decision struct {
 	kind   decisionKind
@@ -142,8 +148,30 @@ func Modify(input jsontext.Value) Decision { return Decision{kind: decisionModif
 // One deferred call holds the whole turn, and the allow, deny and modify
 // decisions taken for its other calls are discarded: approval is a pause at a
 // turn boundary, a person approves the turn they are shown, and a tool that
-// had already run could not be un-run if they then said no.
+// had already run could not be un-run if they then said no. That holds when
+// the turn's other calls were awaited, too: a Defer anywhere in a turn holds
+// all of it. A call that waits on the caller without asking anyone to approve
+// the turn is what [Await] is for.
 func Defer() Decision { return Decision{kind: decisionDefer} }
+
+// Await holds this one call for the caller to answer — a question put to a
+// person, a result that arrives from outside the process — while the turn's
+// other calls are handled as they would be without it: allowed and modified
+// calls run, denied calls are refused, each with its usual events. The
+// awaited call emits neither ToolCallStart nor ToolCallEnd, since it has not
+// happened.
+//
+// Once the others have finished, the assistant turn is committed on its own
+// and the run ends with Stopped{Cause: StopCauseDeferred}: Result.Pending
+// lists the awaited calls and Result.Finished the results of the rest, both
+// in the order the model made the calls. Every tool_use must be answered in
+// one results message, so the caller hands the finished results back to
+// [Agent.Resume] beside its own answers; the run keeps nothing between the
+// two, which is what lets a pause outlive the process that paused.
+//
+// A [Defer] anywhere in the turn holds the whole turn, awaited calls
+// included, because approval is about the turn a person is shown.
+func Await() Decision { return Decision{kind: decisionAwait} }
 
 // String names the decision, for logs.
 func (d Decision) String() string { return d.kind.String() }

@@ -47,7 +47,15 @@ type Result struct {
 	Cost Cost `json:"cost,omitzero"`
 	// StopReason is the model's reason for stopping on the last turn.
 	StopReason StopReason `json:"stop_reason,omitzero"`
-	// Pending is the tool calls a hook deferred, waiting for the caller to
-	// approve them and resume. It is empty on every other exit.
+	// Pending is the tool calls a hook deferred or awaited, waiting for
+	// the caller to answer them and resume. It is empty on every other
+	// exit.
 	Pending []ToolUse `json:"pending,omitzero"`
+	// Finished is the results of the paused turn's calls that were not
+	// held — the ones that ran or were denied while an [Await]ed call
+	// waited — in the order the model made them. The caller passes them
+	// back to [Agent.Resume] beside its answers to Pending, so the resumed
+	// turn answers every call without running any of them again. It is
+	// empty when a [Defer] held the whole turn, and on every other exit.
+	Finished []ToolResult `json:"finished,omitzero"`
 }

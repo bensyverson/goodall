@@ -106,7 +106,7 @@ The triage example is the delegation one. It reads a mailbox, Apple Mail's store
 
 | Package | What it is |
 |---|---|
-| `goodall` | Blocks, messages and conversations; tools with inferred schemas; the provider seam; the streaming event model; the agent loop with budgets, hooks, approval and resume; capability pre-flight against the model catalog |
+| `goodall` | Blocks, messages and conversations; tools with inferred schemas; the provider seam; the streaming event model; the agent loop with budgets, hooks, approval (`Defer` holds a whole turn for a person to approve), awaited calls (`Await` holds one call for an answer while the turn's others run) and resume; capability pre-flight against the model catalog |
 | `goodall/anthropic` | The Messages API: streaming and blocking, thinking (adaptive and budget), images and PDFs, cache control, the models catalog |
 | `goodall/openrouter` | Chat Completions with typed dialects for OpenRouter, OpenAI, LM Studio and generic servers: reasoning details round-tripped verbatim, cost reporting, the catalog with prices |
 | `goodall/chat` | Threads, stores, the service that owns runs, the redacted view and the redacted stream, SSE and NDJSON writers, a chat-safe Markdown subset |

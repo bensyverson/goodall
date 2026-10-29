@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 
 	"github.com/bensyverson/goodall"
@@ -195,6 +196,12 @@ func (s *Service) Send(ctx context.Context, threadID string, input ...goodall.Bl
 // every other respect: same ownership, same [ErrThreadBusy], same
 // persistence.
 //
+// When the turn paused on an awaited call ([goodall.Await]), the results of
+// the calls that already ran are kept on the thread's Finished, and Resolve
+// passes them to the agent ahead of the caller's, so the caller answers only
+// the calls in Result.Pending; a result the caller gives for a finished call
+// replaces it.
+//
 // A thread whose conversation does not end in a model turn that asked for
 // tools is refused with [ErrNotResolvable] rather than starting a run that
 // could only fail. Which calls are waiting is on the terminal event's
@@ -212,7 +219,7 @@ func (s *Service) Resolve(ctx context.Context, threadID string, results ...gooda
 	}
 	conv := thread.Conversation
 	return s.begin(thread, func(runCtx context.Context) goodall.Stream {
-		return s.agent.Resume(runCtx, conv, results...)
+		return s.agent.Resume(runCtx, conv, slices.Concat(thread.Finished, results)...)
 	})
 }
 

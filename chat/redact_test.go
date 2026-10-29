@@ -242,12 +242,20 @@ func TestRedactDropsTheHistoryFromTheTerminalEvents(t *testing.T) {
 		Pending: []goodall.ToolUse{
 			{ID: "toolu_1", Name: "echo", Input: jsontext.Value(`{"text":"` + canaryInput + `"}`)},
 		},
+		Finished: []goodall.ToolResult{
+			{ToolUseID: "toolu_2", Content: goodall.Blocks{goodall.Text{Text: canaryInput}}},
+			{ToolUseID: "toolu_3", IsError: true, Content: goodall.Blocks{goodall.Text{Text: canaryInput}}},
+		},
 	}
 	wantResult := goodall.Result{
 		Response:   &goodall.Response{ID: "msg_01", Usage: goodall.Usage{Output: 7}},
 		Usage:      goodall.Usage{Input: 12, Output: 7},
 		StopReason: goodall.StopEndTurn,
 		Pending:    []goodall.ToolUse{{ID: "toolu_1", Name: "echo"}},
+		Finished: []goodall.ToolResult{
+			{ToolUseID: "toolu_2"},
+			{ToolUseID: "toolu_3", IsError: true},
+		},
 	}
 
 	got := collect(t, chat.Redact(streamOf(
