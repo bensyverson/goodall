@@ -1,0 +1,51 @@
+{
+  "model": "gpt-6.1-terra",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "Look up the current weather in a city.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "the city to look up, such as Paris"
+          },
+          "unit": {
+            "type": "string",
+            "description": "celsius or fahrenheit",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ]
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  ],
+  "reasoning": {
+    "effort": "high",
+    "summary": "auto"
+  },
+  "max_output_tokens": 2048,
+  "store": false,
+  "stream": true,
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "A cyclist in Paris will ride 137 km at 23.4 km/h with two 18-minute stops, starting at 13:47. Work out to the minute when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+        }
+      ]
+    }
+  ]
+}

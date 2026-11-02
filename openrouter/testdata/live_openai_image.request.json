@@ -1,0 +1,22 @@
+{
+  "model": "gpt-6.1-terra",
+  "max_output_tokens": 2048,
+  "store": false,
+  "stream": true,
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAFUlEQVR4nGL5VMXDgA0wwRhDQwIwAC0lAYsctKtjAAAAAElFTkSuQmCC"
+        },
+        {
+          "type": "input_text",
+          "text": "Answer with one word: what color is this image?"
+        }
+      ]
+    }
+  ]
+}

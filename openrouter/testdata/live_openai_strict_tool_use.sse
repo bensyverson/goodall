@@ -1,0 +1,48 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_09195f497d398fc5016ae8cece7d8887d19c581e549d0fa145","object":"response","created_at":1793642190,"status":"in_progress","access_programs":{"cyber":"standard"},"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":2048,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"medium","mode":"standard","summary":null},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Look up the current weather in a city.","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string","description":"the city to look up, such as Paris"},"unit":{"type":"string","description":"celsius or fahrenheit","enum":["celsius","fahrenheit"]}},"required":["city","unit"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+
+event: response.in_progress
+data: {"type":"response.in_progress","response":{"id":"resp_09195f497d398fc5016ae8cece7d8887d19c581e549d0fa145","object":"response","created_at":1793642190,"status":"in_progress","access_programs":{"cyber":"standard"},"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":2048,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"medium","mode":"standard","summary":null},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Look up the current weather in a city.","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string","description":"the city to look up, such as Paris"},"unit":{"type":"string","description":"celsius or fahrenheit","enum":["celsius","fahrenheit"]}},"required":["city","unit"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","type":"function_call","status":"in_progress","arguments":"","call_id":"call_ijolnoxKmdIcAksEF2W1Da4r","name":"get_weather"},"output_index":0,"sequence_number":2}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"{\"","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"xiaH2evvX1caOu","output_index":0,"sequence_number":3}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"city","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"VOzEI7I443lY","output_index":0,"sequence_number":4}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"\":\"","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"ao7fDo0L2pXcG","output_index":0,"sequence_number":5}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"Paris","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"XTThAdAiPvZ","output_index":0,"sequence_number":6}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"\",\"","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"rCWdADX4DZU1i","output_index":0,"sequence_number":7}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"unit","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"CvQDepaQOQDw","output_index":0,"sequence_number":8}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"\":\"","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"37UuFeShISFOA","output_index":0,"sequence_number":9}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"c","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"mThEya3ekSGPV9k","output_index":0,"sequence_number":10}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"elsius","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"UeKolsFTts","output_index":0,"sequence_number":11}
+
+event: response.function_call_arguments.delta
+data: {"type":"response.function_call_arguments.delta","delta":"\"}","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","obfuscation":"NGi1uSZfkV0WXO","output_index":0,"sequence_number":12}
+
+event: response.function_call_arguments.done
+data: {"type":"response.function_call_arguments.done","arguments":"{\"city\":\"Paris\",\"unit\":\"celsius\"}","item_id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","output_index":0,"sequence_number":13}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","type":"function_call","status":"completed","arguments":"{\"city\":\"Paris\",\"unit\":\"celsius\"}","call_id":"call_ijolnoxKmdIcAksEF2W1Da4r","name":"get_weather"},"output_index":0,"sequence_number":14}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_09195f497d398fc5016ae8cece7d8887d19c581e549d0fa145","object":"response","created_at":1793642190,"status":"completed","access_programs":{"cyber":"standard"},"background":false,"completed_at":1793642191,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":2048,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[{"id":"fc_09195f497d398fc5016ae8cecf500087d19ecffe47bfe282ab","type":"function_call","status":"completed","arguments":"{\"city\":\"Paris\",\"unit\":\"celsius\"}","call_id":"call_ijolnoxKmdIcAksEF2W1Da4r","name":"get_weather"}],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"medium","mode":"standard","summary":null},"safety_identifier":null,"service_tier":"default","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Look up the current weather in a city.","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string","description":"the city to look up, such as Paris"},"unit":{"type":"string","description":"celsius or fahrenheit","enum":["celsius","fahrenheit"]}},"required":["city","unit"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":{"input_tokens":90,"input_tokens_details":{"cache_write_tokens":0,"cached_tokens":0},"output_tokens":23,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":113},"user":null,"metadata":{}},"sequence_number":15}
+

@@ -1,0 +1,17 @@
+{
+  "model": "gpt-no-such-model",
+  "max_output_tokens": 2048,
+  "store": false,
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "This request is never served."
+        }
+      ]
+    }
+  ]
+}

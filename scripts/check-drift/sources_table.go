@@ -125,7 +125,7 @@ var loopTargets = []loopTarget{
 	{"openai", livemodel.OpenAI, goodall.EffortLow},
 	{"openai", "gpt-6-astra", goodall.EffortLow},
 	{"openai", "gpt-6.1-sol", goodall.EffortLow},
-	{"openai", "gpt-6.1-terra", goodall.EffortLow},
+	{"openai", "gpt-6-luna", goodall.EffortLow},
 	{"openai", "gpt-6-luna", goodall.EffortOff},
 }
 

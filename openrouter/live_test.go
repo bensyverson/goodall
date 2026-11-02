@@ -250,46 +250,93 @@ func TestLiveCompleteAnswersWithoutStreaming(t *testing.T) {
 	}
 }
 
+// TestLiveOpenAIDialectRoundTrip takes one thinking tool call through two turns on
+// /v1/responses. goodall sends no include member, on the evidence that the
+// ciphertext arrives anyway, so the assertion on encrypted_content is what makes a
+// change to that loud. The server would accept a second turn with the reasoning
+// lost, so the second turn only shows the request is well formed; the replay's bytes
+// are held by the offline tests.
 func TestLiveOpenAIDialectRoundTrip(t *testing.T) {
-	// One streamed call to api.openai.com under the OpenAI dialect. It is
-	// the only test of the narrower body that dialect builds, and each of
-	// the three things asserted here was a refusal or a silent zero before
-	// the fixtures were recorded: max_completion_tokens rather than
-	// max_tokens, reasoning_effort rather than the reasoning object, and
-	// stream_options.include_usage, without which a streamed answer arrives
-	// with every token count at zero.
 	client := openrouter.New(
 		openrouter.WithAPIKey(liveKey(t, openAIKeyName)),
 		openrouter.WithBaseURL("https://api.openai.com/v1"),
 		openrouter.WithDialect(openrouter.OpenAI),
 	)
-
-	resp, err := client.Stream(t.Context(), &goodall.Request{
+	weather, err := goodall.NewTool("get_weather", "Look up the current weather in a city.",
+		func(_ context.Context, _ struct {
+			City string `json:"city"`
+		}) (goodall.ToolResult, error) {
+			return goodall.TextResult(""), nil
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// High, and arithmetic first: at low effort a plain question can draw no reasoning
+	// item at all, which would leave nothing here to assert on.
+	first := &goodall.Request{
 		Model:     livemodel.OpenAI,
 		MaxTokens: liveMaxTokens,
-		Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortLow},
-		Messages: []goodall.Message{goodall.UserMessage(
-			goodall.Text{Text: "A cyclist rides 40 km at 24 km/h, starting at 14:00. " +
-				"Answer in one short sentence: when do they finish?"},
-		)},
-	}).Collect()
+		Thinking:  goodall.ThinkingConfig{Effort: goodall.EffortHigh, Display: goodall.DisplaySummarized},
+		Tools:     []goodall.Tool{weather},
+		Messages: []goodall.Message{goodall.UserMessage(goodall.Text{Text: "A cyclist in Paris will ride 137 km at 23.4 km/h " +
+			"with two 18-minute stops, starting at 13:47. Work out to the minute when they finish, look up the weather there, " +
+			"and tell me whether they should expect rain during the ride."})},
+	}
+	resp, err := client.Stream(t.Context(), first).Collect()
 	if err != nil {
 		t.Fatalf("the live OpenAI-dialect call failed: %v", err)
 	}
-	t.Logf("openai: stop=%s input=%d output=%d reasoning=%d",
-		resp.StopReason, resp.Usage.Input, resp.Usage.Output, resp.Usage.Reasoning)
+	t.Logf("openai turn 1: model=%s stop=%s input=%d output=%d reasoning=%d",
+		livemodel.OpenAI, resp.StopReason, resp.Usage.Input, resp.Usage.Output, resp.Usage.Reasoning)
 
-	if resp.StopReason != goodall.StopEndTurn {
-		t.Errorf("stop reason = %s, want %s", resp.StopReason, goodall.StopEndTurn)
-	}
-	if resp.Message.Text() == "" {
-		t.Error("the live OpenAI-dialect call returned no text")
+	if resp.Cost.Reported {
+		t.Error("a cost was reported, though api.openai.com sends no figure")
 	}
 	if resp.Usage.Output == 0 {
-		t.Error("the live OpenAI-dialect call reported no output tokens; api.openai.com streams usage only when asked")
+		t.Error("the call reported no output tokens")
 	}
-	if resp.Cost.Reported {
-		t.Error("a cost was reported, though api.openai.com charges no figure on this API")
+	var encrypted int
+	for _, blk := range resp.Message.Content {
+		thinking, ok := blk.(goodall.Thinking)
+		if !ok {
+			continue
+		}
+		var item struct {
+			Encrypted string `json:"encrypted_content"`
+		}
+		if err := json.Unmarshal(thinking.Raw, &item); err != nil {
+			t.Fatalf("a reasoning item did not decode: %v", err)
+		}
+		encrypted += len(item.Encrypted)
+	}
+	t.Logf("openai turn 1: encrypted_content %d characters", encrypted)
+	if encrypted == 0 {
+		t.Fatal("no reasoning item carried encrypted_content, so nothing could be replayed")
+	}
+	uses := resp.Message.ToolUses()
+	if len(uses) == 0 {
+		t.Fatalf("the model answered without the tool: %q", resp.Message.Text())
+	}
+
+	var results goodall.Blocks
+	for _, use := range uses {
+		result := goodall.TextResult(`{"conditions":"light rain"}`)
+		result.ToolUseID = use.ID
+		results = append(results, result)
+	}
+	second := *first
+	second.Messages = append(append([]goodall.Message{}, first.Messages...), resp.Message, goodall.UserMessage(results...))
+	answer, err := client.Stream(t.Context(), &second).Collect()
+	if err != nil {
+		t.Fatalf("the replaying turn was refused: %v", err)
+	}
+	t.Logf("openai turn 2: stop=%s input=%d output=%d reasoning=%d",
+		answer.StopReason, answer.Usage.Input, answer.Usage.Output, answer.Usage.Reasoning)
+	if answer.StopReason != goodall.StopEndTurn {
+		t.Errorf("stop reason = %s, want %s", answer.StopReason, goodall.StopEndTurn)
+	}
+	if answer.Message.Text() == "" {
+		t.Error("the replaying turn returned no text")
 	}
 }
 

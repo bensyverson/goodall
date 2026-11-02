@@ -65,19 +65,11 @@ const OpenRouterOpenAI = "openai/gpt-6-astra"
 // OpenAI is the model the OpenAI-dialect recordings and live test use against
 // api.openai.com itself, rather than through OpenRouter.
 //
-// It is gpt-5.6-terra because that is the newest model GET
-// https://api.openai.com/v1/models offered this project's key on 2026-09-15
-// that can use function tools on /v1/chat/completions, which is the only
-// format this package speaks. The two newer reasoning models cannot: observed
-// the same day, /v1/chat/completions refuses function tools alongside any
-// reasoning effort above "none" (HTTP 400, "Function tools with
-// reasoning_effort are not supported … use /v1/responses or set
-// reasoning_effort to 'none'"), and gpt-6-astra's reasoning cannot be turned
-// off at all (HTTP 400, "'reasoning_effort' does not support 'none' with this
-// model"), so it can never carry a tool on this endpoint. gpt-5.6-terra's
-// effort ladder runs from none to max, so it serves all three of text, a tool
-// call and a reasoning answer.
-const OpenAI = "gpt-5.6-terra"
+// It is gpt-6.1-terra because one model can then serve both live paths: on
+// 2026-11-02, /v1/responses took efforts none, low and max from it (go run
+// ./scripts/probe-responses, effort_none and effort_max). gpt-6-astra and
+// gpt-6.1-sol refuse none with a 400, so neither could serve the thinking-off path.
+const OpenAI = "gpt-6.1-terra"
 
 // OpenRouterDecision is the non-Jev decision model the OpenRouter decision
 // recordings and live test use. It is GPT-6 Luna because it answered every

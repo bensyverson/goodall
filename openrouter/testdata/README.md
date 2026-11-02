@@ -3,7 +3,8 @@
 Two sets live here, and the file names say which is which.
 
 - **`live_*` — recorded**, by `go run ./scripts/record-fixtures -provider openrouter` and
-  `-provider openai`, from the live API. The Claude recordings were re-recorded on
+  `-provider openai`, from the live API. Run `-provider openai` with `-only`, one exchange
+  at a time, or it re-records the decision fixtures too. The Claude recordings were re-recorded on
   **2026-10-28**; the OpenAI one (`live_encrypted_reasoning_*`) dates from
   **2026-09-15**, and their request bodies show the older, easier cyclist question. Every byte of a `live_*.sse` or
   `live_*.json` came off the wire; the `live_*.request.json` beside each one is the body
@@ -23,6 +24,7 @@ Two sets live here, and the file names say which is which.
 | `live_encrypted_reasoning_tool_use*` | `openrouter.ai/api/v1` | `openai/gpt-6-astra` |
 | `live_decision_*` | `openrouter.ai/api/v1/systemone` and `/models` | `openai/gpt-6-luna-decisions`, `scaledown/classify-1` for the limit |
 | `live_openai_decision_*` | `api.openai.com/v1/decisions`, `Dialect: OpenAI` | `gpt-6-luna` |
+| `live_openai_*`, every other | `api.openai.com/v1/responses`, `Dialect: OpenAI` | `gpt-6.1-terra` |
 
 The constants and the reasons for each choice are in `internal/livemodel`.
 
@@ -43,6 +45,12 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_decision_model_limit.json` | Recorded 2026-11-02: `scaledown/classify-1` refusing an object state with a 400 that says so. |
 | `live_decision_schema_error.json` | Recorded 2026-11-02: an unknown question type, posted by hand since the typed API cannot build one. Its message is a JSON array inside a string, which `readableMessage` turns into sentences. |
 | `live_decision_models.json` | Recorded 2026-11-02: `GET /models?output_modalities=decisions`, 33 rows, no request file because it is a GET. |
+| `live_openai_text.sse` / `live_openai_text_blocking.json` | Recorded 2026-11-02: a one-line answer on the Responses wire, streamed and blocking. These and the rows below are read by `responses_fixtures_test.go`, and the chat tests leave every `live_openai_*` out. |
+| `live_openai_tool_use.sse` | Recorded 2026-11-02: a forced tool call, with `strict: false` stated. |
+| `live_openai_strict_tool_use.sse` | Recorded 2026-11-02: a tool sent with `strict: true` under `tool_choice` auto. |
+| `live_openai_thinking_tool_use.sse` + `_turn2` | Recorded 2026-11-02: reasoning and a tool call at high effort, then a second turn replaying the encrypted reasoning item. The server takes a request with that item missing and says nothing, so the test compares the bytes. |
+| `live_openai_image.sse` / `live_openai_pdf.sse` | Recorded 2026-11-02: `input_image` and `input_file`, built by the production client. |
+| `live_openai_error.json` | Recorded 2026-11-02: an unrecognized model id, HTTP 404 with `code: model_not_found`, where OpenRouter answers 400. |
 | `live_openai_decision_mixed.json` | Recorded 2026-11-02: OpenAI's own wire on `gpt-6-luna`, the question set and object state of `live_decision_mixed.json`, so the two wires can be compared. It read 433 input tokens and the same figures on both. No cost, id or host in the body. |
 | `live_openai_decision_criteria.json` | Recorded 2026-11-02: a predicate with true and false descriptions, folded into the instructions, over a string state. |
 | `live_openai_decision_one_option.json` | Recorded 2026-11-02: a choice with one option, refused with a 400 and a string `code`. |
@@ -78,8 +86,8 @@ committed (the regression tests are in `dialect_test.go`):
    `reasoning_effort` to `'none'`." It is refused on `gpt-6-astra` and `gpt-5.6-terra` alike,
    so the encrypted reasoning round trip here is recorded through OpenRouter, which routes
    upstream to `/v1/responses`. The OpenAI dialect itself left Chat Completions on
-   2026-11-02 and its chat recordings (`live_openai_text`, `_tool_use`, `_reasoning`,
-   `_strict_tool_use`) were removed; its own recordings are in
+   2026-11-02. Its chat recordings were replaced that day by the `live_openai_*` Responses
+   recordings above, some under the same names, and the probe's are in
    `scripts/probe-responses/testdata`.
 4. **An OpenAI model reasons on the turn that answers, not on the turn that calls a tool.**
    At `effort: "high"`, `openai/gpt-6-astra` returned `reasoning_tokens: 0` and no

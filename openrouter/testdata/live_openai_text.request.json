@@ -1,0 +1,18 @@
+{
+  "model": "gpt-6.1-terra",
+  "max_output_tokens": 2048,
+  "store": false,
+  "stream": true,
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Answer in one short sentence: what is the capital of France?"
+        }
+      ]
+    }
+  ]
+}

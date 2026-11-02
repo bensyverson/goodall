@@ -35,7 +35,8 @@ const (
 //
 // The request bodies the recorder writes beside each response end in
 // .request.json and are excluded: they are the input, not something a client
-// can be handed as an answer.
+// can be handed as an answer. So are the live_openai_ recordings, which are other
+// wires': responses_fixtures_test.go and decide_openai_fixtures_test.go read them.
 func recordedFixtures(t *testing.T, pattern string) []string {
 	t.Helper()
 	paths, err := filepath.Glob(filepath.Join("testdata", pattern))
@@ -45,7 +46,7 @@ func recordedFixtures(t *testing.T, pattern string) []string {
 	var names []string
 	for _, path := range paths {
 		name := filepath.Base(path)
-		if strings.HasSuffix(name, ".request.json") {
+		if strings.HasSuffix(name, ".request.json") || strings.HasPrefix(name, "live_openai_") {
 			continue
 		}
 		names = append(names, name)
@@ -121,10 +122,9 @@ func TestEveryRecordedBlockingResponseDecodes(t *testing.T) {
 			// asserted on where errors are.
 			continue
 		}
-		if strings.HasPrefix(name, "live_decision_") || strings.HasPrefix(name, "live_openai_decision_") {
-			// These are the decision wires', not completions, and
-			// decide_fixtures_test.go and decide_openai_fixtures_test.go
-			// read them.
+		if strings.HasPrefix(name, "live_decision_") {
+			// These are the decision wire's, not completions, and
+			// decide_fixtures_test.go reads them.
 			continue
 		}
 		t.Run(name, func(t *testing.T) {

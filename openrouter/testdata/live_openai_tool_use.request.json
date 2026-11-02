@@ -1,0 +1,51 @@
+{
+  "model": "gpt-6.1-terra",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "Look up the current weather in a city.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "the city to look up, such as Paris"
+          },
+          "unit": {
+            "type": "string",
+            "description": "celsius or fahrenheit",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ]
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": {
+    "type": "function",
+    "name": "get_weather"
+  },
+  "max_output_tokens": 2048,
+  "store": false,
+  "stream": true,
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "What is the weather in Paris right now?"
+        }
+      ]
+    }
+  ]
+}
