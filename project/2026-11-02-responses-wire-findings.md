@@ -60,5 +60,5 @@ A 200 here shows only that the request was accepted, since the plan records that
 ## Still open
 
 - **`decide/openrouter/nace-ai/drex-max` answered a 429 "Model busy, retry later" on 2 of the 5 drift runs on this date,** once for each state form. A row refused for capacity (`rate_limited`, `overloaded`, `server`) is now `NOT CHECKED` rather than drift, and the baseline keeps what it had.
-- **The error prefix says `openrouter:` on OpenAI's refusals,** since the package names the provider. Those two rows above read that way. Cosmetic, and left as is.
+- **The error prefix.** The rows above read `openrouter:` on OpenAI's refusals. Ruled the same day and fixed: `APIError.Provider`, `CapabilityError.Provider` and `ModelInfo.Provider` now name the client's dialect, so they read `openai:`. This breaks anyone comparing against `ProviderName` outside the OpenRouter dialect. `Extensions.Provider` keeps the package's name.
 - **Still never observed,** so only authored fixtures cover them: `response.failed`, the stream's `error` event, refusals and `content_filter`.

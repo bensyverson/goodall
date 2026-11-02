@@ -182,7 +182,7 @@ func TestARecordedOpenAIErrorSurfacesItsSentence(t *testing.T) {
 			if !ok {
 				t.Fatalf("error is %T, want *goodall.APIError: %v", err, err)
 			}
-			if apiErr.Provider != ProviderName || apiErr.Kind != goodall.KindInvalidRequest || apiErr.Status != http.StatusBadRequest {
+			if apiErr.Provider != OpenAI.String() || apiErr.Kind != goodall.KindInvalidRequest || apiErr.Status != http.StatusBadRequest {
 				t.Errorf("APIError = %+v", apiErr)
 			}
 			if apiErr.Message != tc.message {

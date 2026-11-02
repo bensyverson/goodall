@@ -37,6 +37,17 @@ const (
 // a caller never has to check for an error before ranging.
 func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Stream {
 	return func(yield func(goodall.Event, error) bool) {
+		for ev, err := range c.stream(ctx, req) {
+			if !yield(ev, c.named(err)) {
+				return
+			}
+		}
+	}
+}
+
+// stream is [Client.Stream] before any error is named.
+func (c *Client) stream(ctx context.Context, req *goodall.Request) goodall.Stream {
+	return func(yield func(goodall.Event, error) bool) {
 		body, header, err := c.requestBody(req, true)
 		if err != nil {
 			yield(nil, err)

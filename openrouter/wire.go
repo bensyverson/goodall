@@ -22,9 +22,9 @@ import (
 	"github.com/bensyverson/goodall"
 )
 
-// ProviderName is the name goodall knows this provider by. It is what an
-// [Extensions] value answers to goodall.Extension.Provider and what appears on
-// the errors this package raises.
+// ProviderName is the name goodall knows this package by, what an [Extensions]
+// value answers to goodall.Extension.Provider. An error or a model description
+// names the client's [Dialect] instead, since that is the server that answered.
 const ProviderName = "openrouter"
 
 // maxResponseBody bounds a catalog or decision response read into memory.

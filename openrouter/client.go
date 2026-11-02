@@ -3,6 +3,7 @@ package openrouter
 import (
 	"context"
 	json "encoding/json/v2"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -82,7 +83,7 @@ func New(opts ...Option) *Client {
 	for _, opt := range opts {
 		opt(c)
 	}
-	c.http.Provider = ProviderName
+	c.http.Provider = c.dialect.String()
 	c.http.Decode = errorDecoder
 	return c
 }
@@ -134,6 +135,25 @@ func (c *Client) Dialect() Dialect { return c.dialect }
 // choice carrying one, a failed status, or a body with no answer at all comes
 // back as a *[goodall.APIError].
 func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.Response, error) {
+	resp, err := c.complete(ctx, req)
+	return resp, c.named(err)
+}
+
+// named puts the server this client talks to on an error, whichever path built it.
+// The paths below it read a body and know no client, and a refusal from OpenAI is
+// not a refusal from OpenRouter.
+func (c *Client) named(err error) error {
+	if apiErr, ok := errors.AsType[*goodall.APIError](err); ok {
+		apiErr.Provider = c.dialect.String()
+	}
+	if capErr, ok := errors.AsType[*goodall.CapabilityError](err); ok {
+		capErr.Provider = c.dialect.String()
+	}
+	return err
+}
+
+// complete is [Client.Complete] before the error is named.
+func (c *Client) complete(ctx context.Context, req *goodall.Request) (*goodall.Response, error) {
 	body, header, err := c.requestBody(req, false)
 	if err != nil {
 		return nil, err

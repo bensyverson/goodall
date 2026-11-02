@@ -117,7 +117,7 @@ func TestDecideSurfacesEveryLocalServersSentence(t *testing.T) {
 			if apiErr.Type != tc.wantType {
 				t.Errorf("Type = %q, want %q", apiErr.Type, tc.wantType)
 			}
-			if apiErr.Provider != ProviderName {
+			if apiErr.Provider != LMStudio.String() {
 				t.Errorf("Provider = %q", apiErr.Provider)
 			}
 			if string(apiErr.Raw) != tc.body {

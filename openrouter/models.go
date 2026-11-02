@@ -124,9 +124,10 @@ func (c *Client) Model(ctx context.Context, id string) (*goodall.ModelInfo, erro
 	}
 	read, err := c.fetchCatalog(ctx)
 	if err != nil {
-		return nil, err
+		return nil, c.named(err)
 	}
-	return c.cacheCatalog(read, id)
+	info, err := c.cacheCatalog(read, id)
+	return info, c.named(err)
 }
 
 // catalogRead is one read of GET /models: the entries, and the facts about
@@ -158,6 +159,7 @@ func (c *Client) cacheCatalog(read *catalogRead, id string) (*goodall.ModelInfo,
 	var found *goodall.ModelInfo
 	for _, entry := range read.list.Data {
 		info := modelInfo(&entry)
+		info.Provider = c.dialect.String()
 		c.models[entry.ID] = info
 		if entry.CanonicalSlug != "" && entry.CanonicalSlug != entry.ID {
 			c.models[entry.CanonicalSlug] = info

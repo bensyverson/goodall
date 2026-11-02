@@ -54,6 +54,12 @@ var _ decision.Decider = (*Client)(nil)
 // after the server evaluated it; [WithMaxRetries] with a negative value gives
 // at-most-once behavior.
 func (c *Client) Decide(ctx context.Context, req *decision.Request) (*decision.Answers, error) {
+	answers, err := c.decide(ctx, req)
+	return answers, c.named(err)
+}
+
+// decide is [Client.Decide] before the error is named.
+func (c *Client) decide(ctx context.Context, req *decision.Request) (*decision.Answers, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
