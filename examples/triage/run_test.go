@@ -18,7 +18,7 @@ const (
 	cleanDraft   = "Hello Priya, a CSV export is on the reports screen next to the PDF one. Tell me if it is not there for your plan and I will check."
 	dirtyDraft   = "Hello, invoice 2214 belongs to purchase order INVENTED-4471 and we will credit you by Friday, PROMISED."
 	redraftDraft = "Hello, invoice 2214 belongs to purchase order INVENTED-4471; we are checking which of the two it should be."
-	finalAnswer  = "Twelve messages triaged. Two drafts written: one is ready and one needs you."
+	finalAnswer  = "Fourteen messages triaged. Two drafts written: one is ready and one needs you."
 )
 
 // scriptedRun is the whole cascade as three scripted providers: the parent
@@ -107,7 +107,7 @@ func TestAWholeRunOverTheSampleInboxPrintsTheReport(t *testing.T) {
 	if !strings.Contains(report, redraftDraft) {
 		t.Errorf("the escalated draft's own text is missing:\n%s", report)
 	}
-	// Every judgment is one call: twelve triage calls, three checks and
+	// Every judgment is one call: fourteen triage calls, three checks and
 	// the routing judgment.
 	if got, want := j.asked(qDepartment), sampleCount; got != want {
 		t.Errorf("%d triage calls, want %d", got, want)
@@ -186,7 +186,7 @@ func TestTheDelegateRunsUnderItsCallAndDeclaresWhatItSpent(t *testing.T) {
 
 	triage := ends[toolTriage]
 	if want := (goodall.Usage{Input: judgeInputTokens * sampleCount, Output: judgeOutputTokens * sampleCount}); triage.Usage != want {
-		t.Errorf("triage_inbox declared %+v, want the sum over its twelve calls %+v", triage.Usage, want)
+		t.Errorf("triage_inbox declared %+v, want the sum over its fourteen calls %+v", triage.Usage, want)
 	}
 	draft := ends[toolDraft]
 	if draft.Usage.Input != 310 {

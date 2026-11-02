@@ -18,7 +18,7 @@ const (
 	invoiceID   = "m04-invoice@brightlane.example"
 	colleagueID = "m05-colleague@harbourworks.example"
 	phishingID  = "m07-phishing@harbour-secure-verify.test"
-	sampleCount = 12
+	sampleCount = 14
 )
 
 // sampleInbox reads the bundled sample the way the command does with no flags.

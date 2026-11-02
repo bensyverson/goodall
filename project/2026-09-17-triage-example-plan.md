@@ -53,6 +53,35 @@ The owner passed on a Reddit post, [10 Jev Commandments](https://www.reddit.com/
 >
 > **The owner's Apple Mail store:** `go run ./examples/triage -source apple -path ~/Library/Mail/V10 -n 30`. Exit 0 in 1m33s over a store of tens of thousands of files, the newest thirty across every inbox; **no file was skipped**, `.partial.emlx` included. Routes: 24 other, 4 personal, 1 billing, 1 sales, which fits a personal inbox that is mostly newsletters and notifications. Urgent: none, correctly. Needs a reply: five, and here the question is too generous: a professional-network notification, a fundraising appeal, a survey reminder and a trademark-services solicitation all scored 0.60 to 0.82 because the True criterion, "asked for something only the recipient can give", is satisfied by any call to action from a company. The parent drafted replies for three of the five and let the others go, one redraft, none escalated. Spend: 34 judgments in 5 tool calls at 29,997 judge input tokens; parent 110,006 in, 6,331 out. Filed as an issue: sharpen `needs_reply` so a mass mailing or a company's call to action is a no, and measure the change over repeated runs; and note that the department rubric describes a small software company, so a personal inbox lands mostly in other, which is honest rather than wrong. The reader found no defect on real mail. **A Postfix mbox:** `go run ./examples/triage -source mbox -path local/<copy>`, a three-message copy of a `/var/mail` file the owner supplied, whose From_ separators carry Postfix's two spaces before the date. Exit 0 in under ten seconds; all three listed with their 2015 dates, all three routed other with no reply needed, so no draft was written; 3 judgments in 1 tool call at 2,530 judge input tokens. The mbox reader had no defect either.
 
+> **Measured 2026-11-02 (`QVt82X`): `needs_reply` sharpened.** The shipping question's criteria changed, and mail you did not reply to now draws about half as many yeses with no loss on mail you did. Everything here is aggregate; senders and subjects stayed under the gitignored `local/`.
+>
+> ```
+> TRIAGE_MEASURE_STORE=$HOME/Library/Mail/V10 TRIAGE_MEASURE_OUT=$PWD/local/needs-reply TRIAGE_MEASURE_RUNS=1 \
+>   go test -v -count=1 -timeout 60m -run TestMeasureNeedsReply ./examples/triage
+> ```
+>
+> **Why not the newest 30.** The owner pointed out that the newest messages change week to week, so runs on them cannot be compared. The sample is drawn once from the newest 6,000 inbox messages, by a hash of each id, and its ids are kept in `local/`. It went to `jev-1.13.0` only, with the shipping question set and the 400-character snippet, and no parent model. **No message was labeled by anyone.** The strata are signals: `replied` is a message the owner's Sent mail answers by `In-Reply-To`, `bulk` carries a list or auto-submission header, `automated` comes from a no-reply address, and `other` is the rest.
+>
+> **The rule, fixed before the 603-message run:** adopt a wording only if yeses on mail not replied to fall by at least 25%, and yeses on replied mail lose no more than 5 percentage points. Each model answer below is one call.
+>
+> | Yes at 0.60 | Pool | Sampled | Baseline | `criteria`, shipped | `question` |
+> |---|---|---|---|---|---|
+> | `replied` | 103 | 103 | 71 | 71 | 72 |
+> | `bulk` | 4,128 | 200 | 12 | 7 | 6 |
+> | `automated` | 704 | 100 | 7 | 4 | 3 |
+> | `other` | 1,045 | 200 | 31 | 16 | 16 |
+> | Not replied, total | | 500 | 50 | **27, down 46%** | 25, down 50% |
+>
+> `criteria` changes the True and False descriptions, and `question` also changes the question. `question` passes too, and it won by 2 messages out of 500, which is not a difference this run can resolve. `criteria` shipped because it changes less and holds up better if the threshold is ever raised: at 0.80, replied yeses are 66, 59 and 52. The threshold stays at 0.60. Against baseline, `criteria` moved 28 messages from yes to no and 5 from no to yes, 2 of each kind among `replied`.
+>
+> **What this does not show.**
+> - **Whether the 16 `other` messages that dropped to no deserved it.** That stratum mixes people and companies. Not replying is not the same as not needing a reply, so the owner can check them in `local/needs-reply/review.tsv`, with the arms' scores per message.
+> - **Whether the named September cases were fixed on real mail.** They were not in this sample by name. Their shape is tested below.
+> - **That the verdict is now precise.** This sample over-represents `replied`. Weighting each stratum's rate by its pool, an estimate from rates as low as 3.5%, about 330 of the 6,000 would be yes against about 530 before, and about 78% of those yeses would land on mail with no reply against about 87%. Some of that mail may have needed one; a reply is a signal, not a label.
+> - **Stability beyond this model.** `jev-1.13.0` answered identically on 3 runs of each of 3 arms over a first sample of 140, which is why one run sufficed. Thresholds do not travel, so another judge would need its own run.
+>
+> **The regression.** The bundled inbox gained a fundraising appeal and a survey reminder, each written as if a person were waiting, and it now holds 14 messages. `TestLiveNeedsReplyOnTheBundledInbox`, in the plain `go test`, asks about the nine bundled messages with an unambiguous answer. On the old wording it failed on both new messages, at 0.96 and 0.88. On the new wording it passes, with those at 0.14 and 0.07. The measurement sits in `examples/triage` rather than `scripts/`, on purpose: the package is `main`, and a script could only have asked a copy of the question set.
+
 ## Task tree
 
 Imported into `job` under its own root. Files are disjoint across the parallel leaves; the agent leaf waits for both.

@@ -125,8 +125,8 @@ func triageQuestions() decision.Questions {
 		}},
 		{ID: string(qNeedsReply), Question: decision.Predicate{
 			Instructions: "Is this message waiting on a written answer from the person who received it?",
-			True:         "The sender asked a question, asked for a decision, or asked for something only the recipient can give, and nothing in the message says it was already answered.",
-			False:        "The message is a receipt, a notification, a newsletter, an automated report, or a note that closes a thread; a reply would add nothing.",
+			True:         "A particular person wrote to this recipient and is waiting on their words: a question, a decision or a request that only a reply from them can settle, not yet answered.",
+			False:        "It went out to many people or from a company's system, so no one is waiting on this recipient's words: a receipt, a notification, a newsletter, a solicitation, an appeal, a survey, or any call to action answered by clicking, paying or ignoring it. Or it is a note that closes a thread.",
 		}},
 		{ID: string(qIsUrgent), Question: decision.Predicate{
 			Instructions: "Would a day's delay in answering this message cost the sender or the recipient something real?",

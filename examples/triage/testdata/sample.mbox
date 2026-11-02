@@ -259,3 +259,45 @@ Backup 2026-03-13 completed in 11 minutes. 4 volumes, no errors, and
 the restore check passed on the smallest of them.
 
 This message is generated nightly.
+
+From appeal@tidewatertrust.example Fri Mar 13 09:00:00 2026
+Return-path: <appeal@tidewatertrust.example>
+From: Dana Whitlock at Tidewater Trust <appeal@tidewatertrust.example>
+To: you@harbourworks.example
+Subject: Will you stand with us before Friday?
+Date: Fri, 13 Mar 2026 09:00:00 +0000
+Message-ID: <m13-appeal@tidewatertrust.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Dear friend,
+
+Our spring campaign closes on Friday and we are still short of our goal.
+We need your help. Can we count on you? A gift of any size keeps the
+estuary program running for another year.
+
+Please give today at the link below.
+
+Dana Whitlock
+Director of Giving, Tidewater Trust
+
+From research@surveyloop.example Sat Mar 14 10:30:00 2026
+Return-path: <research@surveyloop.example>
+From: Marco at SurveyLoop <research@surveyloop.example>
+To: you@harbourworks.example
+Subject: Reminder: we would still love your feedback
+Date: Sat, 14 Mar 2026 10:30:00 +0000
+Message-ID: <m14-survey@surveyloop.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Hi there,
+
+We have not heard from you yet. Could you spare three minutes to tell us
+how your team handles vendor reviews? Your answers shape what we build
+next, and only you can give your perspective.
+
+Take the survey here before the end of the month.
+
+Thanks,
+Marco
