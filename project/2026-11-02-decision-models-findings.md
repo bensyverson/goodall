@@ -182,6 +182,15 @@ The other wire does not have this rule: System One takes any JSON, so a list of 
 
 An object state reads alike on both wires. The recorded mixed exchange, the same ticket and questions on each, came back with 433 input tokens on both and identical figures (`openrouter/testdata/live_decision_mixed.json` against `live_openai_decision_mixed.json`, held together by `TestBothWiresReadAsTheSameNeutralShapes`).
 
+> **Added 2026-11-02 (`HHn1fo`): one description without the other.** `go run ./scripts/probe-predicate-criteria -env /abs/.env -runs 3`, through each production client. Only OpenRouter refuses it. So goodall documents the pairing, in the field a model fills, and does not validate it locally, which would refuse what three backends accept.
+>
+> | Backend | Both | True only | False only |
+> |---|---|---|---|
+> | TypeSafe | 3 of 3 | 3 of 3 | 3 of 3 |
+> | OpenRouter | 3 of 3 | **0 of 3**, 400 `criteria.false: Invalid input` | **0 of 3**, 400 `criteria.true: Invalid input` |
+> | OpenAI | 3 of 3 | 3 of 3 | 3 of 3 |
+> | LM Studio, `julia-1` | 3 of 3 | 3 of 3 | 3 of 3 |
+
 ### Predicate criteria: folded
 
 **`True` and `False` are written into the instructions: the question, a blank line, then `True: …` and `False: …` on a line each, leaving out one that is empty.** A question written for Jev and a question written for Luna are then the same value, which is the goal, and a developer does not need to know this wire has no member for them. Refusal would have broken that for an option the neutral type advertises and `AuthoredTool` offers to a model. It was the fallback if folding measured badly.

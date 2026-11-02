@@ -56,3 +56,10 @@ func TestARowSaysWhichTurnReasoned(t *testing.T) {
 		t.Errorf("row = %s", got)
 	}
 }
+
+func TestAStoppedRunKeepsItsErrorKind(t *testing.T) {
+	provider := &fake.Provider{Script: []fake.Turn{{Err: &goodall.APIError{Status: 429, Kind: goodall.KindRateLimited, Message: "busy"}}}}
+	if got := AgentLoop(t.Context(), provider, "m", goodall.EffortLow); got.Kind != goodall.KindRateLimited {
+		t.Errorf("Kind = %q, want %q", got.Kind, goodall.KindRateLimited)
+	}
+}

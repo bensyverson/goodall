@@ -10,7 +10,6 @@ import (
 	json "encoding/json/v2"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/bensyverson/goodall"
@@ -101,7 +100,7 @@ func (c *Client) postDecision(ctx context.Context, path string, body []byte) ([]
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
-	raw, err := io.ReadAll(resp.Body)
+	raw, err := readResponseBody(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 )
 
 func TestModelMapsTheCatalogEntry(t *testing.T) {
@@ -250,4 +251,70 @@ func TestAModelTheCatalogDoesNotListIsLookedUpAgain(t *testing.T) {
 	if fetches != 2 {
 		t.Errorf("the catalog was fetched %d times, want one per miss", fetches)
 	}
+}
+
+// LM Studio answers a path it does not route with a 200 and an error in the body.
+// A list decode takes that as a catalog with no models, and a caller reads "no such
+// model" about a server that never looked.
+func TestACatalogAnsweredWithAnErrorIsThatError(t *testing.T) {
+	for name, body := range map[string]string{
+		"object": `{"error":{"message":"the catalog is down"}}`,
+		"string": `{"error":"the catalog is down"}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			c := testClient(t, func(w http.ResponseWriter, _ *http.Request) {
+				w.Write([]byte(body))
+			})
+			for call, err := range map[string]error{
+				"Model":          func() error { _, err := c.Model(t.Context(), "any/model"); return err }(),
+				"DecisionModels": func() error { _, err := c.DecisionModels(t.Context()); return err }(),
+			} {
+				apiErr, ok := errors.AsType[*goodall.APIError](err)
+				if !ok {
+					t.Fatalf("%s: error is %T, want *goodall.APIError: %v", call, err, err)
+				}
+				if apiErr.Message != "the catalog is down" {
+					t.Errorf("%s: Message = %q", call, apiErr.Message)
+				}
+			}
+		})
+	}
+}
+
+// An empty catalog is a real answer, and the error path must leave it alone.
+func TestAnEmptyCatalogIsNotAnError(t *testing.T) {
+	c := testClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte(`{"data":[]}`))
+	})
+	models, err := c.DecisionModels(t.Context())
+	if err != nil || len(models) != 0 {
+		t.Errorf("models = %v, err = %v", models, err)
+	}
+}
+
+// A server is not trusted to bound its own answer. The padding comes first so the
+// truncated body can only be refused, where an unbounded read would decode it.
+func TestAnOversizedBodyIsRefusedRatherThanRead(t *testing.T) {
+	oversized := []byte(`{"padding":"` + strings.Repeat("x", maxResponseBody) + `","data":[],"answers":{}}`)
+	c := testClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.Write(oversized)
+	})
+	check := func(call string, err error) {
+		t.Helper()
+		protocol, ok := errors.AsType[*goodall.ProtocolError](err)
+		if !ok {
+			t.Fatalf("%s: error is %T, want *goodall.ProtocolError: %v", call, err, err)
+		}
+		if !strings.Contains(protocol.Reason, "16 MiB") {
+			t.Errorf("%s: Reason = %q, want it to say the limit", call, protocol.Reason)
+		}
+	}
+	_, err := c.DecisionModels(t.Context())
+	check("DecisionModels", err)
+	_, err = c.Decide(t.Context(), &decision.Request{
+		Model:     "m",
+		State:     "s",
+		Questions: decision.Questions{{ID: "q", Question: decision.Predicate{Instructions: "?"}}},
+	})
+	check("Decide", err)
 }

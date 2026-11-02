@@ -54,9 +54,11 @@ type Predicate struct {
 	// Instructions is the yes-or-no question to evaluate, such as "Does
 	// this convey urgency?".
 	Instructions string
-	// True describes what a yes, a value near 1, means. Optional.
+	// True describes what a yes, a value near 1, means. Give both True and False or
+	// neither to work on every server: OpenRouter refuses one without the other with
+	// a 400, where TypeSafe, OpenAI and LM Studio accept it.
 	True string
-	// False describes what a no, a value near 0, means. Optional.
+	// False describes what a no, a value near 0, means. See True on giving both.
 	False string
 }
 

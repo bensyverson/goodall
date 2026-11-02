@@ -192,7 +192,22 @@ func (r *liveRun) do(ctx context.Context, j job) {
 	row := j.run(ctx)
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if row.Unreached {
+		r.o.skippedLive = append(r.o.skippedLive, j.row)
+		r.o.gaps = append(r.o.gaps, gap{Check: checkLive, Name: j.row, Reason: "the vendor had no capacity: " + row.Detail})
+		return
+	}
 	r.o.live[j.row] = row
+}
+
+// unreached reports whether a refusal says the vendor could not serve the call,
+// rather than saying anything about the call.
+func unreached(kind goodall.ErrorKind) bool {
+	switch kind {
+	case goodall.KindRateLimited, goodall.KindOverloaded, goodall.KindServer:
+		return true
+	}
+	return false
 }
 
 // available reports whether a wire has a key, and records a gap when it does not.
@@ -229,7 +244,7 @@ func (r *liveRun) loopJobs() []job {
 				if result.Passed() {
 					return liveRow{Outcome: outcomePass, Detail: result.String()}
 				}
-				return liveRow{Outcome: outcomeFail, Detail: result.String()}
+				return liveRow{Outcome: outcomeFail, Detail: result.String(), Unreached: unreached(result.Kind)}
 			},
 		})
 	}
@@ -286,7 +301,11 @@ func (r *liveRun) decide(ctx context.Context, client decision.Decider, model str
 	answers, err := client.Decide(ctx, &decision.Request{Model: model, State: state, Questions: conformance.Questions})
 	if err != nil {
 		r.budget.charge(goodall.Cost{}, goodall.Usage{})
-		return liveRow{Outcome: outcomeFail, Detail: err.Error()}
+		var kind goodall.ErrorKind
+		if apiErr, ok := errors.AsType[*goodall.APIError](err); ok {
+			kind = apiErr.Kind
+		}
+		return liveRow{Outcome: outcomeFail, Detail: err.Error(), Unreached: unreached(kind)}
 	}
 	r.budget.charge(answers.Cost, goodall.Usage{Input: answers.Usage.Input, Output: answers.Usage.Output})
 	_, errChoice := answers.Choice("department")

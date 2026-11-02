@@ -49,6 +49,8 @@ type Result struct {
 	TurnReasoning []int
 	// Failure says what stopped the run, empty for one that finished.
 	Failure string
+	// Kind classifies what stopped the run, empty for one that finished.
+	Kind goodall.ErrorKind
 }
 
 // Passed reports whether the run called the tool and finished. A model that answers
@@ -104,6 +106,7 @@ func AgentLoop(ctx context.Context, provider goodall.Provider, model string, eff
 			return result
 		case goodall.Stopped:
 			result.Failure = fmt.Sprintf("cause=%s kind=%s: %s", e.Cause, e.Kind, clip(e.Message))
+			result.Kind = e.Kind
 			return result
 		}
 	}

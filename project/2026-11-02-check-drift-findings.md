@@ -77,3 +77,5 @@ launchctl kickstart gui/$(id -u)/com.bensyverson.goodall.drift-check    # one ru
 The log is `local/drift-check.log`. The Skill reports and files, and leaves its report uncommitted for the owner, who also runs `-accept`. Until then, the same findings come back each week.
 
 **Installed and tested on 2026-11-02.** The owner ran the commands above, and the `kickstart` run under launchd finished with `last exit code = 0` (`launchctl print gui/$(id -u)/com.bensyverson.goodall.drift-check`): no drift, nothing unchecked, nothing filed, USD 0.008466183 reported across 54 of 75 calls. That run had nothing to judge, so the Skill's judgment has only been exercised by [the rehearsal](2026-11-02-drift-report-rehearsal.md). It has not yet fired on the calendar.
+
+> **Added 2026-11-02.** A live row refused with `rate_limited`, `overloaded` or `server` is now reported as `NOT CHECKED` with the vendor's words, and the baseline keeps what it had. `decide/openrouter/nace-ai/drex-max` raised false drift on 2 of 5 runs that day with a 429, "Model busy, retry later". The cost: a row that stays refused never reads as drift, only as a hole in every report.

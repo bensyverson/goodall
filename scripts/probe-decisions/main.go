@@ -41,6 +41,7 @@ import (
 	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/internal/dotenv"
 	"github.com/bensyverson/goodall/internal/livemodel"
+	"github.com/bensyverson/goodall/internal/redact"
 	"github.com/bensyverson/goodall/internal/systemone"
 	"github.com/bensyverson/goodall/openrouter"
 	"github.com/bensyverson/goodall/typesafe"
@@ -349,7 +350,7 @@ func post(ctx context.Context, call rawCall) (int, []byte, error) {
 // save writes one raw body, naming it safely for a model id with slashes.
 func save(dir, name string, body []byte) {
 	name = strings.NewReplacer("/", "_", ":", "_", "~", "_").Replace(name)
-	if err := os.WriteFile(filepath.Join(dir, name+".json"), body, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, name+".json"), redact.Account(body), 0o644); err != nil {
 		fmt.Fprintln(os.Stderr, "save:", err)
 	}
 }
@@ -357,6 +358,7 @@ func save(dir, name string, body []byte) {
 // clip bounds a body printed to the terminal; the whole one is in -out.
 func clip(body []byte) string {
 	const limit = 1800
+	body = redact.Account(body)
 	if len(body) > limit {
 		return string(body[:limit]) + "…"
 	}

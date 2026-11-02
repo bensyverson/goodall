@@ -27,6 +27,9 @@ import (
 // the errors this package raises.
 const ProviderName = "openrouter"
 
+// maxResponseBody bounds a catalog or decision response read into memory.
+const maxResponseBody = 16 << 20 // 16 MiB
+
 // role is a chat message's role. OpenRouter also accepts "developer", which
 // goodall has no neutral concept for and so never sends.
 type role string

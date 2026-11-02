@@ -54,6 +54,9 @@ type liveRow struct {
 	Outcome outcome
 	// Detail is what a reader needs to act on it, never compared.
 	Detail string
+	// Unreached means the vendor had no capacity for the call, so the row says
+	// nothing either way and is reported as not checked.
+	Unreached bool
 }
 
 // gap is something this run did not check.

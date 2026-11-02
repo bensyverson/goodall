@@ -13,6 +13,7 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/internal/claudename"
+	"github.com/bensyverson/goodall/internal/systemone"
 	"github.com/bensyverson/goodall/internal/transport"
 )
 
@@ -196,7 +197,7 @@ func (c *Client) readCatalog(ctx context.Context, url string) (*catalogRead, err
 	}
 	defer resp.Body.Close()
 
-	raw, err := io.ReadAll(resp.Body)
+	raw, err := readResponseBody(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +208,29 @@ func (c *Client) readCatalog(ctx context.Context, url string) (*catalogRead, err
 		}
 		return nil, fmt.Errorf("openrouter: decoding the models catalog: %w", err)
 	}
+	// A list decode succeeds on any object, so an error in a 200 reads as no models.
+	if len(read.list.Data) == 0 {
+		if apiErr := decodeError(0, resp.Header, raw); apiErr != nil {
+			return nil, apiErr
+		}
+		if message := systemone.ErrorMessage(raw); message != "" {
+			return nil, inBodyError(&wireError{Message: message}, resp.Header, raw)
+		}
+	}
 	return read, nil
+}
+
+// readResponseBody reads a body that is decoded whole, refusing one past
+// [maxResponseBody] rather than holding whatever a server chooses to send.
+func readResponseBody(body io.Reader) ([]byte, error) {
+	raw, err := io.ReadAll(io.LimitReader(body, maxResponseBody+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(raw) > maxResponseBody {
+		return nil, &goodall.ProtocolError{Reason: "the response is larger than the 16 MiB this client reads"}
+	}
+	return raw, nil
 }
 
 // modelInfo maps one catalog entry onto the neutral description.

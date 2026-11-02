@@ -36,9 +36,9 @@ type authoredQuestion struct {
 	// Instructions is the question itself.
 	Instructions string `json:"instructions" desc:"the question to judge, as the exact condition you mean: the judge reads this literally and answers only what these words ask"`
 	// True describes what a yes means, on a predicate.
-	True string `json:"true,omitzero" desc:"predicate only, optional: what a yes means here"`
+	True string `json:"true,omitzero" desc:"predicate only: what a yes means here; give both true and false or neither, since some servers refuse one alone"`
 	// False describes what a no means, on a predicate.
-	False string `json:"false,omitzero" desc:"predicate only, optional: what a no means here"`
+	False string `json:"false,omitzero" desc:"predicate only: what a no means here; give both true and false or neither, since some servers refuse one alone"`
 	// Options are the options to choose between, on a choice question.
 	Options []authoredOption `json:"options,omitzero" desc:"choice only: name every option the state could fall into, and add a none-of-the-above option when the list might not cover it"`
 	// Levels are the rubric, on a score question.

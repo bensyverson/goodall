@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/bensyverson/goodall"
 )
 
 func TestNoKeysMeansEveryLiveRowIsAGapAndNoCallIsMade(t *testing.T) {
@@ -126,6 +128,39 @@ func TestEveryLoopTargetsWireHasAKeyAndAKnownWire(t *testing.T) {
 		}
 		if !slices.ContainsFunc(wires, func(w wire) bool { return w.Name == target.Wire }) {
 			t.Errorf("%s is not a wire", target.Wire)
+		}
+	}
+}
+
+// A vendor out of capacity says nothing about its API. Calling that a failure would
+// raise drift on a row that works, and accepting it would write the bad hour down.
+func TestARowTheVendorHadNoCapacityForIsAGapNotAFailure(t *testing.T) {
+	limit, _ := newBudget("1", 5)
+	o := observation{live: map[string]liveRow{}}
+	run := &liveRun{budget: limit, o: &o}
+	run.do(t.Context(), job{row: "decide/x/y/text", run: func(context.Context) liveRow {
+		return liveRow{Outcome: outcomeFail, Detail: "HTTP 429: Model busy", Unreached: true}
+	}})
+	if _, ok := o.live["decide/x/y/text"]; ok {
+		t.Errorf("the row was compared: %+v", o.live)
+	}
+	if !slices.Contains(o.skippedLive, "decide/x/y/text") || len(o.gaps) != 1 || !strings.Contains(o.gaps[0].Reason, "Model busy") {
+		t.Errorf("skipped %v, gaps %+v", o.skippedLive, o.gaps)
+	}
+}
+
+func TestOnlyARefusalForCapacityIsUnreached(t *testing.T) {
+	for kind, want := range map[goodall.ErrorKind]bool{
+		goodall.KindRateLimited:    true,
+		goodall.KindOverloaded:     true,
+		goodall.KindServer:         true,
+		goodall.KindInvalidRequest: false,
+		goodall.KindNotFound:       false,
+		goodall.KindUnauthorized:   false,
+		goodall.KindUnknown:        false,
+	} {
+		if got := unreached(kind); got != want {
+			t.Errorf("unreached(%s) = %v, want %v", kind, got, want)
 		}
 	}
 }

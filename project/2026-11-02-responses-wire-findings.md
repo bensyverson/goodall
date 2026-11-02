@@ -48,7 +48,7 @@ So the exchange now records three turns. One run each, same command:
 
 A 200 here shows only that the request was accepted, since the plan records that the server also takes a request with the reasoning lost. That it was carried is held by `TestTheRecordedResponsesTurnReplaysItsReasoningByteForByte`, over `gpt-6.1-terra`'s committed recording.
 
-**Worth knowing for a future reader of the drift check:** a passing `loop/openai/*` row at low effort usually replays nothing, so it would not catch lost reasoning on those models.
+**Worth knowing for a future reader of the drift check:** a passing `loop/openai/*` row says nothing about reasoning replay. At low effort it usually replays nothing, and a row that did replay would still pass with the reasoning lost, since the server does not complain. Only the offline tests hold it.
 
 ## What changed from the plan
 
@@ -59,6 +59,6 @@ A 200 here shows only that the request was accepted, since the plan records that
 
 ## Still open
 
-- **`decide/openrouter/nace-ai/drex-max` answered a 429 "Model busy, retry later" on 2 of the 5 drift runs on this date,** once for each state form. The other runs passed, so the baseline still says pass. It will read as drift when it recurs, including in the scheduled run. It is the vendor's capacity and no change to goodall's wire.
+- **`decide/openrouter/nace-ai/drex-max` answered a 429 "Model busy, retry later" on 2 of the 5 drift runs on this date,** once for each state form. A row refused for capacity (`rate_limited`, `overloaded`, `server`) is now `NOT CHECKED` rather than drift, and the baseline keeps what it had.
 - **The error prefix says `openrouter:` on OpenAI's refusals,** since the package names the provider. Those two rows above read that way. Cosmetic, and left as is.
 - **Still never observed,** so only authored fixtures cover them: `response.failed`, the stream's `error` event, refusals and `content_filter`.

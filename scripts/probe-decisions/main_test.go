@@ -1,7 +1,10 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/bensyverson/goodall"
@@ -72,5 +75,22 @@ func TestTallyCountsReadableCallsAndWhatTheyCost(t *testing.T) {
 	}
 	if !cost.Reported || cost.Amount.Cmp(amount.MulInt(2)) != 0 {
 		t.Errorf("cost = %+v, want a reported 1", cost)
+	}
+}
+
+// OpenRouter's error envelopes name the account behind the key, and this probe's
+// output gets pasted into notes.
+func TestAProbedBodyCarriesNoAccountID(t *testing.T) {
+	body := []byte(`{"error":{"message":"nope"},"user_id":"user_abc123"}`)
+	dir := t.TempDir()
+	save(dir, "raw_x", body)
+	saved, err := os.ReadFile(filepath.Join(dir, "raw_x.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, got := range map[string]string{"saved": string(saved), "printed": clip(body)} {
+		if strings.Contains(got, "user_abc123") {
+			t.Errorf("the %s body carries the account id: %s", name, got)
+		}
 	}
 }
