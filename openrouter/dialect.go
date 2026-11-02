@@ -84,6 +84,18 @@ const (
 	StrictToolsWithAnthropicBeta StrictToolStyle = "member_anthropic_beta"
 )
 
+// DecisionWire is how a dialect answers [Client.Decide]. The zero value is
+// [DecisionWireSystemOne], the one wire every local server checked serves, which
+// is the safe answer for a server this package has never heard of.
+type DecisionWire string
+
+const (
+	// DecisionWireSystemOne posts the System One shape.
+	DecisionWireSystemOne DecisionWire = ""
+	// DecisionWireRefused refuses the call before anything is sent.
+	DecisionWireRefused DecisionWire = "refused"
+)
+
 // Quirks is what one dialect accepts. It is a struct rather than a map so the
 // set of questions is fixed, the answers are typed, and a new question is a
 // compile error in the table below rather than a silently missing key.
@@ -125,6 +137,13 @@ type Quirks struct {
 	// StrictTools is how a strict tool is carried, or whether it is
 	// refused.
 	StrictTools StrictToolStyle
+	// DecisionWire is how a decision request is carried, or whether it is
+	// refused.
+	DecisionWire DecisionWire
+	// DecisionModelRequired is whether a decision request with no model is
+	// refused locally. A local server may have only one model loaded and
+	// ignore the member, so whether one is needed is the server's call there.
+	DecisionModelRequired bool
 }
 
 // Quirks is what this dialect accepts. The table:
@@ -142,6 +161,8 @@ type Quirks struct {
 //	Metadata            yes         yes               no          no
 //	UsageCost           yes         no                no          no
 //	StrictTools         + beta      member            refused     refused
+//	DecisionWire        System One  refused           System One  System One
+//	DecisionModelReq…   yes         no                no          no
 func (d Dialect) Quirks() Quirks {
 	switch d {
 	case OpenRouter:
@@ -156,6 +177,8 @@ func (d Dialect) Quirks() Quirks {
 			Metadata:         true,
 			UsageCost:        true,
 			StrictTools:      StrictToolsWithAnthropicBeta,
+
+			DecisionModelRequired: true,
 		}
 	case OpenAI:
 		return Quirks{
@@ -164,6 +187,8 @@ func (d Dialect) Quirks() Quirks {
 			StreamUsage: true,
 			Metadata:    true,
 			StrictTools: StrictToolsMember,
+
+			DecisionWire: DecisionWireRefused,
 		}
 	case LMStudio:
 		return Quirks{Reasoning: ReasoningEffortField, StreamUsage: true}

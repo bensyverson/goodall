@@ -22,6 +22,7 @@ Two sets live here, and the file names say which is which.
 | `live_tool_use*` | `openrouter.ai/api/v1` | `anthropic/claude-haiku-5.5`, which still accepts a forced `tool_choice` |
 | `live_encrypted_reasoning_tool_use*` | `openrouter.ai/api/v1` | `openai/gpt-6-astra` |
 | `live_openai_*` | `api.openai.com/v1`, `Dialect: OpenAI` | `gpt-5.6-terra` |
+| `live_decision_*` | `openrouter.ai/api/v1/systemone` and `/models` | `openai/gpt-6-luna-decisions`, `scaledown/classify-1` for the limit |
 
 The constants and the reasons for each choice are in `internal/livemodel`.
 
@@ -40,6 +41,12 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_openai_text.sse`, `live_openai_tool_use.sse`, `live_openai_reasoning.sse` | The OpenAI dialect against api.openai.com: text, a forced tool call, and a reasoning answer. |
 | `live_strict_tool_use.sse` | Recorded 2026-10-29: a tool sent with `function.strict` under `tool_choice` auto on Claude, with the `X-Anthropic-Beta` header OpenRouter needs before it forwards the flag (headers are not captured; the unit tests assert it). |
 | `live_openai_strict_tool_use.sse` | Recorded 2026-10-29: the same strict call against api.openai.com, every parameter required as OpenAI's strict mode demands, with reasoning off. |
+| `live_decision_mixed.json` | Recorded 2026-11-02: the System One wire on `openai/gpt-6-luna-decisions`, one question of each type over an object state, with the `id`, `provider` and `usage.cost` OpenRouter adds. It cost $0.0000433. |
+| `live_decision_model_limit.json` | Recorded 2026-11-02: `scaledown/classify-1` refusing an object state with a 400 that says so. |
+| `live_decision_schema_error.json` | Recorded 2026-11-02: an unknown question type, posted by hand since the typed API cannot build one. Its message is a JSON array inside a string, which `readableMessage` turns into sentences. |
+| `live_decision_models.json` | Recorded 2026-11-02: `GET /models?output_modalities=decisions`, 33 rows, no request file because it is a GET. |
+
+The recorder replaces the `user_id` on an error envelope with `<redacted>`, since it names the account behind the key. That is the one way a `live_*` file differs from the wire. `live_error.json` predates the recorder's redaction and was edited by hand to match on 2026-11-02.
 
 ## What the recordings confirmed, and what they corrected
 

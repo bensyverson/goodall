@@ -79,6 +79,18 @@ const OpenRouterOpenAI = "openai/gpt-6-astra"
 // call and a reasoning answer.
 const OpenAI = "gpt-5.6-terra"
 
+// OpenRouterDecision is the non-Jev decision model the OpenRouter decision
+// recordings and live test use. It is GPT-6 Luna because it answered every
+// question over both state forms in the 2026-11-02 sweep (findings doc, scripts/
+// probe-decisions) and the OpenAI wire's work asks the same model directly, so the
+// two can be held side by side. This is the concrete catalog id, never an alias.
+const OpenRouterDecision = "openai/gpt-6-luna-decisions"
+
+// OpenRouterDecisionLimited is the decision model whose own limit the refusal
+// recording provokes: in the same sweep it answered a string state and refused an
+// object state with a 400 saying so.
+const OpenRouterDecisionLimited = "scaledown/classify-1"
+
 // TypeSafe is the Jev model the TypeSafe live test and
 // scripts/record-fixtures use by default.
 //

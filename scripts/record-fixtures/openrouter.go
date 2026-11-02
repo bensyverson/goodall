@@ -35,7 +35,11 @@ func openRouterExchanges(rec *recorder, key, model string) ([]exchange, error) {
 		openrouter.WithAPIKey(key),
 		openrouter.WithHTTPClient(rec.httpClient()),
 	)
-	return chatCompletionExchanges(rec, client, model, livemodel.OpenRouterOpenAI)
+	chat, err := chatCompletionExchanges(rec, client, model, livemodel.OpenRouterOpenAI)
+	if err != nil {
+		return nil, err
+	}
+	return append(chat, decisionExchanges(rec, client, key)...), nil
 }
 
 // openAIExchanges builds the recordings made against api.openai.com itself,

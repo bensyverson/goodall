@@ -27,6 +27,8 @@ const (
 	memberAnswers       = "answers"
 	memberUsage         = "usage"
 	memberCost          = "cost"
+	memberGeneration    = "generation"
+	memberServedBy      = "served_by"
 )
 
 // refusalNote is what a model reads where an answer would be. A bare type member
@@ -106,7 +108,8 @@ func (u UnknownAnswer) MarshalJSONTo(enc *jsontext.Encoder) error {
 }
 
 // MarshalJSONTo writes the set as one object: the model, the answers keyed by id
-// in the order they arrived, the usage, and the cost when there is one to state.
+// in the order they arrived, the usage, and the cost, generation and host when
+// there is one to state.
 // The form is this package's own, which [Answers.UnmarshalJSONFrom] reads back:
 //
 //	{"model":"…","answers":{
@@ -155,6 +158,16 @@ func (a *Answers) MarshalJSONTo(enc *jsontext.Encoder) error {
 			return err
 		}
 	}
+	if a.Generation != "" {
+		if err := writeStringMember(enc, memberGeneration, a.Generation); err != nil {
+			return err
+		}
+	}
+	if a.ServedBy != "" {
+		if err := writeStringMember(enc, memberServedBy, a.ServedBy); err != nil {
+			return err
+		}
+	}
 	return enc.WriteToken(jsontext.EndObject)
 }
 
@@ -167,11 +180,15 @@ func (a *Answers) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 		Answers namedAnswers  `json:"answers,omitzero"`
 		Usage   goodall.Usage `json:"usage,omitzero"`
 		Cost    goodall.Cost  `json:"cost,omitzero"`
+
+		Generation string `json:"generation,omitzero"`
+		ServedBy   string `json:"served_by,omitzero"`
 	}
 	if err := json.UnmarshalDecode(dec, &w); err != nil {
 		return err
 	}
 	a.Model, a.Usage, a.Cost, a.entries = w.Model, w.Usage, w.Cost, w.Answers
+	a.Generation, a.ServedBy = w.Generation, w.ServedBy
 	return nil
 }
 

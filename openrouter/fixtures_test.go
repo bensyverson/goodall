@@ -127,6 +127,11 @@ func TestEveryRecordedBlockingResponseDecodes(t *testing.T) {
 			// asserted on where errors are.
 			continue
 		}
+		if strings.HasPrefix(name, "live_decision_") {
+			// These are the decision wire's, not completions, and
+			// decide_fixtures_test.go reads them.
+			continue
+		}
 		t.Run(name, func(t *testing.T) {
 			resp := completeRecording(t, name)
 			if resp.ID == "" {

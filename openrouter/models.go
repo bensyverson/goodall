@@ -180,9 +180,15 @@ func (c *Client) cacheCatalog(read *catalogRead, id string) (*goodall.ModelInfo,
 // fetchCatalog reads GET /models. The lock is never held across the call:
 // a slow catalog must not block a lookup that the memo could have answered.
 func (c *Client) fetchCatalog(ctx context.Context) (*catalogRead, error) {
+	return c.readCatalog(ctx, c.baseURL+pathModels)
+}
+
+// readCatalog reads one catalog URL, since the decision models live behind a
+// filter on the same shape.
+func (c *Client) readCatalog(ctx context.Context, url string) (*catalogRead, error) {
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodGet,
-		URL:    c.baseURL + pathModels,
+		URL:    url,
 		Header: c.header(),
 	})
 	if err != nil {

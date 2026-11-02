@@ -119,14 +119,14 @@ func typeSafeExchanges(rec *recorder, key, model string) ([]exchange, error) {
 			name: "refused",
 			what: "an unknown question type, so a real 422 envelope is on disk",
 			run: func(ctx context.Context) error {
-				return recordRefusal(ctx, rec, key, "refused", unknownQuestionType)
+				return recordRefusal(ctx, rec, key, typesafe.DefaultBaseURL+systemOnePath, "refused", unknownQuestionType)
 			},
 		},
 	}, nil
 }
 
 // askAndSave makes one judgment call, records it and prints what it cost.
-func askAndSave(ctx context.Context, rec *recorder, client *typesafe.Client, name string, state any, questions decision.Questions, model string) error {
+func askAndSave(ctx context.Context, rec *recorder, client decision.Decider, name string, state any, questions decision.Questions, model string) error {
 	answers, callErr := client.Decide(ctx, &decision.Request{Model: model, State: state, Questions: questions})
 	if err := rec.refused(name, ".json", callErr); err != nil {
 		return err
@@ -144,9 +144,9 @@ func askAndSave(ctx context.Context, rec *recorder, client *typesafe.Client, nam
 // recordRefusal posts a body the client cannot build and records the error
 // envelope the API answers with. The call is made by hand because the point of
 // the fixture is a body the typed API refuses to produce.
-func recordRefusal(ctx context.Context, rec *recorder, key, name, body string) error {
+func recordRefusal(ctx context.Context, rec *recorder, key, url, name, body string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		typesafe.DefaultBaseURL+systemOnePath, bytes.NewReader([]byte(body)))
+		url, bytes.NewReader([]byte(body)))
 	if err != nil {
 		return err
 	}

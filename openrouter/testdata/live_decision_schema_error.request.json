@@ -1,0 +1,10 @@
+{
+  "state": "Help!",
+  "model": "openai/gpt-6-luna-decisions",
+  "questions": {
+    "vibe": {
+      "type": "vibe",
+      "instructions": "What is the vibe?"
+    }
+  }
+}

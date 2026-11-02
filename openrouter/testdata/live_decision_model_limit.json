@@ -1,0 +1,1 @@
+{"error":{"message":"ScaleDown state must be a string or an object with only text, document, and document_mime_type, including text or document","code":400}}

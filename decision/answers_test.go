@@ -318,6 +318,29 @@ func TestAnswersRoundTripThroughJSON(t *testing.T) {
 	}
 }
 
+// TestGenerationAndHostRoundTripWhenStated: a consumer auditing a tool result has
+// only this JSON to read them from, and a server that names neither adds nothing
+// to what a model reads.
+func TestGenerationAndHostRoundTripWhenStated(t *testing.T) {
+	original := mixedAnswers()
+	original.Generation = "gen-123"
+	original.ServedBy = "Some Host"
+	encoded, err := json.Marshal(original)
+	if err != nil {
+		t.Fatalf("marshaling: %v", err)
+	}
+	if !strings.HasSuffix(string(encoded), `"generation":"gen-123","served_by":"Some Host"}`) {
+		t.Errorf("the JSON form does not end with both: %s", encoded)
+	}
+	var back Answers
+	if err := json.Unmarshal(encoded, &back); err != nil {
+		t.Fatalf("decoding: %v", err)
+	}
+	if back.Generation != "gen-123" || back.ServedBy != "Some Host" {
+		t.Errorf("Generation %q, ServedBy %q", back.Generation, back.ServedBy)
+	}
+}
+
 // TestAnUnknownAnswerKeepsItsBytesThroughJSON is invariant 6 across the tool
 // seam: what no type here models still reaches the reader unchanged.
 func TestAnUnknownAnswerKeepsItsBytesThroughJSON(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sync"
 
@@ -157,11 +158,22 @@ func (r *recorder) save(name, ext string) error {
 // writeFile puts one fixture on disk and remembers it for the summary.
 func (r *recorder) writeFile(name string, data []byte) error {
 	path := filepath.Join(r.out, name)
-	if err := os.WriteFile(path, data, 0o644); err != nil {
+	if err := os.WriteFile(path, redactAccount(data), 0o644); err != nil {
 		return fmt.Errorf("writing %s: %w", path, err)
 	}
 	r.written = append(r.written, name)
 	return nil
+}
+
+// accountID matches the user_id member OpenRouter adds to an error envelope,
+// which names the account behind the key. Recordings get committed, and no test
+// reads the value.
+var accountID = regexp.MustCompile(`"user_id":\s*"[^"]*"`)
+
+// redactAccount replaces the account id in a fixture. It is the one place a
+// recording differs from the bytes that came off the wire.
+func redactAccount(data []byte) []byte {
+	return accountID.ReplaceAll(data, []byte(`"user_id":"<redacted>"`))
 }
 
 // summary lists what the run wrote, in name order.

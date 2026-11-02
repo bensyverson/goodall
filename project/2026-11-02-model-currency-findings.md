@@ -49,6 +49,8 @@ Direct Gemini was never in the brief, so this is a gap only if someone wants it.
 
 The OpenAI dialect reported the tools-with-reasoning 400 as `kind=unknown`, though the unsupported-value 400 came back as `invalid_request`. So a caller branching on `KindInvalidRequest` misses it. Filed in `job` under "Issues found on the way".
 
+> **Fixed 2026-11-02 (`1JOSCO`).** The cause: this body's `error.code` is JSON `null`, which `errorCode` decoded into an int as 0 with no error and called numeric, so `KindForStatus(0)` set the kind to unknown, and the transport only fills a kind that is empty. A body with no `code` member at all was never affected. Regression test: `openrouter/errors_null_code_test.go`.
+
 ## Why this went unnoticed
 
 Nothing in the repo looks outward between sessions. `go test ./...` replays against the pinned models, so a new model family, a stale pin or a moved feature stays invisible until someone asks, as happened here. On this one date, a look found GPT-6.1, Gemini 4, Jev 1.14 with a fourth question type, decision models on five local servers, and the Responses trigger firing.

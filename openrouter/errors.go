@@ -94,7 +94,7 @@ func apiError(we *wireError, status int, header http.Header, body []byte) *gooda
 		Provider: ProviderName,
 		Kind:     kindFor(we, code, numeric),
 		Type:     errorTypeOf(we),
-		Message:  we.Message,
+		Message:  readableMessage(we.Message),
 		Status:   status,
 	}
 	if numeric {
@@ -107,6 +107,57 @@ func apiError(we *wireError, status int, header http.Header, body []byte) *gooda
 		out.Raw = raw
 	}
 	return out
+}
+
+// wireIssue is one entry of a schema failure's issue list.
+type wireIssue struct {
+	// Path is the way to the offending member, as names and array indices.
+	Path []jsontext.Value `json:"path,omitzero"`
+	// Message is what is wrong with it.
+	Message string `json:"message,omitzero"`
+}
+
+// readableMessage turns a schema failure into sentences. OpenRouter's message for
+// one is a JSON array of issues inside the string (observed 2026-11-02 on an
+// unknown question type, testdata/live_decision_schema_error.json), which reaches
+// a person in a log line and a model in a tool result, and both need the member
+// and what is wrong with it. Any other message is the server's own wording and is
+// left alone; the whole envelope stays on [goodall.APIError].Raw either way.
+func readableMessage(message string) string {
+	var issues []wireIssue
+	if !strings.HasPrefix(strings.TrimSpace(message), "[") || json.Unmarshal([]byte(message), &issues) != nil {
+		return message
+	}
+	sentences := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		if issue.Message == "" {
+			return message
+		}
+		sentence := issue.Message
+		if path := issuePath(issue.Path); path != "" {
+			sentence = path + ": " + sentence
+		}
+		sentences = append(sentences, sentence)
+	}
+	if len(sentences) == 0 {
+		return message
+	}
+	return strings.Join(sentences, "; ")
+}
+
+// issuePath renders an issue's path as "questions.vibe.type". The elements may be
+// names or array indices, so each is its JSON text with a string's quotes removed.
+func issuePath(path []jsontext.Value) string {
+	parts := make([]string, 0, len(path))
+	for _, element := range path {
+		var name string
+		if json.Unmarshal(element, &name) == nil {
+			parts = append(parts, name)
+			continue
+		}
+		parts = append(parts, string(element))
+	}
+	return strings.Join(parts, ".")
 }
 
 // kindFor classifies the error: the documented error_type first, the routing
@@ -160,24 +211,29 @@ func metadataType(we *wireError) string {
 	return we.Metadata.ErrorType
 }
 
-// errorCode reads error.code as a number. OpenRouter sends the HTTP status
-// there before the response is committed and an upstream provider's own string
-// after, so the caller is told which of the two arrived.
+// errorCode reads error.code as an HTTP error status. OpenRouter sends the
+// status there before the response is committed and an upstream provider's own
+// string after, so the caller is told which of the two arrived.
+//
+// Only a number that is an error status counts. api.openai.com sends "code":
+// null, which decodes into an int as 0 with no error, and anything classified
+// from a status that is not one comes back as [goodall.KindUnknown]: a kind that
+// is set, so the transport would not fill it from the real status.
 func errorCode(code jsontext.Value) (int, bool) {
-	if len(code) == 0 {
+	if code.Kind() != '0' {
 		return 0, false
 	}
 	var n int
 	if err := json.Unmarshal(code, &n); err != nil {
 		return 0, false
 	}
-	return n, true
+	return n, n >= 400 && n <= 599
 }
 
 // codeString reads error.code as a string, for the provider codes that are
 // not numbers.
 func codeString(code jsontext.Value) (string, bool) {
-	if len(code) == 0 {
+	if code.Kind() != '"' {
 		return "", false
 	}
 	var s string

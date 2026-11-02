@@ -33,6 +33,14 @@ type Answers struct {
 	// "not known", never "free": a server that publishes its prices elsewhere
 	// reports none here, and goodall keeps no price list.
 	Cost goodall.Cost
+	// Generation is the server's own id for this call, for finding it in that
+	// server's logs and billing. Empty when the server names none.
+	Generation string
+	// ServedBy is the host that actually ran the model, where a server routes
+	// one model id to several. Two calls to one id may land on two hosts, which
+	// is worth knowing when a threshold moves. Empty when the server does not
+	// say.
+	ServedBy string
 
 	// entries are the answers in the order they arrived, which is the order
 	// the questions were sent in.

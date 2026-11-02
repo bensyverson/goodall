@@ -29,11 +29,19 @@ const (
 	// the catalog and finds the id, which the client's memo makes a
 	// once-per-client cost for every model at once.
 	pathModels = "/models"
+	// pathSystemOne is the decision endpoint on every server that takes
+	// System One. OpenRouter also serves the same shape at /api/alpha/decisions;
+	// this one is not labeled alpha and carried the 2026-11-02 sweep.
+	pathSystemOne = "/systemone"
+	// queryDecisionModels is the filter the decision models need, since the
+	// default list leaves them out.
+	queryDecisionModels = "output_modalities=decisions"
 )
 
 // Client talks to OpenRouter, or to any other server that speaks the OpenAI
 // Chat Completions format. It implements [goodall.Provider],
-// [goodall.Completer] and [goodall.ModelLister].
+// [goodall.Completer] and [goodall.ModelLister] for conversation, and
+// [decision.Decider] for decision models.
 //
 // A Client holds no per-call state, so one value serves every goroutine in a
 // process (invariant 12); the [goodall.Stream] it returns is single-consumer.
