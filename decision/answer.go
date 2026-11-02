@@ -1,49 +1,39 @@
-package typesafe
+package decision
 
 import (
 	"encoding/json/jsontext"
-	json "encoding/json/v2"
 	"slices"
 	"strconv"
 )
 
-// The four answer shapes, one per question type plus the unknown. The set they
-// arrive in, and the accessors that read it, are in answers.go.
+// The answer shapes: one per question type, one for a question the model
+// declined and one for a type this version does not model. The set they arrive
+// in, and the accessors that read it, are in answers.go; how each one is written
+// as JSON is in answers_json.go.
 
-// NoulAnswer is the answer to a [Noul]: the probability that the answer is yes.
-// There is no confidence figure, because there is nothing a distribution over
-// two outcomes would say that the probability does not — 0.5 means "yes and no
-// are equally likely", not "medium".
-type NoulAnswer struct {
-	// Noul is the probability of yes, from 0 (no) to 1 (yes).
-	Noul float64 `json:"noul"`
+// PredicateAnswer is the answer to a [Predicate]: the probability that the
+// answer is yes. There is no confidence figure, because there is nothing a
+// distribution over two outcomes would say that the probability does not: 0.5
+// means "yes and no are equally likely", not "medium".
+type PredicateAnswer struct {
+	// Probability is the probability of yes, from 0 (no) to 1 (yes).
+	Probability float64 `json:"probability"`
 }
 
-// AnswerType names this answer's wire type.
-func (NoulAnswer) AnswerType() QuestionType { return TypeNoul }
+// AnswerType names this answer's type.
+func (PredicateAnswer) AnswerType() QuestionType { return TypePredicate }
 
-func (NoulAnswer) isAnswer() {}
+func (PredicateAnswer) isAnswer() {}
 
 // Yes reports whether the probability of yes is at least threshold. It is a
 // method rather than a comparison at each call site because a threshold is the
 // one number in a judgment pipeline worth keeping in one reviewable place.
-func (n NoulAnswer) Yes(threshold float64) bool { return n.Noul >= threshold }
-
-// MarshalJSONTo writes the answer as the API sends it.
-func (n NoulAnswer) MarshalJSONTo(enc *jsontext.Encoder) error {
-	if err := openAnswer(enc, TypeNoul); err != nil {
-		return err
-	}
-	if err := writeFloatMember(enc, "noul", n.Noul); err != nil {
-		return err
-	}
-	return enc.WriteToken(jsontext.EndObject)
-}
+func (p PredicateAnswer) Yes(threshold float64) bool { return p.Probability >= threshold }
 
 // ChoiceAnswer is the answer to a [Choice]: the most probable option, the whole
 // distribution and a confidence derived from it.
 //
-// Confidence is a statistic of Probabilities and nothing more — concentrated
+// Confidence is a statistic of Probabilities and nothing more: concentrated
 // means high, spread means low. It says nothing about whether this particular
 // answer is right, and it is calibrated per model version, so a threshold tuned
 // against one version belongs with a pinned [WithModel].
@@ -58,7 +48,7 @@ type ChoiceAnswer struct {
 	Confidence float64 `json:"confidence"`
 }
 
-// AnswerType names this answer's wire type.
+// AnswerType names this answer's type.
 func (ChoiceAnswer) AnswerType() QuestionType { return TypeChoice }
 
 func (ChoiceAnswer) isAnswer() {}
@@ -66,23 +56,6 @@ func (ChoiceAnswer) isAnswer() {}
 // Ranked lists the options by descending probability, ties broken by option
 // name so that two identical answers rank identically.
 func (c ChoiceAnswer) Ranked() []Outcome { return rank(c.Probabilities) }
-
-// MarshalJSONTo writes the answer as the API sends it.
-func (c ChoiceAnswer) MarshalJSONTo(enc *jsontext.Encoder) error {
-	if err := openAnswer(enc, TypeChoice); err != nil {
-		return err
-	}
-	if err := writeStringMember(enc, "choice", c.Choice); err != nil {
-		return err
-	}
-	if err := writeFloatMember(enc, "confidence", c.Confidence); err != nil {
-		return err
-	}
-	if err := writeProbabilities(enc, c.Probabilities); err != nil {
-		return err
-	}
-	return enc.WriteToken(jsontext.EndObject)
-}
 
 // ScoreAnswer is the answer to a [Score]: a probability-weighted position
 // across the levels, which may land between two of them.
@@ -106,7 +79,7 @@ type ScoreAnswer struct {
 	Confidence float64 `json:"confidence"`
 }
 
-// AnswerType names this answer's wire type.
+// AnswerType names this answer's type.
 func (ScoreAnswer) AnswerType() QuestionType { return TypeScore }
 
 func (ScoreAnswer) isAnswer() {}
@@ -131,50 +104,34 @@ func (s ScoreAnswer) Levels() []string {
 // ties broken by that index. Read the description of a key out of Legend.
 func (s ScoreAnswer) Ranked() []Outcome { return rank(s.Probabilities) }
 
-// MarshalJSONTo writes the answer as the API sends it.
-func (s ScoreAnswer) MarshalJSONTo(enc *jsontext.Encoder) error {
-	if err := openAnswer(enc, TypeScore); err != nil {
-		return err
-	}
-	if err := writeFloatMember(enc, "score", s.Score); err != nil {
-		return err
-	}
-	if err := writeFloatMember(enc, "confidence", s.Confidence); err != nil {
-		return err
-	}
-	if err := enc.WriteToken(jsontext.String("legend")); err != nil {
-		return err
-	}
-	if err := json.MarshalEncode(enc, s.Legend, json.Deterministic(true)); err != nil {
-		return err
-	}
-	if err := writeProbabilities(enc, s.Probabilities); err != nil {
-		return err
-	}
-	return enc.WriteToken(jsontext.EndObject)
-}
+// RefusalAnswer stands where an answer would be when the model declined to
+// answer that one question. The others in the same set still stand, which is why
+// it is an answer rather than an error on the whole call, and a typed accessor
+// reading it returns an error naming the id rather than a zero value, because a
+// probability of 0 would read as a confident no.
+type RefusalAnswer struct{}
+
+// AnswerType names this answer's type, which is [TypeRefusal] whatever the
+// question asked for.
+func (RefusalAnswer) AnswerType() QuestionType { return TypeRefusal }
+
+func (RefusalAnswer) isAnswer() {}
 
 // UnknownAnswer is an answer whose type this version of goodall does not model,
-// kept whole rather than dropped (invariant 6). The API already has a fourth
-// question type that is not in its published reference — a 422 names
-// bounding_box among the tags it expects — so this is a live case: a request
-// that somehow asks for one gets its answer here, with the bytes intact.
+// kept whole rather than dropped (invariant 6). Servers already answer types
+// beyond the three here, images and boxes among them, so this is a live case: a
+// request that somehow asks for one gets its answer here, with the bytes intact.
 type UnknownAnswer struct {
-	// Type is the type the API reported.
+	// Type is the type the server reported.
 	Type QuestionType
 	// Raw is the answer object as received.
 	Raw jsontext.Value
 }
 
-// AnswerType names the type the API reported.
+// AnswerType names the type the server reported.
 func (u UnknownAnswer) AnswerType() QuestionType { return u.Type }
 
 func (UnknownAnswer) isAnswer() {}
-
-// MarshalJSONTo writes the answer's own bytes back out, unchanged.
-func (u UnknownAnswer) MarshalJSONTo(enc *jsontext.Encoder) error {
-	return enc.WriteValue(u.Raw)
-}
 
 // Outcome is one option or level with its probability, as [ChoiceAnswer.Ranked]
 // and [ScoreAnswer.Ranked] return them.
@@ -199,14 +156,14 @@ func rank(probabilities map[string]float64) []Outcome {
 			}
 			return 1
 		}
-		return cmpStrings(a.Key, b.Key)
+		return cmpKeys(a.Key, b.Key)
 	})
 	return out
 }
 
-// cmpStrings orders two keys, numerically where both are level indices so that
+// cmpKeys orders two keys, numerically where both are level indices so that
 // level 10 does not sort before level 2.
-func cmpStrings(a, b string) int {
+func cmpKeys(a, b string) int {
 	ai, aerr := strconv.Atoi(a)
 	bi, berr := strconv.Atoi(b)
 	if aerr == nil && berr == nil {
@@ -225,37 +182,4 @@ func cmpStrings(a, b string) int {
 		return 1
 	}
 	return 0
-}
-
-// openAnswer writes the object opening and the type member every answer shares.
-func openAnswer(enc *jsontext.Encoder, t QuestionType) error {
-	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
-		return err
-	}
-	return writeStringMember(enc, typeMember, string(t))
-}
-
-// writeFloatMember writes one member whose value is a JSON number.
-func writeFloatMember(enc *jsontext.Encoder, name string, value float64) error {
-	if err := enc.WriteToken(jsontext.String(name)); err != nil {
-		return err
-	}
-	return enc.WriteToken(jsontext.Float(value))
-}
-
-// writeProbabilities writes the probabilities member, in key order so that two
-// encodings of one answer are the same bytes.
-func writeProbabilities(enc *jsontext.Encoder, probabilities map[string]float64) error {
-	if err := enc.WriteToken(jsontext.String("probabilities")); err != nil {
-		return err
-	}
-	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
-		return err
-	}
-	for _, outcome := range rank(probabilities) {
-		if err := writeFloatMember(enc, outcome.Key, outcome.Probability); err != nil {
-			return err
-		}
-	}
-	return enc.WriteToken(jsontext.EndObject)
 }

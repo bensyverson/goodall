@@ -1,4 +1,4 @@
-package typesafe_test
+package decision_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/anthropic"
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/typesafe"
 )
 
@@ -17,16 +18,16 @@ import (
 // triageQuestions is the question set the fixed-questions example asks. It is a
 // package-level value because that is where a reviewable question set belongs:
 // one place, beside the thresholds that read its answers.
-var triageQuestions = typesafe.Questions{
-	{ID: "department", Question: typesafe.Choice{
+var triageQuestions = decision.Questions{
+	{ID: "department", Question: decision.Choice{
 		Instructions: "Which team should handle this ticket?",
-		Options: []typesafe.Option{
+		Options: []decision.Option{
 			{Key: "billing", Description: "Payments, payouts, invoicing, refunds"},
 			{Key: "technical", Description: "Bugs, outages, integrations"},
 			{Key: "other", Description: "Anything the two above do not cover"},
 		},
 	}},
-	{ID: "is_urgent", Question: typesafe.Noul{
+	{ID: "is_urgent", Question: decision.Predicate{
 		Instructions: "Is work or money blocked right now?",
 		True:         "Blocked right now",
 		False:        "The sender can wait",
@@ -39,10 +40,10 @@ var triageQuestions = typesafe.Questions{
 func ExampleTool() {
 	client := typesafe.New(os.Getenv("TYPESAFE_API_KEY"))
 
-	triage, err := typesafe.Tool(client, "triage_ticket",
+	triage, err := decision.Tool(client, "triage_ticket",
 		"Decide which team a support ticket belongs to and whether it is blocking the sender. "+
 			"Send the ticket as an object with its subject and body.",
-		triageQuestions, typesafe.WithToolModel("jev-1.13.0"))
+		triageQuestions, decision.WithModel("jev-1.13.0"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,12 +68,12 @@ func ExampleTool() {
 
 // A judgment tool whose questions the model writes at call time: the delegation
 // shape, for the judgments a developer cannot enumerate in advance. The
-// description defaults to typesafe.DefaultAuthoredDescription, and the guidance
+// description defaults to decision.DefaultAuthoredDescription, and the guidance
 // about each part of a question travels in the input schema.
 func ExampleAuthoredTool() {
 	client := typesafe.New(os.Getenv("TYPESAFE_API_KEY"))
 
-	judge, err := typesafe.AuthoredTool(client, "judge", typesafe.WithToolModel("jev-1.13.0"))
+	judge, err := decision.AuthoredTool(client, "judge", decision.WithModel("jev-1.13.0"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -101,10 +102,10 @@ func ExampleAuthoredTool() {
 func ExampleRoute() {
 	client := typesafe.New(os.Getenv("TYPESAFE_API_KEY"))
 
-	routing := typesafe.Questions{
-		{ID: "intent", Question: typesafe.Choice{
+	routing := decision.Questions{
+		{ID: "intent", Question: decision.Choice{
 			Instructions: "What does this turn need?",
-			Options: []typesafe.Option{
+			Options: []decision.Option{
 				{Key: "chat", Description: "Small talk, or a question a short answer settles"},
 				{Key: "hard", Description: "A problem that needs careful reasoning or a plan"},
 			},
@@ -115,8 +116,8 @@ func ExampleRoute() {
 		Provider: anthropic.New(os.Getenv("ANTHROPIC_API_KEY")),
 		Model:    "claude-haiku-4-5-20251001",
 		Hooks: goodall.Hooks{
-			BeforeSend: typesafe.Route(client, routing,
-				func(ctx context.Context, req *goodall.Request, newTurn *goodall.Message, answers *typesafe.Answers) error {
+			BeforeSend: decision.Route(client, routing,
+				func(ctx context.Context, req *goodall.Request, newTurn *goodall.Message, answers *decision.Answers) error {
 					intent, err := answers.Choice("intent")
 					if err != nil {
 						return err

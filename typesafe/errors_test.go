@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 )
 
 // simpleQuestions is the smallest valid question list, for the tests that are
 // about the response rather than the request.
-func simpleQuestions() Questions {
-	return Questions{{ID: "is_urgent", Question: Noul{Instructions: "Does this convey urgency?"}}}
+func simpleQuestions() decision.Questions {
+	return decision.Questions{{ID: "is_urgent", Question: decision.Predicate{Instructions: "Does this convey urgency?"}}}
 }
 
 // TestEachStatusMapsToTheDocumentedKind is the error contract: the four
@@ -37,7 +38,7 @@ func TestEachStatusMapsToTheDocumentedKind(t *testing.T) {
 			// Retries are off so a retryable status costs one call and
 			// the test does not wait out a backoff.
 			client, _ := serveJSON(t, tc.status, tc.body, WithMaxRetries(-1))
-			_, err := client.Ask(t.Context(), "hi", simpleQuestions())
+			_, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: simpleQuestions()})
 			if err == nil {
 				t.Fatal("a failing status came back as success")
 			}
@@ -64,7 +65,7 @@ func TestEachStatusMapsToTheDocumentedKind(t *testing.T) {
 func TestTheErrorBodyMessageAndRawSurvive(t *testing.T) {
 	const body = `{"detail":"questions.frustration.criteria: at least two levels are required"}`
 	client, _ := serveJSON(t, http.StatusUnprocessableEntity, body, WithMaxRetries(-1))
-	_, err := client.Ask(t.Context(), "hi", simpleQuestions())
+	_, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: simpleQuestions()})
 	apiErr, ok := errors.AsType[*goodall.APIError](err)
 	if !ok {
 		t.Fatalf("error is %T, want *goodall.APIError: %v", err, err)
@@ -91,7 +92,7 @@ func TestTheErrorBodyMessageIsReadFromEitherShape(t *testing.T) {
 	for body, want := range cases {
 		t.Run(want, func(t *testing.T) {
 			client, _ := serveJSON(t, http.StatusUnprocessableEntity, body, WithMaxRetries(-1))
-			_, err := client.Ask(t.Context(), "hi", simpleQuestions())
+			_, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: simpleQuestions()})
 			apiErr, ok := errors.AsType[*goodall.APIError](err)
 			if !ok {
 				t.Fatalf("error is %T, want *goodall.APIError: %v", err, err)
@@ -111,7 +112,7 @@ func TestRetryAfterIsHonoredAsTheTransportPromises(t *testing.T) {
 		w.Header().Set("Retry-After", "120")
 		w.WriteHeader(http.StatusTooManyRequests)
 	}, WithMaxRetries(-1))
-	_, err := client.Ask(t.Context(), "hi", simpleQuestions())
+	_, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: simpleQuestions()})
 	apiErr, ok := errors.AsType[*goodall.APIError](err)
 	if !ok {
 		t.Fatalf("error is %T, want *goodall.APIError: %v", err, err)
@@ -123,7 +124,7 @@ func TestRetryAfterIsHonoredAsTheTransportPromises(t *testing.T) {
 
 func TestAnUndecodableSuccessBodyIsAProtocolError(t *testing.T) {
 	client, _ := serveJSON(t, http.StatusOK, `{"model":"jev-1.13.0","answers":`)
-	_, err := client.Ask(t.Context(), "hi", simpleQuestions())
+	_, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: simpleQuestions()})
 	if err == nil {
 		t.Fatal("a truncated body came back as an answer")
 	}

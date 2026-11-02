@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 )
 
 // testKey is the key every test client sends. It is not a real credential.
@@ -27,7 +28,7 @@ type capture struct {
 }
 
 // serve starts a test server running h and returns a client pointed at it.
-func serve(t *testing.T, h http.HandlerFunc, opts ...ClientOption) (*Client, *capture) {
+func serve(t *testing.T, h http.HandlerFunc, opts ...Option) (*Client, *capture) {
 	t.Helper()
 	seen := &capture{}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -41,12 +42,12 @@ func serve(t *testing.T, h http.HandlerFunc, opts ...ClientOption) (*Client, *ca
 		h(w, r)
 	}))
 	t.Cleanup(srv.Close)
-	opts = append([]ClientOption{WithBaseURL(srv.URL)}, opts...)
+	opts = append([]Option{WithBaseURL(srv.URL)}, opts...)
 	return New(testKey, opts...), seen
 }
 
 // serveJSON starts a server that answers every call with one status and body.
-func serveJSON(t *testing.T, status int, body string, opts ...ClientOption) (*Client, *capture) {
+func serveJSON(t *testing.T, status int, body string, opts ...Option) (*Client, *capture) {
 	t.Helper()
 	return serve(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -65,22 +66,22 @@ const okAnswers = `{"model":"jev-1.13.0","answers":{"is_urgent":{"type":"noul","
 // alphabetical order: a marshaler that sorted them would be caught.
 const documentedState = "Help! My payouts have been failing for 3 days."
 
-func documentedQuestions() Questions {
-	return Questions{
-		{ID: "department", Question: Choice{
+func documentedQuestions() decision.Questions {
+	return decision.Questions{
+		{ID: "department", Question: decision.Choice{
 			Instructions: "Which team should handle this?",
-			Options: []Option{
+			Options: []decision.Option{
 				{Key: "billing", Description: "Payments, invoicing, refunds"},
 				{Key: "technical", Description: "Bugs, outages, integrations"},
 				{Key: "sales"},
 			},
 		}},
-		{ID: "is_urgent", Question: Noul{
+		{ID: "is_urgent", Question: decision.Predicate{
 			Instructions: "Does this convey urgency?",
 			True:         "Explicitly time-sensitive",
 			False:        "No urgency expressed",
 		}},
-		{ID: "frustration", Question: Score{
+		{ID: "frustration", Question: decision.Score{
 			Instructions: "How frustrated is the customer?",
 			Levels:       []string{"Calm", "Frustrated", "Very angry"},
 		}},
@@ -101,10 +102,10 @@ const documentedBody = `{"state":"Help! My payouts have been failing for 3 days.
 	`"frustration":{"type":"score","instructions":"How frustrated is the customer?",` +
 	`"criteria":["Calm","Frustrated","Very angry"]}}}`
 
-func TestAskSendsTheDocumentedRequest(t *testing.T) {
+func TestDecideSendsTheDocumentedRequest(t *testing.T) {
 	client, seen := serveJSON(t, http.StatusOK, okAnswers)
-	if _, err := client.Ask(t.Context(), documentedState, documentedQuestions()); err != nil {
-		t.Fatalf("Ask: %v", err)
+	if _, err := client.Decide(t.Context(), &decision.Request{State: documentedState, Questions: documentedQuestions()}); err != nil {
+		t.Fatalf("Decide: %v", err)
 	}
 	if seen.Method != http.MethodPost {
 		t.Errorf("method = %s, want POST", seen.Method)
@@ -123,7 +124,7 @@ func TestAskSendsTheDocumentedRequest(t *testing.T) {
 	}
 }
 
-func TestTwoIdenticalAsksSendIdenticalBytes(t *testing.T) {
+func TestTwoIdenticalCallsSendIdenticalBytes(t *testing.T) {
 	// Invariant 8: the same questions marshal to the same bytes, so a
 	// prompt cache and a diff of two requests both mean something. A map
 	// anywhere in the request path would break this at random.
@@ -131,8 +132,8 @@ func TestTwoIdenticalAsksSendIdenticalBytes(t *testing.T) {
 	state := map[string]any{"zeta": 1, "alpha": 2, "mu": 3}
 	var bodies []string
 	for range 8 {
-		if _, err := client.Ask(t.Context(), state, documentedQuestions()); err != nil {
-			t.Fatalf("Ask: %v", err)
+		if _, err := client.Decide(t.Context(), &decision.Request{State: state, Questions: documentedQuestions()}); err != nil {
+			t.Fatalf("Decide: %v", err)
 		}
 		bodies = append(bodies, string(seen.Body))
 	}
@@ -146,7 +147,7 @@ func TestTwoIdenticalAsksSendIdenticalBytes(t *testing.T) {
 	}
 }
 
-func TestAskMarshalsTheStateAsGiven(t *testing.T) {
+func TestDecideMarshalsTheStateAsGiven(t *testing.T) {
 	type record struct {
 		Author string `json:"author"`
 		Body   string `json:"body"`
@@ -163,8 +164,8 @@ func TestAskMarshalsTheStateAsGiven(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			client, seen := serveJSON(t, http.StatusOK, okAnswers)
-			if _, err := client.Ask(t.Context(), tc.state, documentedQuestions()); err != nil {
-				t.Fatalf("Ask: %v", err)
+			if _, err := client.Decide(t.Context(), &decision.Request{State: tc.state, Questions: documentedQuestions()}); err != nil {
+				t.Fatalf("Decide: %v", err)
 			}
 			if !strings.Contains(string(seen.Body), tc.want) {
 				t.Errorf("body does not carry %s: %s", tc.want, seen.Body)
@@ -173,63 +174,63 @@ func TestAskMarshalsTheStateAsGiven(t *testing.T) {
 	}
 }
 
-func TestWithModelOverridesTheDefault(t *testing.T) {
+func TestARequestModelOverridesTheDefault(t *testing.T) {
 	client, seen := serveJSON(t, http.StatusOK, okAnswers)
-	if _, err := client.Ask(t.Context(), "hi", documentedQuestions(), WithModel("jev-1.13.0")); err != nil {
-		t.Fatalf("Ask: %v", err)
+	if _, err := client.Decide(t.Context(), &decision.Request{Model: "jev-1.13.0", State: "hi", Questions: documentedQuestions()}); err != nil {
+		t.Fatalf("Decide: %v", err)
 	}
 	if !strings.Contains(string(seen.Body), `"model":"jev-1.13.0"`) {
-		t.Errorf("the model option was not sent: %s", seen.Body)
+		t.Errorf("the request's model was not sent: %s", seen.Body)
 	}
 	if DefaultModel != "jev-latest" {
 		t.Errorf("DefaultModel = %q, want jev-latest", DefaultModel)
 	}
 }
 
-// TestAskRefusesABadRequestBeforeTheNetwork is the "fail loudly" half: a
+// TestDecideRefusesABadRequestBeforeTheNetwork is the "fail loudly" half: a
 // request the API would refuse with a 422 costs no call and no tokens, and the
 // error names what is wrong.
-func TestAskRefusesABadRequestBeforeTheNetwork(t *testing.T) {
+func TestDecideRefusesABadRequestBeforeTheNetwork(t *testing.T) {
 	cases := map[string]struct {
 		state     any
-		questions Questions
+		questions decision.Questions
 		phrase    string
 	}{
 		"no questions": {
 			state: "hi", questions: nil, phrase: "at least one question",
 		},
 		"empty questions": {
-			state: "hi", questions: Questions{}, phrase: "at least one question",
+			state: "hi", questions: decision.Questions{}, phrase: "at least one question",
 		},
 		"nil state": {
 			state: nil, questions: documentedQuestions(), phrase: "state",
 		},
 		"empty id": {
 			state:     "hi",
-			questions: Questions{{Question: Noul{Instructions: "urgent?"}}},
+			questions: decision.Questions{{Question: decision.Predicate{Instructions: "urgent?"}}},
 			phrase:    "id",
 		},
 		"duplicate id": {
 			state: "hi",
-			questions: Questions{
-				{ID: "dup", Question: Noul{Instructions: "urgent?"}},
-				{ID: "dup", Question: Noul{Instructions: "angry?"}},
+			questions: decision.Questions{
+				{ID: "dup", Question: decision.Predicate{Instructions: "urgent?"}},
+				{ID: "dup", Question: decision.Predicate{Instructions: "angry?"}},
 			},
 			phrase: `"dup"`,
 		},
 		"nil question": {
 			state:     "hi",
-			questions: Questions{{ID: "empty"}},
+			questions: decision.Questions{{ID: "empty"}},
 			phrase:    `"empty"`,
 		},
 		"no instructions": {
 			state:     "hi",
-			questions: Questions{{ID: "urgent", Question: Noul{}}},
+			questions: decision.Questions{{ID: "urgent", Question: decision.Predicate{}}},
 			phrase:    "instructions",
 		},
 		"score with one level": {
 			state: "hi",
-			questions: Questions{{ID: "frustration", Question: Score{
+			questions: decision.Questions{{ID: "frustration", Question: decision.Score{
 				Instructions: "How frustrated?",
 				Levels:       []string{"Calm"},
 			}}},
@@ -237,31 +238,31 @@ func TestAskRefusesABadRequestBeforeTheNetwork(t *testing.T) {
 		},
 		"score with no levels": {
 			state: "hi",
-			questions: Questions{{ID: "frustration", Question: Score{
+			questions: decision.Questions{{ID: "frustration", Question: decision.Score{
 				Instructions: "How frustrated?",
 			}}},
 			phrase: "two levels",
 		},
 		"choice with no options": {
 			state: "hi",
-			questions: Questions{{ID: "department", Question: Choice{
+			questions: decision.Questions{{ID: "department", Question: decision.Choice{
 				Instructions: "Which team?",
 			}}},
 			phrase: "option",
 		},
 		"choice with an unnamed option": {
 			state: "hi",
-			questions: Questions{{ID: "department", Question: Choice{
+			questions: decision.Questions{{ID: "department", Question: decision.Choice{
 				Instructions: "Which team?",
-				Options:      []Option{{Key: "billing"}, {Description: "no key"}},
+				Options:      []decision.Option{{Key: "billing"}, {Description: "no key"}},
 			}}},
 			phrase: "option",
 		},
 		"choice with a repeated option": {
 			state: "hi",
-			questions: Questions{{ID: "department", Question: Choice{
+			questions: decision.Questions{{ID: "department", Question: decision.Choice{
 				Instructions: "Which team?",
-				Options:      []Option{{Key: "billing"}, {Key: "billing", Description: "again"}},
+				Options:      []decision.Option{{Key: "billing"}, {Key: "billing", Description: "again"}},
 			}}},
 			phrase: `"billing"`,
 		},
@@ -269,9 +270,9 @@ func TestAskRefusesABadRequestBeforeTheNetwork(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			client, seen := serveJSON(t, http.StatusOK, okAnswers)
-			_, err := client.Ask(t.Context(), tc.state, tc.questions)
+			_, err := client.Decide(t.Context(), &decision.Request{State: tc.state, Questions: tc.questions})
 			if err == nil {
-				t.Fatal("Ask accepted a request the API would refuse")
+				t.Fatal("Decide accepted a request the API would refuse")
 			}
 			if seen.Requests != 0 {
 				t.Errorf("the client made %d calls; a request this bad must cost nothing", seen.Requests)
@@ -287,13 +288,13 @@ func TestAskRefusesABadRequestBeforeTheNetwork(t *testing.T) {
 }
 
 // TestNegativeMaxRetriesMakesOneAttempt is the regression guard for the
-// double-billing warning on [Client.Ask] and [WithMaxRetries]: a negative
+// double-billing warning on [Client.Decide] and [WithMaxRetries]: a negative
 // WithMaxRetries must turn off retrying, not just cap it lower, or
 // "at-most-once" in the doc comment is a lie.
 func TestNegativeMaxRetriesMakesOneAttempt(t *testing.T) {
 	client, seen := serveJSON(t, http.StatusInternalServerError, `{"message":"boom"}`, WithMaxRetries(-1))
-	if _, err := client.Ask(t.Context(), "hi", documentedQuestions()); err == nil {
-		t.Fatal("Ask succeeded against a server that only ever returns 500")
+	if _, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: documentedQuestions()}); err == nil {
+		t.Fatal("Decide succeeded against a server that only ever returns 500")
 	}
 	if seen.Requests != 1 {
 		t.Errorf("Requests = %d, want 1: WithMaxRetries(-1) must not retry a retryable failure", seen.Requests)

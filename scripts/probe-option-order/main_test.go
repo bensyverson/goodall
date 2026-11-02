@@ -128,7 +128,7 @@ func TestSentOrder(t *testing.T) {
 // TestSentOrderWithoutTheQuestion keeps a body the probe cannot interpret from
 // passing as a verified one.
 func TestSentOrderWithoutTheQuestion(t *testing.T) {
-	body := []byte(`{"model":"jev-1.13.0","questions":{"other":{"type":"noul","instructions":"Urgent?"}}}`)
+	body := []byte(`{"model":"jev-1.13.0","questions":{"other":{"type":"score","instructions":"How urgent?","criteria":["Low","High"]}}}`)
 	if _, err := sentOrder(body); err == nil {
 		t.Error("sentOrder accepted a body carrying no choice question")
 	}

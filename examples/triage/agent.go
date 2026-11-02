@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/examples/internal/render"
-	"github.com/bensyverson/goodall/typesafe"
 )
 
 // deps is what a run talks to: a provider client per role and the judge. The
@@ -24,7 +24,7 @@ type deps struct {
 	// Models is which model each role asks for.
 	Models modelSet
 	// Judge is the judgment client every question goes to.
-	Judge *typesafe.Client
+	Judge decision.Decider
 	// JudgeModel is the pinned Jev version.
 	JudgeModel string
 }

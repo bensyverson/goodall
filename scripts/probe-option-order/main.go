@@ -1,4 +1,4 @@
-// Command probe-option-order measures whether the order a [typesafe.Choice]
+// Command probe-option-order measures whether the order a [decision.Choice]
 // question's options are written in moves Jev's distribution.
 //
 // goodall sends a choice's options in the order the author wrote them, because
@@ -8,7 +8,7 @@
 // model's tool schemas; this script is the measurement that claim never had.
 //
 // It asks one fixed question about one fixed ticket through
-// [typesafe.Client.Ask] — the production path — n times with the options in
+// [typesafe.Client.Decide] — the production path — n times with the options in
 // author order and n times with the slice reversed, and nothing else differs
 // between the two arms: it reads the option order back out of the bytes it
 // actually sent and refuses a run whose two arms differ in anything else. It
@@ -42,7 +42,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/internal/dotenv"
+	"github.com/bensyverson/goodall/internal/systemone"
 	"github.com/bensyverson/goodall/typesafe"
 )
 
@@ -97,7 +99,7 @@ var states = map[string]ticket{
 
 // authorOrder is the option order as an author would write it. The reverse arm
 // sends exactly these options, reversed, and changes nothing else.
-var authorOrder = []typesafe.Option{
+var authorOrder = []decision.Option{
 	{Key: "billing", Description: "Payments, invoicing, refunds, duplicate charges"},
 	{Key: "technical", Description: "Bugs, timeouts, retries, integrations"},
 	{Key: "sales", Description: "Pricing, upgrades, adding seats, new accounts"},
@@ -178,15 +180,15 @@ func run() error {
 
 // collect makes n calls with one option order and returns what came back,
 // pairing each answer with the request body that produced it.
-func collect(client *typesafe.Client, arm string, state ticket, options []typesafe.Option, n int, model string, log *bodyLog) ([]sample, error) {
-	questions := typesafe.Questions{{ID: questionID, Question: typesafe.Choice{
+func collect(client *typesafe.Client, arm string, state ticket, options []decision.Option, n int, model string, log *bodyLog) ([]sample, error) {
+	questions := decision.Questions{{ID: questionID, Question: decision.Choice{
 		Instructions: instructions,
 		Options:      options,
 	}}}
 	out := make([]sample, 0, n)
 	for i := range n {
 		mark := log.mark()
-		answers, err := client.Ask(context.Background(), state, questions, typesafe.WithModel(model))
+		answers, err := client.Decide(context.Background(), &decision.Request{Model: model, State: state, Questions: questions})
 		if err != nil {
 			return nil, fmt.Errorf("%s sample %d: %w", arm, i+1, err)
 		}
@@ -269,7 +271,7 @@ func identicalBodies(samples []sample) error {
 // Questions decodes in document order, so the options come back in the order
 // they were sent.
 type sentRequest struct {
-	Questions typesafe.Questions `json:"questions"`
+	Questions systemone.Questions `json:"questions"`
 }
 
 // sentOrder lists the option keys a recorded request body carried, in the
@@ -283,7 +285,7 @@ func sentOrder(body []byte) ([]string, error) {
 		if q.ID != questionID {
 			continue
 		}
-		choice, ok := q.Question.(typesafe.Choice)
+		choice, ok := q.Question.(decision.Choice)
 		if !ok {
 			return nil, fmt.Errorf("question %q came back as a %s, not a choice", q.ID, q.Question.QuestionType())
 		}
@@ -316,7 +318,7 @@ func (d distribution) String() string {
 		parts = append(parts, fmt.Sprintf("%.4f", d[opt.Key]))
 	}
 	for key := range d {
-		if !slices.ContainsFunc(authorOrder, func(o typesafe.Option) bool { return o.Key == key }) {
+		if !slices.ContainsFunc(authorOrder, func(o decision.Option) bool { return o.Key == key }) {
 			parts = append(parts, key+"?"+fmt.Sprintf("%.4f", d[key]))
 		}
 	}

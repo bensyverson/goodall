@@ -3,6 +3,7 @@ package typesafe_test
 import (
 	"testing"
 
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/internal/dotenv"
 	"github.com/bensyverson/goodall/internal/livemodel"
 	"github.com/bensyverson/goodall/typesafe"
@@ -54,30 +55,34 @@ func TestLiveMixedJudgmentRoundTrip(t *testing.T) {
 		Subject string `json:"subject"`
 		Body    string `json:"body"`
 	}
-	questions := typesafe.Questions{
-		{ID: "department", Question: typesafe.Choice{
+	questions := decision.Questions{
+		{ID: "department", Question: decision.Choice{
 			Instructions: "Which team should handle this ticket?",
-			Options: []typesafe.Option{
+			Options: []decision.Option{
 				{Key: "billing", Description: "Payments, payouts, invoicing, refunds"},
 				{Key: "technical", Description: "Bugs, outages, integrations"},
 				{Key: "sales", Description: "Pricing, upgrades, new accounts"},
 			},
 		}},
-		{ID: "is_urgent", Question: typesafe.Noul{
+		{ID: "is_urgent", Question: decision.Predicate{
 			Instructions: "Does this ticket convey urgency?",
 			True:         "Explicitly time-sensitive, or money or work is blocked right now",
 			False:        "No urgency expressed; the sender can wait",
 		}},
-		{ID: "frustration", Question: typesafe.Score{
+		{ID: "frustration", Question: decision.Score{
 			Instructions: "How frustrated is the customer?",
 			Levels:       []string{"Calm", "Mildly annoyed", "Frustrated", "Furious"},
 		}},
 	}
 
-	answers, err := client.Ask(t.Context(), ticket{
-		Subject: "Payouts failing since Tuesday",
-		Body:    "Help! My payouts have been failing for 3 days and I have staff to pay.",
-	}, questions, typesafe.WithModel(livemodel.TypeSafe))
+	answers, err := client.Decide(t.Context(), &decision.Request{
+		Model: livemodel.TypeSafe,
+		State: ticket{
+			Subject: "Payouts failing since Tuesday",
+			Body:    "Help! My payouts have been failing for 3 days and I have staff to pay.",
+		},
+		Questions: questions,
+	})
 	if err != nil {
 		t.Fatalf("the live judgment failed: %v", err)
 	}
@@ -108,13 +113,13 @@ func TestLiveMixedJudgmentRoundTrip(t *testing.T) {
 		t.Errorf("probabilities cover %d options, want 3", len(choice.Probabilities))
 	}
 
-	noul, err := answers.Noul("is_urgent")
+	predicate, err := answers.Predicate("is_urgent")
 	if err != nil {
-		t.Fatalf("Noul: %v", err)
+		t.Fatalf("Predicate: %v", err)
 	}
-	t.Logf("is_urgent: noul=%.4f", noul.Noul)
-	if !noul.Yes(0.5) {
-		t.Errorf("is_urgent = %v, want the yes side; the ticket says money is blocked", noul.Noul)
+	t.Logf("is_urgent: predicate=%.4f", predicate.Probability)
+	if !predicate.Yes(0.5) {
+		t.Errorf("is_urgent = %v, want the yes side; the ticket says money is blocked", predicate.Probability)
 	}
 
 	score, err := answers.Score("frustration")

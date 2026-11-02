@@ -20,7 +20,7 @@ import (
 // implementation's signature.
 //
 // It is how an [AgentTool] puts a delegated run's events on the parent's stream
-// and how the typesafe judgment tools declare what a judgment cost; a tool that
+// and how the decision judgment tools declare what a judgment cost; a tool that
 // only computes something has no use for it and implements [Tool] alone.
 type Reporter interface {
 	// ExecuteReporting runs the tool, reporting events as it goes, and

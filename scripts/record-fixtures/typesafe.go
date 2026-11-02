@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/bensyverson/goodall/decision"
+	"github.com/bensyverson/goodall/internal/systemone"
 	"github.com/bensyverson/goodall/typesafe"
 )
 
@@ -42,6 +44,11 @@ const recordedComplaint = "Help! My payouts have been failing for 3 days and I h
 const unknownQuestionType = `{"state":"Help! My payouts have been failing for 3 days.",` +
 	`"model":"jev-1.13.0","questions":{"vibe":{"type":"vibe","instructions":"What is the vibe?"}}}`
 
+// criteriaFixture names the recording of a predicate with criteria. A recording
+// is named for the wire it was taken from, so its name follows the wire's
+// spelling, which has one home.
+const criteriaFixture = systemone.WirePredicate + "_criteria"
+
 // typeSafeExchanges builds the TypeSafe recordings against one model.
 func typeSafeExchanges(rec *recorder, key, model string) ([]exchange, error) {
 	client := typesafe.New(key, typesafe.WithHTTPClient(rec.httpClient()))
@@ -51,25 +58,25 @@ func typeSafeExchanges(rec *recorder, key, model string) ([]exchange, error) {
 		Body:    recordedComplaint,
 		Plan:    "growth",
 	}
-	mixed := typesafe.Questions{
-		{ID: "department", Question: typesafe.Choice{
+	mixed := decision.Questions{
+		{ID: "department", Question: decision.Choice{
 			Instructions: "Which team should handle this ticket?",
-			Options: []typesafe.Option{
+			Options: []decision.Option{
 				{Key: "billing", Description: "Payments, payouts, invoicing, refunds"},
 				{Key: "technical", Description: "Bugs, outages, integrations"},
 				{Key: "sales", Description: "Pricing, upgrades, new accounts"},
 			},
 		}},
-		{ID: "is_urgent", Question: typesafe.Noul{
+		{ID: "is_urgent", Question: decision.Predicate{
 			Instructions: "Does this ticket convey urgency?",
 		}},
-		{ID: "frustration", Question: typesafe.Score{
+		{ID: "frustration", Question: decision.Score{
 			Instructions: "How frustrated is the customer?",
 			Levels:       []string{"Calm", "Mildly annoyed", "Frustrated", "Furious"},
 		}},
 	}
-	criteria := typesafe.Questions{
-		{ID: "is_urgent", Question: typesafe.Noul{
+	criteria := decision.Questions{
+		{ID: "is_urgent", Question: decision.Predicate{
 			Instructions: "Does this message convey urgency?",
 			True:         "Explicitly time-sensitive, or money or work is blocked right now",
 			False:        "No urgency expressed; the sender can wait",
@@ -79,16 +86,16 @@ func typeSafeExchanges(rec *recorder, key, model string) ([]exchange, error) {
 	return []exchange{
 		{
 			name: "mixed",
-			what: "one noul, one choice and one score over an object state, in one call",
+			what: "one predicate, one choice and one score over an object state, in one call",
 			run: func(ctx context.Context) error {
 				return askAndSave(ctx, rec, client, "mixed", ticket, mixed, model)
 			},
 		},
 		{
-			name: "noul_criteria",
-			what: "a noul with true and false criteria over a plain string state",
+			name: criteriaFixture,
+			what: "a predicate with true and false criteria over a plain string state",
 			run: func(ctx context.Context) error {
-				return askAndSave(ctx, rec, client, "noul_criteria", recordedComplaint, criteria, model)
+				return askAndSave(ctx, rec, client, criteriaFixture, recordedComplaint, criteria, model)
 			},
 		},
 		{
@@ -119,8 +126,8 @@ func typeSafeExchanges(rec *recorder, key, model string) ([]exchange, error) {
 }
 
 // askAndSave makes one judgment call, records it and prints what it cost.
-func askAndSave(ctx context.Context, rec *recorder, client *typesafe.Client, name string, state any, questions typesafe.Questions, model string) error {
-	answers, callErr := client.Ask(ctx, state, questions, typesafe.WithModel(model))
+func askAndSave(ctx context.Context, rec *recorder, client *typesafe.Client, name string, state any, questions decision.Questions, model string) error {
+	answers, callErr := client.Decide(ctx, &decision.Request{Model: model, State: state, Questions: questions})
 	if err := rec.refused(name, ".json", callErr); err != nil {
 		return err
 	}
@@ -179,7 +186,7 @@ func (r *recorder) saveResponse(name, ext string) error {
 // reportJudgment prints what one judgment call cost and what it decided, so a
 // run's output is enough to write the offline assertions from without opening
 // the fixture.
-func reportJudgment(name string, answers *typesafe.Answers, questions typesafe.Questions) {
+func reportJudgment(name string, answers *decision.Answers, questions decision.Questions) {
 	if answers == nil {
 		fmt.Printf("    %s: no answers\n", name)
 		return
@@ -194,22 +201,22 @@ func reportJudgment(name string, answers *typesafe.Answers, questions typesafe.Q
 
 // describeAnswer renders one answer for the run's output, read through the
 // accessor for the type the question asked.
-func describeAnswer(answers *typesafe.Answers, nq typesafe.NamedQuestion) string {
+func describeAnswer(answers *decision.Answers, nq decision.NamedQuestion) string {
 	switch nq.Question.QuestionType() {
-	case typesafe.TypeNoul:
-		answer, err := answers.Noul(nq.ID)
+	case decision.TypePredicate:
+		answer, err := answers.Predicate(nq.ID)
 		if err != nil {
 			return err.Error()
 		}
-		return fmt.Sprintf("noul=%.4f", answer.Noul)
-	case typesafe.TypeChoice:
+		return fmt.Sprintf("predicate=%.4f", answer.Probability)
+	case decision.TypeChoice:
 		answer, err := answers.Choice(nq.ID)
 		if err != nil {
 			return err.Error()
 		}
 		return fmt.Sprintf("choice=%s confidence=%.4f ranked=%v",
 			answer.Choice, answer.Confidence, answer.Ranked())
-	case typesafe.TypeScore:
+	case decision.TypeScore:
 		answer, err := answers.Score(nq.ID)
 		if err != nil {
 			return err.Error()

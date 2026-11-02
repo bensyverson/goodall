@@ -62,7 +62,7 @@ func scriptedRun(t *testing.T) (options, deps, *judge) {
 		Strong:     strong,
 		Cheap:      cheap,
 		Models:     anthropicModels,
-		Judge:      j.client(),
+		Judge:      j,
 		JudgeModel: opts.JudgeModel,
 	}, j
 }

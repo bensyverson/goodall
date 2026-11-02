@@ -1,18 +1,17 @@
 package main
 
 import (
-	"encoding/json/jsontext"
+	"context"
 	json "encoding/json/v2"
 	"fmt"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"slices"
 	"strings"
 	"sync"
 	"testing"
 
-	"github.com/bensyverson/goodall/typesafe"
+	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 )
 
 // The tokens every scripted judgment reports, so a test can assert that a
@@ -26,7 +25,8 @@ const (
 // body is what the privacy test reads, and the decoded parts are what the
 // answering logic switches on.
 type judgeRequest struct {
-	// Body is the request exactly as it arrived.
+	// Body is everything the request carried, as text, which is what a
+	// privacy assertion has to search.
 	Body string
 	// Model is the model the caller asked for.
 	Model string
@@ -36,32 +36,25 @@ type judgeRequest struct {
 	State string
 }
 
-// judge is an httptest stand-in for Jev that answers whatever question ids it
-// is sent and records every request. It answers from the state's own words, so
-// a test scripts the judgments by writing the fixture and the drafts rather
-// than by wiring an answer per call.
+// judge is a stand-in [decision.Decider] that answers whatever question ids it is
+// sent and records every request. It answers from the state's own words, so a
+// test scripts the judgments by writing the fixture and the drafts rather than by
+// wiring an answer per call.
+//
+// It sits at the seam rather than on one server's wire, since this example's
+// questions and policy are not about any wire; goodall/typesafe tests its own.
 type judge struct {
-	server *httptest.Server
-
 	mu       sync.Mutex
 	requests []judgeRequest
-	// refuse, when it reports true for a request, makes the judge answer
-	// 422 instead, which is how a one-message failure is scripted.
+	// refuse, when it reports true for a request, makes the judge reject it
+	// instead, which is how a one-message failure is scripted.
 	refuse func(judgeRequest) bool
 }
 
-// newJudge starts a fake judge for the life of the test.
+// newJudge builds a fake judge.
 func newJudge(t *testing.T) *judge {
 	t.Helper()
-	j := &judge{}
-	j.server = httptest.NewServer(http.HandlerFunc(j.serve))
-	t.Cleanup(j.server.Close)
-	return j
-}
-
-// client is a typesafe client pointed at this judge.
-func (j *judge) client() *typesafe.Client {
-	return typesafe.New("test-key", typesafe.WithBaseURL(j.server.URL))
+	return &judge{}
 }
 
 // seen is every request the judge received, in arrival order.
@@ -84,69 +77,53 @@ func (j *judge) asked(id questionID) int {
 	return n
 }
 
-// serve answers one judgment request.
-func (j *judge) serve(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+// Decide answers one judgment request, doing what a real client does first and
+// refusing a request that could never be answered.
+func (j *judge) Decide(_ context.Context, r *decision.Request) (*decision.Answers, error) {
+	if err := r.Validate(); err != nil {
+		return nil, err
+	}
+	state, err := json.Marshal(r.State, json.Deterministic(true))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var wire struct {
-		State jsontext.Value `json:"state"`
-		Model string         `json:"model"`
-	}
-	if err := json.Unmarshal(body, &wire); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 	req := judgeRequest{
-		Body:  string(body),
-		Model: wire.Model,
-		IDs:   questionIDsOf(string(body)),
-		State: string(wire.State),
+		Body:  fmt.Sprintf("%s %+v", state, r.Questions),
+		Model: r.Model,
+		IDs:   questionIDsOf(r.Questions),
+		State: string(state),
 	}
 	j.mu.Lock()
 	j.requests = append(j.requests, req)
 	refuse := j.refuse
 	j.mu.Unlock()
 
-	w.Header().Set("Content-Type", "application/json")
 	if refuse != nil && refuse(req) {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprint(w, `{"detail":[{"type":"value_error","loc":["body","state"],"msg":"this state cannot be evaluated"}]}`)
-		return
+		return nil, &goodall.APIError{
+			Provider: "fake-judge",
+			Status:   http.StatusUnprocessableEntity,
+			Kind:     goodall.KindInvalidRequest,
+			Message:  "body.state: this state cannot be evaluated",
+		}
 	}
-	fmt.Fprint(w, answerBody(req))
+	var answers decision.Answers
+	if err := json.Unmarshal([]byte(answerBody(req)), &answers); err != nil {
+		return nil, err
+	}
+	return &answers, nil
 }
 
-// questionIDsOf reads the ids out of a request body in the order they were
-// written, which is the order the caller built them in.
-func questionIDsOf(body string) []string {
-	var wire struct {
-		Questions jsontext.Value `json:"questions"`
-	}
-	if err := json.Unmarshal([]byte(body), &wire); err != nil {
-		return nil
-	}
-	var ids []string
-	rest := string(wire.Questions)
-	for _, id := range allQuestionIDs {
-		if strings.Contains(rest, `"`+string(id)+`":`) {
-			ids = append(ids, string(id))
-		}
+// questionIDsOf lists the ids in the order the caller built them in.
+func questionIDsOf(questions decision.Questions) []string {
+	ids := make([]string, 0, len(questions))
+	for _, question := range questions {
+		ids = append(ids, question.ID)
 	}
 	return ids
 }
 
-// allQuestionIDs is every id this example sends, which is how the fake judge
-// recognizes what it was asked without parsing the questions object.
-var allQuestionIDs = []questionID{
-	qDepartment, qNeedsReply, qIsUrgent, qIntent,
-	qAnswersTheQuestion, qInventsAFact, qUnaskedPromise, qToneMismatch,
-}
-
-// answerBody is the response for one request: one answer per question id,
-// decided from the words of the state.
+// answerBody is the answer set for one request, in [decision.Answers]'s own JSON
+// form: one answer per question id, decided from the words of the state.
 func answerBody(req judgeRequest) string {
 	var answers []string
 	for _, id := range req.IDs {
@@ -164,21 +141,21 @@ func answerFor(id questionID, state string) string {
 	case qDepartment:
 		return choiceAnswer(string(departmentOf(state)), departmentKeys())
 	case qNeedsReply:
-		return noulAnswer(boolNoul(containsAny(state, "CSV", "purchase order", "print vendor", "liability", "pricing")))
+		return predicateAnswer(decided(containsAny(state, "CSV", "purchase order", "print vendor", "liability", "pricing")))
 	case qIsUrgent:
-		return noulAnswer(boolNoul(containsAny(state, "print vendor")))
+		return predicateAnswer(decided(containsAny(state, "print vendor")))
 	case qIntent:
 		return choiceAnswer(intentOf(state), []string{string(intentSummary), string(intentDrafts)})
 	case qAnswersTheQuestion:
-		return noulAnswer(boolNoul(!strings.Contains(state, "OFFTARGET")))
+		return predicateAnswer(decided(!strings.Contains(state, "OFFTARGET")))
 	case qInventsAFact:
-		return noulAnswer(boolNoul(strings.Contains(state, "INVENTED")))
+		return predicateAnswer(decided(strings.Contains(state, "INVENTED")))
 	case qUnaskedPromise:
-		return noulAnswer(boolNoul(strings.Contains(state, "PROMISED")))
+		return predicateAnswer(decided(strings.Contains(state, "PROMISED")))
 	case qToneMismatch:
-		return noulAnswer(boolNoul(strings.Contains(state, "BRUSQUE")))
+		return predicateAnswer(decided(strings.Contains(state, "BRUSQUE")))
 	}
-	return noulAnswer(0.5)
+	return predicateAnswer(0.5)
 }
 
 // departmentOf is the department the sample inbox's subjects imply.
@@ -223,17 +200,17 @@ func containsAny(s string, needles ...string) bool {
 	return false
 }
 
-// boolNoul is a decided probability, well clear of every threshold.
-func boolNoul(yes bool) float64 {
+// decided is a settled probability, well clear of every threshold.
+func decided(yes bool) float64 {
 	if yes {
 		return 0.92
 	}
 	return 0.04
 }
 
-// noulAnswer writes a noul answer body.
-func noulAnswer(p float64) string {
-	return fmt.Sprintf(`{"type":"noul","noul":%v}`, p)
+// predicateAnswer writes a predicate answer.
+func predicateAnswer(p float64) string {
+	return fmt.Sprintf(`{"type":"predicate","probability":%v}`, p)
 }
 
 // choiceAnswer writes a choice answer body: the pick at 0.88 and the rest

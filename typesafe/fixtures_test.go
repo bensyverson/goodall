@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 )
 
 // These tests read the recordings scripts/record-fixtures made from the live
@@ -33,16 +34,16 @@ func fixture(t *testing.T, name string) []byte {
 
 // askFixture replays one recorded answer body through the client, which is the
 // same path a live response takes.
-func askFixture(t *testing.T, name string) (*Answers, error) {
+func askFixture(t *testing.T, name string) (*decision.Answers, error) {
 	t.Helper()
 	client, _ := serveJSON(t, http.StatusOK, string(fixture(t, name)))
-	return client.Ask(t.Context(), "replayed", simpleQuestions())
+	return client.Decide(t.Context(), &decision.Request{State: "replayed", Questions: simpleQuestions()})
 }
 
 func TestRecordedMixedAnswersDecode(t *testing.T) {
 	answers, err := askFixture(t, "live_mixed.json")
 	if err != nil {
-		t.Fatalf("Ask: %v", err)
+		t.Fatalf("Decide: %v", err)
 	}
 	if answers.Model != "jev-1.13.0" {
 		t.Errorf("Model = %q, want the versioned id that answered", answers.Model)
@@ -70,7 +71,7 @@ func TestRecordedMixedAnswersDecode(t *testing.T) {
 	if got := choice.Probabilities["billing"]; got != 0.97 {
 		t.Errorf("probabilities[billing] = %v, want 0.97", got)
 	}
-	wantRanked := []Outcome{
+	wantRanked := []decision.Outcome{
 		{Key: "billing", Probability: 0.97},
 		{Key: "technical", Probability: 0.03},
 		{Key: "sales", Probability: 0},
@@ -85,12 +86,12 @@ func TestRecordedMixedAnswersDecode(t *testing.T) {
 		}
 	}
 
-	noul, err := answers.Noul("is_urgent")
+	predicate, err := answers.Predicate("is_urgent")
 	if err != nil {
-		t.Fatalf("Noul: %v", err)
+		t.Fatalf("Predicate: %v", err)
 	}
-	if noul.Noul != 0.96 {
-		t.Errorf("noul = %v, want 0.96", noul.Noul)
+	if predicate.Probability != 0.96 {
+		t.Errorf("probability = %v, want 0.96", predicate.Probability)
 	}
 
 	score, err := answers.Score("frustration")
@@ -121,23 +122,23 @@ func TestRecordedMixedAnswersDecode(t *testing.T) {
 	}
 }
 
-func TestRecordedNoulWithCriteriaDecodes(t *testing.T) {
+func TestRecordedPredicateWithCriteriaDecodes(t *testing.T) {
 	answers, err := askFixture(t, "live_noul_criteria.json")
 	if err != nil {
-		t.Fatalf("Ask: %v", err)
+		t.Fatalf("Decide: %v", err)
 	}
-	noul, err := answers.Noul("is_urgent")
+	predicate, err := answers.Predicate("is_urgent")
 	if err != nil {
-		t.Fatalf("Noul: %v", err)
+		t.Fatalf("Predicate: %v", err)
 	}
-	if noul.Noul != 0.98 {
-		t.Errorf("noul = %v, want 0.98", noul.Noul)
+	if predicate.Probability != 0.98 {
+		t.Errorf("probability = %v, want 0.98", predicate.Probability)
 	}
-	// A noul answer carries no confidence at all, which is why NoulAnswer
+	// A predicate answer carries no confidence at all, which is why PredicateAnswer
 	// has no field for one: 0.5 means "yes and no are equally likely", not
 	// "medium confidence".
 	if _, err := answers.Choice("is_urgent"); err == nil {
-		t.Error("reading a noul as a choice succeeded")
+		t.Error("reading a predicate as a choice succeeded")
 	}
 }
 
@@ -174,7 +175,7 @@ func TestRecordedModelCatalogDecodes(t *testing.T) {
 func TestRecordedRefusalDecodes(t *testing.T) {
 	client, _ := serveJSON(t, http.StatusUnprocessableEntity,
 		string(fixture(t, "live_refused.json")), WithMaxRetries(-1))
-	_, err := client.Ask(t.Context(), "hi", simpleQuestions())
+	_, err := client.Decide(t.Context(), &decision.Request{State: "hi", Questions: simpleQuestions()})
 	if err == nil {
 		t.Fatal("a recorded 422 came back as an answer")
 	}

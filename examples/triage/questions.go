@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/bensyverson/goodall/typesafe"
+	"github.com/bensyverson/goodall/decision"
 )
 
 // Every question the judge is ever asked, and every threshold that reads an
@@ -69,7 +69,7 @@ const (
 
 // departments is the set in the order it is sent. The order is fixed because
 // jev-1.13.0 favours whichever option is listed first on a close call
-// (measured by scripts/probe-option-order, recorded in typesafe.Option), so
+// (measured by scripts/probe-option-order, recorded in decision.Option), so
 // two runs are only comparable while it stays put.
 var departments = []department{
 	departmentBilling,
@@ -87,7 +87,7 @@ func (d department) known() bool {
 }
 
 // The thresholds that turn a probability into a decision. They are inclusive:
-// a noul exactly at its threshold counts as a yes.
+// a predicate exactly at its threshold counts as a yes.
 const (
 	// needsReplyThreshold is where "waiting on an answer" starts. It is
 	// low because a message wrongly listed as needing a reply costs a
@@ -113,22 +113,22 @@ const (
 // today. All three are asked in one call over one message's record, which is
 // what the judge is good at — several independent judgments over one small
 // state.
-func triageQuestions() typesafe.Questions {
-	options := make([]typesafe.Option, 0, len(departments))
+func triageQuestions() decision.Questions {
+	options := make([]decision.Option, 0, len(departments))
 	for _, dept := range departments {
-		options = append(options, typesafe.Option{Key: string(dept), Description: departmentDescriptions[dept]})
+		options = append(options, decision.Option{Key: string(dept), Description: departmentDescriptions[dept]})
 	}
-	return typesafe.Questions{
-		{ID: string(qDepartment), Question: typesafe.Choice{
+	return decision.Questions{
+		{ID: string(qDepartment), Question: decision.Choice{
 			Instructions: "Which part of a small software company should handle this message? Decide from what the sender is asking for, not from the address it came from.",
 			Options:      options,
 		}},
-		{ID: string(qNeedsReply), Question: typesafe.Noul{
+		{ID: string(qNeedsReply), Question: decision.Predicate{
 			Instructions: "Is this message waiting on a written answer from the person who received it?",
 			True:         "The sender asked a question, asked for a decision, or asked for something only the recipient can give, and nothing in the message says it was already answered.",
 			False:        "The message is a receipt, a notification, a newsletter, an automated report, or a note that closes a thread; a reply would add nothing.",
 		}},
-		{ID: string(qIsUrgent), Question: typesafe.Noul{
+		{ID: string(qIsUrgent), Question: decision.Predicate{
 			Instructions: "Would a day's delay in answering this message cost the sender or the recipient something real?",
 			True:         "Money, a deadline, an outage, a legal date or a customer's decision turns on an answer arriving today.",
 			False:        "The matter keeps until the end of the week, or the pressure is the sender's own framing rather than a consequence: a marketing deadline, a countdown in a message that asks for a password or a payment.",
@@ -175,7 +175,7 @@ type triageVerdict struct {
 // readTriage applies the thresholds to one message's answers. An answer that
 // is missing or of the wrong type is an error naming the question: a judgment
 // that did not arrive must not read as a no.
-func readTriage(answers *typesafe.Answers) (triageVerdict, error) {
+func readTriage(answers *decision.Answers) (triageVerdict, error) {
 	dept, err := answers.Choice(string(qDepartment))
 	if err != nil {
 		return triageVerdict{}, err
@@ -183,11 +183,11 @@ func readTriage(answers *typesafe.Answers) (triageVerdict, error) {
 	if !department(dept.Choice).known() {
 		return triageVerdict{}, fmt.Errorf("the judge answered %q, which is not one of the departments this report knows", dept.Choice)
 	}
-	reply, err := answers.Noul(string(qNeedsReply))
+	reply, err := answers.Predicate(string(qNeedsReply))
 	if err != nil {
 		return triageVerdict{}, err
 	}
-	urgent, err := answers.Noul(string(qIsUrgent))
+	urgent, err := answers.Predicate(string(qIsUrgent))
 	if err != nil {
 		return triageVerdict{}, err
 	}
@@ -198,13 +198,13 @@ func readTriage(answers *typesafe.Answers) (triageVerdict, error) {
 		DepartmentConfidence:  dept.Confidence,
 		Unsure:                probability < departmentFloor,
 		NeedsReply:            reply.Yes(needsReplyThreshold),
-		NeedsReplyProbability: reply.Noul,
+		NeedsReplyProbability: reply.Probability,
 		Urgent:                urgent.Yes(urgentThreshold),
-		UrgentProbability:     urgent.Noul,
+		UrgentProbability:     urgent.Probability,
 	}, nil
 }
 
-// polarity is which end of a noul an inspector fires at. It is a typed
+// polarity is which end of a predicate an inspector fires at. It is a typed
 // constant rather than a bool because the questions read better as plain
 // questions — "does the draft answer what was asked?" — and which end is the
 // defect is then a fact about the inspector that a reader should find named.
@@ -230,16 +230,16 @@ type inspector struct {
 	Label string
 	// Threshold is where this defect starts.
 	Threshold float64
-	// Fires is which end of the noul the defect is at.
+	// Fires is which end of the predicate the defect is at.
 	Fires polarity
 	// Question is what the judge is asked.
-	Question typesafe.Noul
+	Question decision.Predicate
 }
 
 // fired reports whether this inspector's answer is over its threshold.
-func (ins inspector) fired(answer typesafe.NoulAnswer) bool {
+func (ins inspector) fired(answer decision.PredicateAnswer) bool {
 	if ins.Fires == firesBelow {
-		return answer.Noul < ins.Threshold
+		return answer.Probability < ins.Threshold
 	}
 	return answer.Yes(ins.Threshold)
 }
@@ -255,7 +255,7 @@ var inspectors = []inspector{
 		Label:     "it does not answer what the sender asked",
 		Threshold: 0.50,
 		Fires:     firesBelow,
-		Question: typesafe.Noul{
+		Question: decision.Predicate{
 			Instructions: "Does the draft answer the question the sender actually asked?",
 			True:         "Every question the sender asked is addressed, even if the answer is that it cannot be done or that more information is needed.",
 			False:        "The draft acknowledges the message, changes the subject, or answers a question that was not asked, leaving the sender's own question open.",
@@ -266,7 +266,7 @@ var inspectors = []inspector{
 		Label:     "it states a fact the message does not contain",
 		Threshold: 0.40,
 		Fires:     firesAbove,
-		Question: typesafe.Noul{
+		Question: decision.Predicate{
 			Instructions: "Does the draft state a fact about the account, the product, a price or a date that the sender's message does not contain?",
 			True:         "The draft asserts something specific — a figure, a date, a setting, a plan's contents, what happened before — that nothing in the sender's message supports.",
 			False:        "Everything the draft asserts comes from the sender's message, or is offered as a question, an offer to check, or a plainly general statement.",
@@ -277,7 +277,7 @@ var inspectors = []inspector{
 		Label:     "it promises something the sender did not ask for",
 		Threshold: 0.50,
 		Fires:     firesAbove,
-		Question: typesafe.Noul{
+		Question: decision.Predicate{
 			Instructions: "Does the draft commit the recipient to an action, a date, a refund or a discount that the sender did not ask for?",
 			True:         "The draft offers a deadline, a credit, a call, a feature or a change of plan that nobody requested, in words that would bind the recipient.",
 			False:        "The draft answers what was asked and offers nothing beyond it, or names a next step the sender themselves proposed.",
@@ -288,7 +288,7 @@ var inspectors = []inspector{
 		Label:     "its tone does not fit the sender's",
 		Threshold: 0.65,
 		Fires:     firesAbove,
-		Question: typesafe.Noul{
+		Question: decision.Predicate{
 			Instructions: "Would the sender find the draft's tone a poor fit for their own message?",
 			True:         "A brisk, worried or formal message is answered with jokes, marketing warmth or stiffness that reads as a form letter.",
 			False:        "The draft meets the sender roughly where they are: as plain, as warm and as formal as the message it answers.",
@@ -298,10 +298,10 @@ var inspectors = []inspector{
 
 // inspectorQuestions is the four checks as one request. They are independent
 // judgments over one state, which is the shape that makes a batch cheap.
-func inspectorQuestions() typesafe.Questions {
-	questions := make(typesafe.Questions, 0, len(inspectors))
+func inspectorQuestions() decision.Questions {
+	questions := make(decision.Questions, 0, len(inspectors))
 	for _, ins := range inspectors {
-		questions = append(questions, typesafe.NamedQuestion{ID: string(ins.ID), Question: ins.Question})
+		questions = append(questions, decision.NamedQuestion{ID: string(ins.ID), Question: ins.Question})
 	}
 	return questions
 }
@@ -315,10 +315,10 @@ func inspectorQuestions() typesafe.Questions {
 // An answer that is missing or of the wrong type is an error naming the
 // inspector, because a check that silently lost a question would pass every
 // draft it could not read.
-func flagged(answers *typesafe.Answers) ([]inspector, error) {
+func flagged(answers *decision.Answers) ([]inspector, error) {
 	var fired []inspector
 	for _, ins := range inspectors {
-		answer, err := answers.Noul(string(ins.ID))
+		answer, err := answers.Predicate(string(ins.ID))
 		if err != nil {
 			return nil, fmt.Errorf("the check for %q could not be read: %w", ins.ID, err)
 		}
@@ -366,11 +366,11 @@ const (
 // routingQuestions is the one question asked about the person's turn, before
 // anything is sent to the conversational model. It is deliberately one
 // question over one short state: the turn's own words.
-func routingQuestions() typesafe.Questions {
-	return typesafe.Questions{
-		{ID: string(qIntent), Question: typesafe.Choice{
+func routingQuestions() decision.Questions {
+	return decision.Questions{
+		{ID: string(qIntent), Question: decision.Choice{
 			Instructions: "What is this person asking their mail assistant to do?",
-			Options: []typesafe.Option{
+			Options: []decision.Option{
 				{Key: string(intentSummary), Description: "They want to know what is in the inbox: what arrived, where it belongs, what is waiting on them, what is urgent. A report answers them."},
 				{Key: string(intentDrafts), Description: "They want replies written for them, to messages that need one, whether or not they also want the inbox summarized."},
 			},
@@ -381,14 +381,14 @@ func routingQuestions() typesafe.Questions {
 // readIntent is the routing answer and how concentrated it was. An intent the
 // code has no policy for is an error rather than a default, so a question and
 // a router that have drifted apart are noticed on the first turn.
-func readIntent(answers *typesafe.Answers) (typesafe.ChoiceAnswer, error) {
+func readIntent(answers *decision.Answers) (decision.ChoiceAnswer, error) {
 	answer, err := answers.Choice(string(qIntent))
 	if err != nil {
-		return typesafe.ChoiceAnswer{}, err
+		return decision.ChoiceAnswer{}, err
 	}
 	switch intent(answer.Choice) {
 	case intentSummary, intentDrafts:
 		return answer, nil
 	}
-	return typesafe.ChoiceAnswer{}, fmt.Errorf("the router answered %q, which is neither %q nor %q", answer.Choice, intentSummary, intentDrafts)
+	return decision.ChoiceAnswer{}, fmt.Errorf("the router answered %q, which is neither %q nor %q", answer.Choice, intentSummary, intentDrafts)
 }

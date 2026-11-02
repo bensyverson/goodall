@@ -1,4 +1,4 @@
-package typesafe
+package decision
 
 import (
 	"context"
@@ -32,13 +32,13 @@ type authoredQuestion struct {
 	// ID is the key the answer comes back under.
 	ID string `json:"id" desc:"a short name for this question, such as is_urgent; the answer comes back under it and the judge never sees it"`
 	// Type is the question's type.
-	Type QuestionType `json:"type" enum:"noul,choice,score" desc:"noul for a yes-or-no question, choice for one of a named set, score for a level on a rubric"`
+	Type QuestionType `json:"type" enum:"predicate,choice,score" desc:"predicate for a yes-or-no question, choice for one of a named set, score for a level on a rubric"`
 	// Instructions is the question itself.
 	Instructions string `json:"instructions" desc:"the question to judge, as the exact condition you mean: the judge reads this literally and answers only what these words ask"`
-	// True describes what a yes means, on a noul question.
-	True string `json:"true,omitzero" desc:"noul only, optional: what a yes means here"`
-	// False describes what a no means, on a noul question.
-	False string `json:"false,omitzero" desc:"noul only, optional: what a no means here"`
+	// True describes what a yes means, on a predicate.
+	True string `json:"true,omitzero" desc:"predicate only, optional: what a yes means here"`
+	// False describes what a no means, on a predicate.
+	False string `json:"false,omitzero" desc:"predicate only, optional: what a no means here"`
 	// Options are the options to choose between, on a choice question.
 	Options []authoredOption `json:"options,omitzero" desc:"choice only: name every option the state could fall into, and add a none-of-the-above option when the list might not cover it"`
 	// Levels are the rubric, on a score question.
@@ -53,7 +53,7 @@ type authoredOption struct {
 	Description string `json:"description,omitzero" desc:"what belongs in this option, in enough detail to tell it from the others"`
 }
 
-// AuthoredTool wraps a [Client] as a [goodall.Tool] that lets the model write
+// AuthoredTool wraps a [Decider] as a [goodall.Tool] that lets the model write
 // both the state and the questions at call time. It is the delegation shape: a
 // conversational model hands a batch of judgments to a model that answers them
 // in parallel for a fraction of the price, and reads back typed answers.
@@ -71,27 +71,28 @@ type authoredOption struct {
 // reading as it writes one.
 //
 // A question set this package can refuse costs nothing: an empty list, a type
-// other than noul, choice or score — the API has a fourth, bounding_box, that
-// goodall does not model — a choice with no options, a score with fewer than
-// two levels and two questions sharing an id all come back as a result with
-// IsError set, naming the question and what to write instead, before any call
-// is made. A judgment the API refuses carries the API's own message. The model
-// reads either one and writes a better question set.
+// other than predicate, choice or score, a choice with no options, a score with
+// fewer than two levels and two questions sharing an id all come back as a result
+// with IsError set, naming the question and what to write instead, before any
+// call is made. A judgment the server rejects carries the server's own message.
+// The model reads either one and writes a better question set. A question the
+// judge declines is not a rejection: the result carries the other answers, as on
+// a [Tool].
 //
-// As with [Tool], what a judgment spent travels on the call: the tool
-// implements [goodall.Reporter], so the judge's tokens reach a consumer on that
-// call's [goodall.ToolCallEnd], with an unreported cost, and a question set
-// refused before it was sent declares nothing at all.
+// As with [Tool], what a judgment spent travels on the call: the tool implements
+// [goodall.Reporter], so the judge's tokens reach a consumer on that call's
+// [goodall.ToolCallEnd], and a question set refused before it was sent declares
+// nothing at all.
 //
-// It returns an error for a nil client and for a definition no provider would
-// accept — the naming rules are [goodall.NewTool]'s:
+// It returns an error for a nil Decider and for a definition no provider would
+// accept; the naming rules are [goodall.NewTool]'s:
 //
-//	judge, err := typesafe.AuthoredTool(client, "judge")
-func AuthoredTool(client *Client, name string, opts ...ToolOption) (goodall.Tool, error) {
-	if client == nil {
-		return nil, &toolError{name: name, err: errNoClient}
+//	judge, err := decision.AuthoredTool(decider, "judge")
+func AuthoredTool(decider Decider, name string, opts ...ToolOption) (goodall.Tool, error) {
+	if noDecider(decider) {
+		return nil, &toolError{name: name, err: errNoDecider}
 	}
-	cfg, ask := settleTool(opts)
+	cfg := settleTool(opts)
 	description := DefaultAuthoredDescription
 	if cfg.described {
 		description = cfg.description
@@ -99,16 +100,16 @@ func AuthoredTool(client *Client, name string, opts ...ToolOption) (goodall.Tool
 	return goodall.NewReportingTool(name, description, func(ctx context.Context, in authoredJudgment, _ func(goodall.Event)) (goodall.ToolOutcome, error) {
 		questions, err := authoredQuestions(in.Questions)
 		if err != nil {
-			// The refusal never reached the API, so the call spent
+			// The refusal never reached a server, so the call spent
 			// nothing and declares nothing.
 			return goodall.ToolOutcome{Result: goodall.ErrorResult(err.Error())}, nil
 		}
-		return judge(ctx, client, in.State, questions, ask...)
+		return judge(ctx, decider, &Request{Model: cfg.model, State: in.State, Questions: questions})
 	})
 }
 
 // authoredQuestions translates what the model wrote into a [Questions],
-// refusing the sets this package knows the API cannot answer. Every message is
+// refusing the sets this package knows no server can answer. Every message is
 // written for the model, which reads it and is expected to write a better
 // question, so each one names the question and what to write instead.
 func authoredQuestions(written []authoredQuestion) (Questions, error) {
@@ -123,14 +124,19 @@ func authoredQuestions(written []authoredQuestion) (Questions, error) {
 		}
 		out = append(out, NamedQuestion{ID: w.ID, Question: question})
 	}
+	// The seam leaves validation to each Decider, but "costs nothing" is this
+	// tool's promise whichever one is behind it.
+	if err := out.Validate(); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 
 // question builds the typed question one written question describes.
 func (w authoredQuestion) question() (Question, error) {
 	switch w.Type {
-	case TypeNoul:
-		return Noul{Instructions: w.Instructions, True: w.True, False: w.False}, nil
+	case TypePredicate:
+		return Predicate{Instructions: w.Instructions, True: w.True, False: w.False}, nil
 	case TypeChoice:
 		if len(w.Options) == 0 {
 			return nil, w.problem("is a choice and names no options; list every option the state could fall into, each with a key and a description")
@@ -148,7 +154,7 @@ func (w authoredQuestion) question() (Question, error) {
 		return Score{Instructions: w.Instructions, Levels: w.Levels}, nil
 	}
 	return nil, w.problem("asks for the type %q; ask for %s, %s or %s, and work anything else out yourself",
-		w.Type, TypeNoul, TypeChoice, TypeScore)
+		w.Type, TypePredicate, TypeChoice, TypeScore)
 }
 
 // problem is one refusal, naming the question it is about. A call carrying

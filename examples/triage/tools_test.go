@@ -108,7 +108,7 @@ func TestTriageInboxAsksOneJudgmentPerMessageAndSumsWhatTheySpent(t *testing.T) 
 	st := newStore()
 	j := newJudge(t)
 
-	tool, err := triageInboxTool(j.client(), testJudgeModel, in, st)
+	tool, err := triageInboxTool(j, testJudgeModel, in, st)
 	if err != nil {
 		t.Fatalf("building triage_inbox: %v", err)
 	}
@@ -158,7 +158,7 @@ func TestTriageInboxAsksOneJudgmentPerMessageAndSumsWhatTheySpent(t *testing.T) 
 func TestTriageInboxJudgesOnlyTheMessagesItWasNamed(t *testing.T) {
 	in := sampleInbox(t)
 	j := newJudge(t)
-	tool, err := triageInboxTool(j.client(), testJudgeModel, in, newStore())
+	tool, err := triageInboxTool(j, testJudgeModel, in, newStore())
 	if err != nil {
 		t.Fatalf("building triage_inbox: %v", err)
 	}
@@ -177,7 +177,7 @@ func TestTriageInboxReportsOneMessageTheJudgeRefusedWithoutLosingTheRest(t *test
 	j := newJudge(t)
 	j.refuse = func(req judgeRequest) bool { return strings.Contains(req.State, "Orchard Coffee") }
 
-	tool, err := triageInboxTool(j.client(), testJudgeModel, in, newStore())
+	tool, err := triageInboxTool(j, testJudgeModel, in, newStore())
 	if err != nil {
 		t.Fatalf("building triage_inbox: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestTriageInboxReportsOneMessageTheJudgeRefusedWithoutLosingTheRest(t *test
 func TestTriageInboxRefusesAnIDItDoesNotKnow(t *testing.T) {
 	in := sampleInbox(t)
 	j := newJudge(t)
-	tool, err := triageInboxTool(j.client(), testJudgeModel, in, newStore())
+	tool, err := triageInboxTool(j, testJudgeModel, in, newStore())
 	if err != nil {
 		t.Fatalf("building triage_inbox: %v", err)
 	}
@@ -215,7 +215,7 @@ func TestCheckDraftCombinesTheInspectorsInCodeAndSaysWhatToDoNext(t *testing.T) 
 	in := sampleInbox(t)
 	st := newStore()
 	j := newJudge(t)
-	tool, err := checkDraftTool(j.client(), testJudgeModel, in, st)
+	tool, err := checkDraftTool(j, testJudgeModel, in, st)
 	if err != nil {
 		t.Fatalf("building check_draft: %v", err)
 	}
@@ -265,7 +265,7 @@ func TestCheckDraftCombinesTheInspectorsInCodeAndSaysWhatToDoNext(t *testing.T) 
 
 func TestCheckDraftRefusesAnIDItDoesNotKnow(t *testing.T) {
 	j := newJudge(t)
-	tool, err := checkDraftTool(j.client(), testJudgeModel, sampleInbox(t), newStore())
+	tool, err := checkDraftTool(j, testJudgeModel, sampleInbox(t), newStore())
 	if err != nil {
 		t.Fatalf("building check_draft: %v", err)
 	}
@@ -284,12 +284,12 @@ func TestCheckDraftRefusesAnIDItDoesNotKnow(t *testing.T) {
 func TestTheJudgeIsShownRecordsRatherThanMessages(t *testing.T) {
 	in := sampleInbox(t)
 	j := newJudge(t)
-	triage, err := triageInboxTool(j.client(), testJudgeModel, in, newStore())
+	triage, err := triageInboxTool(j, testJudgeModel, in, newStore())
 	if err != nil {
 		t.Fatalf("building triage_inbox: %v", err)
 	}
 	runTool(t, triage, `{"message_ids":["all"]}`)
-	check, err := checkDraftTool(j.client(), testJudgeModel, in, newStore())
+	check, err := checkDraftTool(j, testJudgeModel, in, newStore())
 	if err != nil {
 		t.Fatalf("building check_draft: %v", err)
 	}

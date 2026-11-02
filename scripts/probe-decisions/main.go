@@ -5,7 +5,7 @@
 // response shape, and says every decision model in its catalog speaks it. That
 // is a claim about a wire goodall already has a client for, so this script tests
 // it through the production path: for every concrete model the catalog lists, it
-// asks one fixed noul, choice and score through [typesafe.Client.Ask] pointed at
+// asks one fixed predicate, choice and score through [typesafe.Client.Decide] pointed at
 // OpenRouter, once over a string state and once over an object state, and reports
 // whether the typed accessors read every answer. Retries are off, so a figure
 // counts one attempt.
@@ -41,7 +41,9 @@ import (
 	"time"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/internal/dotenv"
+	"github.com/bensyverson/goodall/internal/systemone"
 	"github.com/bensyverson/goodall/typesafe"
 )
 
@@ -67,21 +69,21 @@ type record struct {
 }
 
 // questions is the fixed question set, covering each primitive every vendor has.
-var questions = typesafe.Questions{
-	{ID: "department", Question: typesafe.Choice{
+var questions = decision.Questions{
+	{ID: "department", Question: decision.Choice{
 		Instructions: "Which team should handle this ticket?",
-		Options: []typesafe.Option{
+		Options: []decision.Option{
 			{Key: "billing", Description: "Payments, payouts, invoicing, refunds"},
 			{Key: "technical", Description: "Bugs, outages, integrations"},
 			{Key: "sales", Description: "Pricing, upgrades, new accounts"},
 		},
 	}},
-	{ID: "is_urgent", Question: typesafe.Noul{
+	{ID: "is_urgent", Question: decision.Predicate{
 		Instructions: "Does this ticket convey urgency?",
 		True:         "Money or work is blocked right now",
 		False:        "The sender can wait",
 	}},
-	{ID: "frustration", Question: typesafe.Score{
+	{ID: "frustration", Question: decision.Score{
 		Instructions: "How frustrated is the customer?",
 		Levels:       []string{"Calm", "Mildly annoyed", "Frustrated", "Furious"},
 	}},
@@ -218,7 +220,7 @@ func askOne(ctx context.Context, key, model, armName string, state any, out stri
 		typesafe.WithBaseURL(openRouterBase),
 		typesafe.WithHTTPClient(&http.Client{Transport: tap}),
 		typesafe.WithMaxRetries(-1))
-	answers, err := client.Ask(ctx, state, questions, typesafe.WithModel(model))
+	answers, err := client.Decide(ctx, &decision.Request{Model: model, State: state, Questions: questions})
 	save(out, "sweep_"+model+"_"+armName, tap.body)
 	head := fmt.Sprintf("%-40s %-6s", model, armName)
 	if err != nil {
@@ -231,11 +233,11 @@ func askOne(ctx context.Context, key, model, armName string, state any, out stri
 }
 
 // readAll runs every typed accessor and reports the values, or which one broke.
-func readAll(a *typesafe.Answers, raw []byte) string {
+func readAll(a *decision.Answers, raw []byte) string {
 	choice, errChoice := a.Choice("department")
-	noul, errNoul := a.Noul("is_urgent")
+	predicate, errPredicate := a.Predicate("is_urgent")
 	score, errScore := a.Score("frustration")
-	if err := errors.Join(errChoice, errNoul, errScore); err != nil {
+	if err := errors.Join(errChoice, errPredicate, errScore); err != nil {
 		return "PARTIAL " + oneLine(err.Error())
 	}
 	var extra struct {
@@ -247,8 +249,8 @@ func readAll(a *typesafe.Answers, raw []byte) string {
 	if err := json.Unmarshal(raw, &extra); err != nil {
 		return "ok but extras unreadable: " + err.Error()
 	}
-	return fmt.Sprintf("ok choice=%s/%.2f noul=%.2f score=%.2f/%.2f in=%d out=%d cost=%.8f via=%s answered=%s",
-		choice.Choice, choice.Confidence, noul.Noul, score.Score, score.Confidence,
+	return fmt.Sprintf("ok choice=%s/%.2f predicate=%.2f score=%.2f/%.2f in=%d out=%d cost=%.8f via=%s answered=%s",
+		choice.Choice, choice.Confidence, predicate.Probability, score.Score, score.Confidence,
 		a.Usage.Input, a.Usage.Output, extra.Usage.Cost, extra.Provider, a.Model)
 }
 
@@ -262,10 +264,19 @@ type rawCall struct {
 
 // raws makes the calls outside the typed client and prints each status and body.
 func raws(ctx context.Context, keys map[string]string, out string) {
-	nativeBody := `{"state":` + quote(complaint) + `,"model":"%s","questions":{` +
-		`"department":{"type":"choice","instructions":"Which team should handle this ticket?","criteria":{"billing":"Payments, payouts, invoicing, refunds","technical":"Bugs, outages, integrations","sales":"Pricing, upgrades, new accounts"}},` +
-		`"is_urgent":{"type":"noul","instructions":"Does this ticket convey urgency?"},` +
-		`"frustration":{"type":"score","instructions":"How frustrated is the customer?","criteria":["Calm","Mildly annoyed","Frustrated","Furious"]}}}`
+	// The System One form comes from the codec, so this probe posts exactly what
+	// the production path posts, with a predicate carrying no criteria.
+	nativeBody := func(model string) string {
+		body, err := systemone.EncodeRequest(&decision.Request{Model: model, State: complaint, Questions: decision.Questions{
+			questions[0],
+			{ID: "is_urgent", Question: decision.Predicate{Instructions: "Does this ticket convey urgency?"}},
+			questions[2],
+		}})
+		if err != nil {
+			fatal(err)
+		}
+		return string(body)
+	}
 	openAIBody := `{"model":"gpt-6-luna","input":` + quote(complaint) + `,"questions":[` +
 		`{"type":"choice","name":"department","instructions":"Which team should handle this ticket?","choices":[{"value":"billing","description":"Payments, payouts, invoicing, refunds"},{"value":"technical","description":"Bugs, outages, integrations"},{"value":"sales","description":"Pricing, upgrades, new accounts"}]},` +
 		`{"type":"predicate","name":"is_urgent","instructions":"Does this ticket convey urgency?"},` +
@@ -273,11 +284,11 @@ func raws(ctx context.Context, keys map[string]string, out string) {
 	invalid := `{"state":"x","model":"%s","questions":{"q":{"type":"vibe","instructions":"What is the vibe?"}}}`
 
 	calls := []rawCall{
-		{"typesafe_native", typeSafeURL, keys["TYPESAFE_API_KEY"], fmt.Sprintf(nativeBody, "jev-1.14.0")},
-		{"openrouter_alpha_jev", alphaURL, keys["OPENROUTER_API_KEY"], fmt.Sprintf(nativeBody, "typesafe/jev-1.14")},
-		{"openrouter_alpha_luna", alphaURL, keys["OPENROUTER_API_KEY"], fmt.Sprintf(nativeBody, "openai/gpt-6-luna-decisions")},
+		{"typesafe_native", typeSafeURL, keys["TYPESAFE_API_KEY"], nativeBody("jev-1.14.0")},
+		{"openrouter_alpha_jev", alphaURL, keys["OPENROUTER_API_KEY"], nativeBody("typesafe/jev-1.14")},
+		{"openrouter_alpha_luna", alphaURL, keys["OPENROUTER_API_KEY"], nativeBody("openai/gpt-6-luna-decisions")},
 		{"openai_native", openAIURL, keys["OPENAI_API_KEY"], openAIBody},
-		{"openai_systemone_shape_refused", openAIURL, keys["OPENAI_API_KEY"], fmt.Sprintf(nativeBody, "gpt-6-luna")},
+		{"openai_systemone_shape_refused", openAIURL, keys["OPENAI_API_KEY"], nativeBody("gpt-6-luna")},
 		{"typesafe_invalid", typeSafeURL, keys["TYPESAFE_API_KEY"], fmt.Sprintf(invalid, "jev-1.14.0")},
 		{"openrouter_invalid", openRouterBase + "/v1/systemone", keys["OPENROUTER_API_KEY"], fmt.Sprintf(invalid, "typesafe/jev-1.14")},
 		{"openai_invalid", openAIURL, keys["OPENAI_API_KEY"], `{"model":"gpt-6-luna","input":"x","questions":[{"type":"vibe","instructions":"What is the vibe?"}]}`},

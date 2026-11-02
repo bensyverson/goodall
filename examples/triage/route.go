@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/bensyverson/goodall"
-	"github.com/bensyverson/goodall/typesafe"
+	"github.com/bensyverson/goodall/decision"
 )
 
 // router judges what the person asked for, once, and keeps the decision for
@@ -23,7 +23,7 @@ import (
 // [newAgent] builds one per run; a consumer serving many runs from one agent
 // keys the decision by the run instead.
 type router struct {
-	// route is the typesafe.Route hook that asks the judge and calls
+	// route is the decision.Route hook that asks the judge and calls
 	// decide.
 	route func(context.Context, *goodall.Request, *goodall.Message) error
 
@@ -42,13 +42,13 @@ type router struct {
 // judgment under routeFloor leaves the turn as the agent was built — the
 // capable default — because narrowing on a guess takes away a tool the person
 // may have been asking for. And a judgment that fails ends the run, which is
-// typesafe.Route's own default: carrying on unrouted would send every turn to
+// decision.Route's own default: carrying on unrouted would send every turn to
 // whichever model the agent was built with and say nothing about it, and a
 // bill is a poor way to find out that the routing stopped.
 func newRouter(d deps, tools []goodall.Tool) *router {
 	r := &router{}
-	r.route = typesafe.Route(d.Judge, routingQuestions(),
-		func(ctx context.Context, req *goodall.Request, _ *goodall.Message, answers *typesafe.Answers) error {
+	r.route = decision.Route(d.Judge, routingQuestions(),
+		func(ctx context.Context, req *goodall.Request, _ *goodall.Message, answers *decision.Answers) error {
 			answer, err := readIntent(answers)
 			if err != nil {
 				return err
@@ -72,7 +72,7 @@ func newRouter(d deps, tools []goodall.Tool) *router {
 			}
 			return nil
 		},
-		typesafe.WithRouteModel(d.JudgeModel))
+		decision.WithModel(d.JudgeModel))
 	return r
 }
 

@@ -110,7 +110,8 @@ The triage example is the delegation one. It reads a mailbox, Apple Mail's store
 | `goodall/anthropic` | The Messages API: streaming and blocking, thinking (adaptive and budget), images and PDFs, cache control, the models catalog |
 | `goodall/openrouter` | Chat Completions with typed dialects for OpenRouter, OpenAI, LM Studio and generic servers: reasoning details round-tripped verbatim, cost reporting, the catalog with prices |
 | `goodall/chat` | Threads, stores, the service that owns runs, the redacted view and the redacted stream, SSE and NDJSON writers, a chat-safe Markdown subset |
-| `goodall/typesafe` | A blocking client for TypeSafe's Jev, a judgment model: one state plus typed questions in, one typed answer per question out. Not a provider; it sits beside them, as a tool an agent calls (`Tool`, `AuthoredTool`) or a hook that routes a turn (`Route`), and [the findings](project/2026-09-17-typesafe-jev-findings.md#when-to-reach-for-a-judgment-model) say when to reach for it |
+| `goodall/decision` | Decision models from any vendor: one state plus typed questions in, one typed answer per question out, behind a `Decider` seam. Not a provider; it sits beside them, as a tool an agent calls (`Tool`, `AuthoredTool`) or a hook that routes a turn (`Route`), and [the findings](project/2026-09-17-typesafe-jev-findings.md#when-to-reach-for-a-judgment-model) say when to reach for one |
+| `goodall/typesafe` | A `decision.Decider` for TypeSafe's Jev, a judgment model, with its model catalog |
 
 ## Reading further
 

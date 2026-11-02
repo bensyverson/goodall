@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/examples/triage/mailbox"
-	"github.com/bensyverson/goodall/typesafe"
 )
 
 // The tools the agent reads the inbox with. Two of them ask the judge; none of
@@ -160,23 +160,23 @@ type triageReport struct {
 // triageInboxTool judges every named message: where it belongs, whether it is
 // waiting on an answer, and whether it is waiting today.
 //
-// It is built by hand rather than with typesafe.Tool because the state is
+// It is built by hand rather than with decision.Tool because the state is
 // already in this process: the model names records and the tool builds the
 // judge's state from the records it holds, so fifty messages are never echoed
 // through the model's own output to reach the judge. One call per message, run
 // in parallel, is the shape the judge answers best.
-func triageInboxTool(client *typesafe.Client, model string, in *inbox, st *store) (goodall.Tool, error) {
+func triageInboxTool(judge decision.Decider, model string, in *inbox, st *store) (goodall.Tool, error) {
 	return goodall.NewReportingTool(toolTriage,
 		"Sort messages: which part of the business each belongs to, whether it is waiting on a written answer, and whether it is waiting today. "+
 			"A judgment model answers each message on its own record, so this is cheap enough to run over the whole inbox in one call, which is the habit to keep.",
 		func(ctx context.Context, req triageRequest, _ func(goodall.Event)) (goodall.ToolOutcome, error) {
-			return triageMessages(ctx, client, model, in, st, req.MessageIDs)
+			return triageMessages(ctx, judge, model, in, st, req.MessageIDs)
 		})
 }
 
 // triageMessages judges the named messages in parallel and sums what the calls
 // spent onto the one outcome the parent's ToolCallEnd carries.
-func triageMessages(ctx context.Context, client *typesafe.Client, model string, in *inbox, st *store, named []string) (goodall.ToolOutcome, error) {
+func triageMessages(ctx context.Context, judge decision.Decider, model string, in *inbox, st *store, named []string) (goodall.ToolOutcome, error) {
 	ids, err := resolveIDs(in, named)
 	if err != nil {
 		return goodall.ToolOutcome{Result: goodall.ErrorResult(err.Error())}, nil
@@ -196,7 +196,7 @@ func triageMessages(ctx context.Context, client *typesafe.Client, model string, 
 		wg.Go(func() {
 			slots <- struct{}{}
 			defer func() { <-slots }()
-			answers, err := client.Ask(ctx, stateOf(record), questions, typesafe.WithModel(model))
+			answers, err := judge.Decide(ctx, &decision.Request{Model: model, State: stateOf(record), Questions: questions})
 			if err != nil {
 				results[i] = outcome{err: err}
 				return
@@ -318,17 +318,17 @@ type checkVerdict struct {
 // tells the redraft what to fix. The state is built here from the record this
 // process already holds, so the judge sees the same filtered view triage saw
 // plus the draft.
-func checkDraftTool(client *typesafe.Client, model string, in *inbox, st *store) (goodall.Tool, error) {
+func checkDraftTool(judge decision.Decider, model string, in *inbox, st *store) (goodall.Tool, error) {
 	return goodall.NewReportingTool(toolCheck,
 		"Check a draft reply before anyone sees it: four inspectors ask whether it answers what was asked, whether it states a fact the message does not contain, "+
 			"whether it promises something nobody asked for, and whether its tone fits the sender's. The answer says which of them fired and what to do next.",
 		func(ctx context.Context, req checkRequest, _ func(goodall.Event)) (goodall.ToolOutcome, error) {
-			return checkDraft(ctx, client, model, in, st, req)
+			return checkDraft(ctx, judge, model, in, st, req)
 		})
 }
 
 // checkDraft asks the inspectors about one draft and applies the cascade.
-func checkDraft(ctx context.Context, client *typesafe.Client, model string, in *inbox, st *store, req checkRequest) (goodall.ToolOutcome, error) {
+func checkDraft(ctx context.Context, judge decision.Decider, model string, in *inbox, st *store, req checkRequest) (goodall.ToolOutcome, error) {
 	record, ok := in.lookup(req.MessageID)
 	if !ok {
 		return goodall.ToolOutcome{Result: goodall.ErrorResult(fmt.Sprintf(
@@ -340,7 +340,7 @@ func checkDraft(ctx context.Context, client *typesafe.Client, model string, in *
 	}
 
 	st.recordJudgments(1)
-	answers, err := client.Ask(ctx, draftState{Message: stateOf(record), Draft: req.Draft}, inspectorQuestions(), typesafe.WithModel(model))
+	answers, err := judge.Decide(ctx, &decision.Request{Model: model, State: draftState{Message: stateOf(record), Draft: req.Draft}, Questions: inspectorQuestions()})
 	if err != nil {
 		return goodall.ToolOutcome{}, err
 	}
@@ -352,9 +352,9 @@ func checkDraft(ctx context.Context, client *typesafe.Client, model string, in *
 	attempt := checkAttempt{Draft: req.Draft, Fired: fired, Probabilities: map[questionID]float64{}}
 	verdict := checkVerdict{MessageID: req.MessageID, Ready: len(fired) == 0}
 	for _, ins := range fired {
-		answer, _ := answers.Noul(string(ins.ID))
-		attempt.Probabilities[ins.ID] = answer.Noul
-		verdict.Flagged = append(verdict.Flagged, flaggedInspector{ID: string(ins.ID), Problem: ins.Label, Probability: answer.Noul})
+		answer, _ := answers.Predicate(string(ins.ID))
+		attempt.Probabilities[ins.ID] = answer.Probability
+		verdict.Flagged = append(verdict.Flagged, flaggedInspector{ID: string(ins.ID), Problem: ins.Label, Probability: answer.Probability})
 	}
 	verdict.Attempt = st.recordCheck(req.MessageID, attempt)
 	switch {

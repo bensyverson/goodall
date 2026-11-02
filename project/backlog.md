@@ -60,7 +60,7 @@ A second interface beside `Provider` that a judgment model (TypeSafe's Jev) and 
 
 ## 2026-09-17 An explicit union type on a judgment tool's `state` schema
 
-`typesafe.Tool` and `typesafe.AuthoredTool` take the state as a `jsontext.Value`, which `goodall.NewTool` infers to a required, described member with no `type`, so a model may write a string, an object or an array there. Spelling that as an explicit union needs `goodall.Schema` to gain `anyOf`, a root-package change. Parked because both providers accept the typeless member and the live run (`typesafe/live_authored_test.go`) shows a model filling it correctly without one. Revive if a model is seen writing the wrong shape, or if a provider starts refusing a property with no type.
+`decision.Tool` and `decision.AuthoredTool` take the state as a `jsontext.Value`, which `goodall.NewTool` infers to a required, described member with no `type`, so a model may write a string, an object or an array there. Spelling that as an explicit union needs `goodall.Schema` to gain `anyOf`, a root-package change. Parked because both providers accept the typeless member and the live run (`typesafe/live_authored_test.go`) shows a model filling it correctly without one. Revive if a model is seen writing the wrong shape, or if a provider starts refusing a property with no type.
 
 ## 2026-09-17 Approval inside a delegated run
 
@@ -68,15 +68,11 @@ A hook in an `AgentTool`'s child that defers a tool call for approval ends the c
 
 ## 2026-09-17 Discouraging indirection in the authored judgment tool's guidance
 
-The one live run of `typesafe.AuthoredTool` (findings doc, "Observed 2026-09-17 by the adapters leaf") showed claude-sonnet-5 asking all ten questions in one call, as the description asks, but addressing each ticket by reference over the whole array as state, which is the indirection TypeSafe's jaggedness page says degrades Jev. Jev resolved all ten. Parked because one run is not evidence and every sentence in `DefaultAuthoredDescription` competes with the four already there. Revive when a second run shows a wrong answer traceable to indirection; the fix is a sentence in the description or in the `state` field's `desc`, measured over repeated runs.
-
-## 2026-09-17 One model option across the typesafe client, tools and route
-
-`typesafe.WithModel` is an `AskOption`; the tools take `WithToolModel` and the route `WithRouteModel`, because a construction-time option cannot share the per-call func type. Parked as a naming wart. Revive if the three spellings confuse a consumer; the fix is a small interface-based option type the three constructors share, which is a change to `typesafe/options.go`.
+The one live run of `decision.AuthoredTool` (findings doc, "Observed 2026-09-17 by the adapters leaf") showed claude-sonnet-5 asking all ten questions in one call, as the description asks, but addressing each ticket by reference over the whole array as state, which is the indirection TypeSafe's jaggedness page says degrades Jev. Jev resolved all ten. Parked because one run is not evidence and every sentence in `DefaultAuthoredDescription` competes with the four already there. Revive when a second run shows a wrong answer traceable to indirection; the fix is a sentence in the description or in the `state` field's `desc`, measured over repeated runs.
 
 ## 2026-09-17 Structured instructions and criteria on a typesafe question
 
-The API accepts a JSON object or array wherever a question takes text: instructions, an option's description, a score level, a noul's true and false. `goodall/typesafe` sends strings only, which every documented example uses; 2389's typesafe-go types the slot as `any` ([comparison](2026-09-17-typesafe-go-comparison.md)). Parked because no consumer has asked for a rubric object and a `string` field cannot become `any` without touching every question type. Revive when a consumer needs a structured rubric; the shape is a new field beside `Instructions`, such as `Rubric any`, marshaled in its place when set, so the string form stays the simple one.
+The API accepts a JSON object or array wherever a question takes text: instructions, an option's description, a score level, a predicate's true and false. `goodall/decision` sends strings only, which every documented example uses; 2389's typesafe-go types the slot as `any` ([comparison](2026-09-17-typesafe-go-comparison.md)). Parked because no consumer has asked for a rubric object and a `string` field cannot become `any` without touching every question type. Revive when a consumer needs a structured rubric; the shape is a new field beside `Instructions`, such as `Rubric any`, marshaled in its place when set, so the string form stays the simple one.
 
 ## 2026-09-17 Typed question handles with a generic Choice
 

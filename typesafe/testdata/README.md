@@ -35,7 +35,7 @@ That envelope is also where the fourth question type came from. Its
 `expected_tags` names `bounding_box` beside `noul`, `choice` and `score`, and
 the published API reference lists only three; the finding is recorded in
 `project/2026-09-17-typesafe-jev-findings.md`. This package does not model it,
-so an answer of that type decodes to a `typesafe.UnknownAnswer` carrying its
+so an answer of that type decodes to a `decision.UnknownAnswer` carrying its
 bytes.
 
 ## What the offline tests may assert

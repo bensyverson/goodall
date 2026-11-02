@@ -8,9 +8,9 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/anthropic"
+	"github.com/bensyverson/goodall/decision"
 	"github.com/bensyverson/goodall/internal/dotenv"
 	"github.com/bensyverson/goodall/internal/livemodel"
-	"github.com/bensyverson/goodall/typesafe"
 )
 
 // This is the live check the adapters leaf exists to make: one real
@@ -62,7 +62,7 @@ func TestLiveAuthoredToolWritesItsOwnQuestions(t *testing.T) {
 	client := liveClient(t)
 	key := liveAgentKey(t)
 
-	judge, err := typesafe.AuthoredTool(client, "judge", typesafe.WithToolModel(livemodel.TypeSafe))
+	judge, err := decision.AuthoredTool(client, "judge", decision.WithModel(livemodel.TypeSafe))
 	if err != nil {
 		t.Fatalf("building the authored judgment tool: %v", err)
 	}
@@ -145,7 +145,7 @@ func logAuthoredCall(t *testing.T, input jsontext.Value) {
 // would use.
 func logJudgment(t *testing.T, result string) {
 	t.Helper()
-	var answers typesafe.Answers
+	var answers decision.Answers
 	if err := json.Unmarshal([]byte(result), &answers); err != nil {
 		t.Logf("the tool result did not decode back into Answers (%v); raw:\n%s", err, result)
 		return
@@ -153,11 +153,11 @@ func logJudgment(t *testing.T, result string) {
 	t.Logf("%s answered %d questions for %d input tokens", answers.Model, len(answers.IDs()), answers.Usage.Input)
 	for _, entry := range answers.All() {
 		switch answer := entry.Answer.(type) {
-		case typesafe.NoulAnswer:
-			t.Logf("  %s: noul=%.3f", entry.ID, answer.Noul)
-		case typesafe.ChoiceAnswer:
+		case decision.PredicateAnswer:
+			t.Logf("  %s: predicate=%.3f", entry.ID, answer.Probability)
+		case decision.ChoiceAnswer:
 			t.Logf("  %s: %s confidence=%.3f ranked=%v", entry.ID, answer.Choice, answer.Confidence, answer.Ranked())
-		case typesafe.ScoreAnswer:
+		case decision.ScoreAnswer:
 			t.Logf("  %s: score=%.3f confidence=%.3f levels=%q", entry.ID, answer.Score, answer.Confidence, answer.Levels())
 		default:
 			t.Logf("  %s: %s", entry.ID, entry.Answer.AnswerType())

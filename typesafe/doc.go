@@ -1,67 +1,37 @@
-// Package typesafe is a blocking client for TypeSafe's Jev, a judgment model:
-// one request carries a state — text, an object or an array — and a list of
-// typed questions, and the answer is one typed value per question, all
-// evaluated over the same state in parallel. There is no conversation, no tool
-// call, no thinking and no stream, so a Client is deliberately not a
-// [goodall.Provider] and not a [goodall.Completer]; it sits beside them as the
-// thing an agent asks when the question is a judgment rather than a turn.
+// Package typesafe is a blocking client for TypeSafe's Jev, a judgment model. A
+// [Client] implements [decision.Decider], so the questions, the answers and the
+// [decision.Tool], [decision.AuthoredTool] and [decision.Route] adapters are all
+// in [github.com/bensyverson/goodall/decision]; this package holds only what is
+// TypeSafe's own: the endpoint, the key, the default model, the error bodies and
+// the model catalog. Like every decision model it is deliberately not a
+// [goodall.Provider].
 //
 // What it shares with the provider packages is everything below the API: the
 // same HTTP transport with its retries and Retry-After handling, the same
 // *[goodall.APIError] with the same cross-provider error kinds, and the same
-// [goodall.Usage] counts. It imports the root package and nothing outside the
-// standard library.
-//
-// # State is data, not instructions
-//
-// The state is marshaled as JSON exactly as it is given and is the material
-// the model works from. Jev does not treat adversarial content in it as
-// hostile: TypeSafe's own jaggedness notes say so, so a transcript, a web page
-// or a user message placed in the state can carry text that reads as an
-// instruction, and the questions are the only thing that decides what is
-// asked. Keep the questions and their thresholds in the calling code, where
-// they can be reviewed, and put untrusted text only in the state.
+// [goodall.Usage] counts. It imports goodall's own packages and nothing outside
+// the standard library.
 //
 // # What Jev is bad at
 //
 // It reads instructions literally, cannot count, do arithmetic or compare
 // dates, and degrades on state full of detail the question does not need.
-// Filter and compute in code, ask the model only the semantic part, and
-// convert numbers into named buckets before asking about them. See
-// project/2026-09-17-typesafe-jev-findings.md for the whole list and for when
-// a judgment model is the right tool at all.
+// TypeSafe's own jaggedness notes also say it does not treat adversarial content
+// in the state as hostile, which is why [decision] keeps instructions out of the
+// state. See project/2026-09-17-typesafe-jev-findings.md for the whole list and
+// for when a judgment model is the right tool at all.
 //
 // # Quick start
 //
 //	client := typesafe.New(os.Getenv("TYPESAFE_API_KEY"))
-//	answers, err := client.Ask(ctx, ticket, typesafe.Questions{
-//		{ID: "department", Question: typesafe.Choice{
-//			Instructions: "Which team should handle this?",
-//			Options: []typesafe.Option{
-//				{Key: "billing", Description: "Payments, invoicing, refunds"},
-//				{Key: "technical", Description: "Bugs, outages, integrations"},
-//			},
-//		}},
-//		{ID: "is_urgent", Question: typesafe.Noul{Instructions: "Does this convey urgency?"}},
+//	answers, err := client.Decide(ctx, &decision.Request{
+//		State: ticket,
+//		Questions: decision.Questions{
+//			{ID: "is_urgent", Question: decision.Predicate{Instructions: "Does this convey urgency?"}},
+//		},
 //	})
-//	if err != nil {
-//		return err
-//	}
-//	dept, err := answers.Choice("department")
 //
-// # Reaching the judge from an agent
-//
-// Three adapters put a judgment in front of, or inside, a
-// [github.com/bensyverson/goodall.Agent], and none of them needs anything of
-// the core loop that a tool and a hook do not already offer:
-//
-//   - [Tool] is a tool whose questions the developer fixes: the model chooses
-//     what to judge and reads back the typed answers. Reach for this one first.
-//   - [AuthoredTool] is a tool whose questions the model writes at call time,
-//     for judgments that cannot be enumerated in advance. Its input schema
-//     carries the guidance about writing a question, and it refuses a question
-//     set the API could not answer before paying for the call.
-//   - [Route] is a [github.com/bensyverson/goodall.Hooks] BeforeSend hook: it
-//     judges each new turn and hands the answers to a callback that picks the
-//     model, narrows the tools, adds a system line or refuses the turn.
+// Set [decision.Request.Model], or pin it with [decision.WithModel] on an
+// adapter, wherever a threshold depends on the model; left empty it is
+// [DefaultModel], an alias that moves.
 package typesafe

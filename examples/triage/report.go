@@ -193,7 +193,7 @@ func probability(p float64) string {
 	return fmt.Sprintf("%.2f", p)
 }
 
-// yesNo is a decided noul in the words the report uses everywhere.
+// yesNo is a decided predicate in the words the report uses everywhere.
 func yesNo(v bool) string {
 	if v {
 		return "yes"
