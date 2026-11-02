@@ -7,6 +7,7 @@ package openrouter
 
 import (
 	"encoding/json/jsontext"
+	json "encoding/json/v2"
 
 	"github.com/bensyverson/goodall"
 )
@@ -141,10 +142,29 @@ type completionTokensDetails struct {
 // body, inside a choice, or as the only frame of a stream. Code is kept as a
 // raw JSON value because it mirrors the HTTP status as a number before the
 // response is committed and can be a provider's own string after.
+//
+// Other servers on this format send the whole member as a string, Ollama's
+// documented form and what LM Studio 0.4.19 answers an unrouted path with, which
+// reads as an error with only a message.
 type wireError struct {
 	Code     jsontext.Value `json:"code,omitzero"`
 	Message  string         `json:"message,omitzero"`
 	Metadata *errorMetadata `json:"metadata,omitzero"`
+}
+
+// UnmarshalJSONFrom reads the member in either form.
+func (we *wireError) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	if dec.PeekKind() == '"' {
+		return json.UnmarshalDecode(dec, &we.Message)
+	}
+	type object wireError
+	return json.UnmarshalDecode(dec, (*object)(we))
+}
+
+// said reports whether the member says anything. A server that always writes the
+// member leaves it empty on success, and that is no failure.
+func (we *wireError) said() bool {
+	return we != nil && (we.Message != "" || len(we.Code) > 0 || we.Metadata != nil)
 }
 
 // errorMetadata is the stable part of an error: ErrorType is the field to

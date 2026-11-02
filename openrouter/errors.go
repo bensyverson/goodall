@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/bensyverson/goodall"
+	"github.com/bensyverson/goodall/internal/systemone"
 	"github.com/bensyverson/goodall/internal/transport"
 )
 
@@ -60,21 +61,44 @@ const modalityRefusalPrefix = "no endpoints found that support"
 // path calls the same logic on a frame that arrived inside an HTTP 200.
 var errorDecoder transport.ErrorDecoder = decodeError
 
-// decodeError turns an OpenRouter error body into a *goodall.APIError, or nil
-// when the body is not one — an HTML error page from a proxy, say — which
-// leaves the transport to classify the response from its status alone.
+// decodeError turns an error body into a *goodall.APIError, or nil when the body
+// is not one — an HTML error page from a proxy, say — which leaves the transport
+// to classify the response from its status alone.
 //
 // status is the HTTP status the body arrived with; pass zero for a frame that
 // came inside a successful response, which is what leaves APIError.Status at
-// zero the way the root package documents.
+// zero the way the root package documents. On a failing status a body with no
+// error member is still read for a sentence, since a local server may word it
+// another way. With no status only the error member counts, because a successful
+// body may hold a "message" of its own.
 func decodeError(status int, header http.Header, body []byte) *goodall.APIError {
 	var envelope struct {
 		Error *wireError `json:"error,omitzero"`
 	}
-	if err := json.Unmarshal(body, &envelope); err != nil || envelope.Error == nil {
+	if err := json.Unmarshal(body, &envelope); err == nil && envelope.Error.said() {
+		return apiError(envelope.Error, status, header, body)
+	}
+	if status == 0 {
 		return nil
 	}
-	return apiError(envelope.Error, status, header, body)
+	if raw := jsontext.Value(body); !raw.IsValid() || raw.Kind() != '{' {
+		return nil
+	}
+	message := systemone.ErrorMessage(body)
+	if message == "" {
+		return nil
+	}
+	return apiError(&wireError{Message: message}, status, header, body)
+}
+
+// noAnswersError is the error for a 200 decision response with no answers. Where
+// the body says why, that is the server's error; where it says nothing, the
+// response is broken in a way only the calling loop can report.
+func noAnswersError(header http.Header, raw []byte) error {
+	if message := systemone.ErrorMessage(raw); message != "" {
+		return inBodyError(&wireError{Message: message}, header, raw)
+	}
+	return &goodall.ProtocolError{Reason: "the decision response carried neither answers nor an error"}
 }
 
 // apiError builds the neutral error from one wire error object, wherever it
@@ -269,11 +293,11 @@ func errorInBody(body *chatResponse, header http.Header, raw []byte) *goodall.AP
 	if body == nil {
 		return nil
 	}
-	if body.Error != nil {
+	if body.Error.said() {
 		return inBodyError(body.Error, header, raw)
 	}
 	for _, c := range body.Choices {
-		if c.Error != nil {
+		if c.Error.said() {
 			return inBodyError(c.Error, header, raw)
 		}
 		if c.FinishReason == finishError {

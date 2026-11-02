@@ -420,6 +420,22 @@ func TestOpenAIADecisionErrorInsideASuccessIsAnError(t *testing.T) {
 	}
 }
 
+// TestOpenAIAnEmptyErrorIsNoFailure: a server that always writes the member leaves
+// it empty on success, as every other path in this package reads it.
+func TestOpenAIAnEmptyErrorIsNoFailure(t *testing.T) {
+	for _, member := range []string{`""`, `{}`} {
+		body := `{"error":` + member + `,"model":"gpt-6-luna","answers":[{"type":"predicate","name":"q","probability":0.5}]}`
+		answers, _, err := openAIDecide(t, body, openAIRequest())
+		if err != nil {
+			t.Errorf("error %s beside answers: %v", member, err)
+			continue
+		}
+		if got := len(answers.All()); got != 1 {
+			t.Errorf("error %s: %d answers, want 1", member, got)
+		}
+	}
+}
+
 // TestOpenAIDecisionNeedsAModel: "Only gpt-6-luna is supported" today, and picking
 // it silently would pin a caller's thresholds to a model they did not choose. The
 // error must not send them to DecisionModels, which this dialect refuses.

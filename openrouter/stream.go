@@ -125,7 +125,7 @@ func (n *neutralizer) frame(data string) (events []goodall.Event, apiErr *goodal
 	if err := json.Unmarshal(raw, &chunk); err != nil {
 		return []goodall.Event{unknownEvent(eventMalformedChunk, raw)}, nil, false
 	}
-	if chunk.Error != nil {
+	if chunk.Error.said() {
 		return nil, inBodyError(chunk.Error, n.header, raw), true
 	}
 	if len(chunk.Choices) == 0 && chunk.Usage == nil {
@@ -141,7 +141,7 @@ func (n *neutralizer) frame(data string) (events []goodall.Event, apiErr *goodal
 	}
 
 	first := chunk.Choices[0]
-	if first.Error != nil {
+	if first.Error.said() {
 		return events, inBodyError(first.Error, n.header, raw), true
 	}
 	if first.FinishReason == finishError {

@@ -3,6 +3,7 @@ package systemone
 import (
 	"encoding/json/jsontext"
 	json "encoding/json/v2"
+	"errors"
 	"fmt"
 
 	"github.com/bensyverson/goodall"
@@ -25,16 +26,24 @@ type wireUsage struct {
 	Output int `json:"output_tokens,omitzero"`
 }
 
+// ErrNoAnswers is the error for a well-formed body that answers nothing. A request
+// always asks at least one question, so this is a server that did not answer, and
+// a caller reading an empty set would take it for a model with nothing to say.
+var ErrNoAnswers = errors.New("systemone: the body carries no answers")
+
 // DecodeAnswers reads one response body. The cost is left unreported, because
 // the wire's common shape carries none and a server that adds one is the calling
 // client's to read.
 //
 // The error names the answer it could not read and no server; a client wraps it
-// as its own protocol error.
+// as its own protocol error. A body with no answers is [ErrNoAnswers].
 func DecodeAnswers(data []byte) (*decision.Answers, error) {
 	var w wireResponse
 	if err := json.Unmarshal(data, &w); err != nil {
 		return nil, err
+	}
+	if len(w.Answers) == 0 {
+		return nil, ErrNoAnswers
 	}
 	answers := decision.NewAnswers(w.Answers)
 	answers.Model = w.Model

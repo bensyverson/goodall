@@ -298,7 +298,7 @@ func decodeDecisions(raw []byte, header http.Header) (*decision.Answers, error) 
 	if err := json.Unmarshal(raw, &w); err != nil {
 		return nil, decisionsProtocolError(err)
 	}
-	if w.Error != nil {
+	if w.Error.said() {
 		return nil, inBodyError(w.Error, header, raw)
 	}
 	if w.Answers == nil {

@@ -4,8 +4,9 @@
 //
 // It is shared so that every client speaking this wire reuses one translation
 // and no provider package imports another. It knows the wire and nothing about
-// which server is at the other end, so its errors name no server, and each
-// client keeps its own error-body decoder, which stamps its own provider name.
+// which server is at the other end, so its errors name no server. It reads the
+// sentence out of the error bodies servers send ([ErrorMessage]), and each client
+// keeps its own error decoder around that, which stamps its own provider name.
 //
 // The wire's spelling stops here. The yes-or-no question is a noul on this wire
 // and a [decision.Predicate] everywhere above it.
@@ -34,8 +35,9 @@ const WirePredicate = "noul"
 type wireRequest struct {
 	// State is the content to evaluate, as given.
 	State any `json:"state"`
-	// Model is the model or alias that should answer.
-	Model string `json:"model"`
+	// Model is the model or alias that should answer. Left out when empty,
+	// which asks a local server for whichever model it has loaded.
+	Model string `json:"model,omitzero"`
 	// Questions are the typed questions, as the questions object.
 	Questions Questions `json:"questions"`
 }

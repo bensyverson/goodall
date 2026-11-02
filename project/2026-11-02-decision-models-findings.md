@@ -84,8 +84,25 @@ The ollajev row and LocalAI's error body come from a subagent's reading and were
 **The servers agree on shape and differ at the edges**, and three of those differences matter to a client:
 
 - **Errors.** `openrouter`'s decoder reads `error` as an object, so Ollama's string form would fail to decode and lose the server's sentence. Read from the code, not run.
+
+  > Corrected 2026-11-02: "lose the server's sentence" was wrong in its mechanism. With `go test -short -run TestDecideSurfacesEveryLocalServersSentence ./openrouter` before the fix, a failing status with a string error reached the caller with the whole JSON body as `APIError.Message`, from the transport's fallback, so the sentence was wrapped and not lost. Inside a 200 the same body was a `ProtocolError` naming the Go type, and there the sentence was lost. Both now read as the sentence (leaf MxIOGV), through `wireError` and `systemone.ErrorMessage`.
+  >
+  > Re-checked by reading the pages on 2026-11-02: LocalAI's page gives `{"error": {"message": "...", "type": "invalid_request"}}` and ollajev's gives only the shape above, no values, so the sentences in the tests for those two are authored. Ollama's `{"error": "text and schema must not exceed 64 KiB"}` is its 413 example. None of the three has been run.
+
 - **What a state means.** An object is JSON text on Ollama and labeled lines on LocalAI. On llama.cpp an array is read as a list of chat messages. goodall should pass the state through and document this, since normalizing it would hide a real difference in what the model reads.
 - **What confidence means.** An entropy measure on Ollama and a normalized margin for some models on LocalAI, so even a threshold on the same model need not carry between servers.
+
+
+### LM Studio, run live
+
+Run 2026-11-02 against LM Studio 0.4.28+2 (`CFBundleShortVersionString`) with `julia-1`, the Q8_0 GGUF of `ggml-org/Julia-1-GGUF` at 168.17 MB, with `go test -count=1 -v ./openrouter -run TestLiveLMStudio`. One machine, one version and one model, and it shows the wire works, not that the model judges well: on the payouts ticket Julia-1 sent the ticket to `technical` at 0.99, where Luna said `billing`.
+
+- **No key and no model named both work.** `Decide` read a choice, a predicate with criteria and a score through the typed accessors in 0.12s for the test, and the response named `julia-1`. No cost is reported, and `Answers.Cost` stays unreported.
+- **The score carries a legend and integer-keyed probabilities**, and a confidence. The predicate's body carried no confidence, so that tolerance rests on the authored test and on the leaf's report of it.
+- **Errors are this server's own.** An unknown model is a 400 of kind `invalid_request` with code `invalidModelIdentifier` and the sentence "Invalid model identifier \"no-such-model\". Please specify a valid downloaded model (e.g., julia-1)." With nothing loaded it is a 400 with code `noModelsLoaded` and "No models loaded. Please load a model in the developer page or use the 'lms load' command." Both reach `APIError.Message`.
+- **The version matters.** 0.4.19+2 had julia-1 loaded and did not route `/v1/systemone` or `/v1/decisions`, answering each with HTTP 200 and `{"error":"Unexpected endpoint or method. (POST /v1/systemone)"}`, while its chat endpoints said "use /v1/systemone". Updating to 0.4.28+2 fixed it. Which version between them added the routes is not established, since the changelog lines read seem to sit under a Bionic release. `Decide` now reports that body as an error.
+
+llama.cpp, Ollama and LocalAI remain documented and not run.
 
 ## What falls short today
 
@@ -139,7 +156,7 @@ Building both wires together is what proves the types are neutral. A neutral pac
 
 ## The OpenAI wire
 
-Built 2026-11-02 in `openrouter/decide_openai.go`. Every figure here came from `go run ./scripts/probe-openai-decisions -env /abs/path/.env` with the `-mode` named beside it, against `gpt-6-luna` on `api.openai.com` and `openai/gpt-6-luna-decisions` on OpenRouter. The tool run's code was uncommitted on top of `bd411f8`, since the leaf's agent does not commit; it is pinned by the SHA-256 of `openrouter/decide_openai.go`, `7257d55e…`, and of the probe's `criteria.go`, `ec04ef2f…`.
+Built 2026-11-02 in `openrouter/decide_openai.go`. Every figure here came from `go run ./scripts/probe-openai-decisions -env /abs/path/.env` with the `-mode` named beside it, against `gpt-6-luna` on `api.openai.com` and `openai/gpt-6-luna-decisions` on OpenRouter. The tool run's code was uncommitted on top of `bd411f8`, since the leaf's agent does not commit; it is pinned by the SHA-256 of `openrouter/decide_openai.go`, `7257d55e…`, and of the probe's `criteria.go`, `ec04ef2f…`. Commit `d53d65c` holds exactly those bytes, so that is the pin; a later one-word change to how an empty error member reads does not touch what these figures measured.
 
 ### The state rule
 

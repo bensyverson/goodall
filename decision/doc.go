@@ -8,7 +8,7 @@
 //
 // The package holds the questions ([Predicate], [Choice] and [Score]), the
 // answers, the [Decider] seam every server implements, and the adapters written
-// over that seam. It makes no HTTP call and names no vendor: a client package
+// over that seam. It makes no HTTP call and its code names no vendor: a client package
 // implements Decider and translates to its own wire, and everything here works
 // over whichever one it is handed. This package has no default model, and a
 // threshold tuned on one model does not carry to another, so pin one with
@@ -23,6 +23,21 @@
 // that decides what is asked. Keep the questions and their thresholds in the
 // calling code, where they can be reviewed, and put untrusted text only in the
 // state.
+//
+// # A state means what the server makes of it
+//
+// The servers on this wire turn an object or an array into model input each their
+// own way: per their docs as read on 2026-11-02, Ollama serializes either as JSON
+// text and does not read it as chat messages, LocalAI renders an object as labeled
+// lines, and llama.cpp reads an array as a list of chat messages, so an array of
+// records may not mean there what its author intended. goodall passes the state
+// through unnormalized, because rewriting it would hide a real difference in what
+// the model reads. Where the form matters, build the text yourself and send a
+// string, so the rendering is yours and not the server's.
+//
+// Confidence differs in the same way, as an entropy measure on Ollama and a
+// normalized margin for some models on LocalAI, so a threshold tuned on one server
+// need not carry to another even on the same model.
 //
 // # What a judge is bad at
 //

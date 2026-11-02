@@ -32,7 +32,9 @@ type Request struct {
 	// State is the material to judge, marshaled as JSON exactly as given: a
 	// string for text, a struct or a map for a record, a slice for a list of
 	// them. It is data the model reads and not something it defends against,
-	// so instructions belong in the questions, never here.
+	// so instructions belong in the questions, never here. What a model makes
+	// of an object or an array differs between servers, as the package
+	// documentation sets out.
 	State any
 	// Questions are the typed questions, each judged over the same state.
 	Questions Questions

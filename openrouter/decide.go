@@ -8,6 +8,7 @@ package openrouter
 import (
 	"context"
 	json "encoding/json/v2"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,6 +45,11 @@ var _ decision.Decider = (*Client)(nil)
 // wire and are written into its instructions, in a form measured against the same
 // question through OpenRouter. No cost is stated there, so [decision.Answers].Cost
 // stays unreported, meaning not known.
+//
+// A local server takes no key: New(WithBaseURL(local), WithDialect(LMStudio)) sends
+// no Authorization header, and a request with no model leaves that member out, so
+// a server with one model loaded uses it. Its error sentence reaches the
+// *[goodall.APIError] in whichever shape it words one, on any status.
 //
 // A retried call may be billed twice, as on any call whose response was lost
 // after the server evaluated it; [WithMaxRetries] with a negative value gives
@@ -120,17 +126,21 @@ type wireDecisionExtras struct {
 }
 
 // decodeDecision reads one successful response. HTTP 200 is not success on this
-// API, so an error object in the body comes back as what it is, and a body that
-// is not an answer set is a *[goodall.ProtocolError].
+// API, and a local server may answer a path it does not route with one, so an
+// error in the body comes back as what it is, and a body that is not an answer
+// set is a *[goodall.ProtocolError].
 func decodeDecision(raw []byte, header http.Header, quirks Quirks) (*decision.Answers, error) {
 	var extras wireDecisionExtras
 	if err := json.Unmarshal(raw, &extras); err != nil {
 		return nil, &goodall.ProtocolError{Reason: "the decision response could not be decoded: " + err.Error()}
 	}
-	if extras.Error != nil {
+	if extras.Error.said() {
 		return nil, inBodyError(extras.Error, header, raw)
 	}
 	answers, err := systemone.DecodeAnswers(raw)
+	if errors.Is(err, systemone.ErrNoAnswers) {
+		return nil, noAnswersError(header, raw)
+	}
 	if err != nil {
 		return nil, &goodall.ProtocolError{Reason: "the decision response could not be decoded: " + err.Error()}
 	}
