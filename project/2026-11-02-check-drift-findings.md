@@ -63,3 +63,17 @@ The rewind is an approximation. The state before GPT-6 was never captured, so it
 ## Also changed
 
 `scripts/probe-agent-loop` and this tool now share `internal/liveprobe`. A run that finishes without calling the tool used to print `ok`, and now prints `FAIL`, because it says nothing about the second turn the probe exists to test. `livemodel.Pins` lists every model constant, and a test holds the list to them.
+
+## How it runs
+
+**Ruled by the owner on 2026-11-02: locally, weekly.** A launchd job runs the `/drift-check` Skill on Mondays at 09:00 from this checkout, using the `.env` already here, so the keys gain no second home. A cloud routine would have needed all four keys and a way to push its results back. launchd runs a job missed during sleep on wake, but a Mac that stays off misses it.
+
+```
+ln -s /Users/ben/git/goodall/scripts/drift-check/com.bensyverson.goodall.drift-check.plist ~/Library/LaunchAgents/
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.bensyverson.goodall.drift-check.plist
+launchctl kickstart gui/$(id -u)/com.bensyverson.goodall.drift-check    # one run now, to test it
+```
+
+The log is `local/drift-check.log`. The Skill reports and files, and leaves its report uncommitted for the owner, who also runs `-accept`. Until then, the same findings come back each week.
+
+`claude -p "/drift-check"` was run by hand on 2026-11-02 and completed: no drift, nothing filed. It ran from an existing session's environment, so running under launchd itself, with its bare environment and any permission prompts, is what the `kickstart` above tests.
