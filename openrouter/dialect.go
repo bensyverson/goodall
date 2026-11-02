@@ -1,10 +1,10 @@
 package openrouter
 
-// Dialect names the flavour of the OpenAI Chat Completions format a server
-// speaks. The format is shared; the extra members are not, so the dialect
-// decides what a request may carry rather than a second client existing for
-// each target. The zero value is [OpenRouter], because that is the server
-// this package is named for.
+// Dialect names the flavor of OpenAI's format a server speaks: which conversation
+// wire it takes, and within Chat Completions which extra members. The dialect
+// decides what a request may carry rather than a second client existing for each
+// target. The zero value is [OpenRouter], because that is the server this package
+// is named for.
 //
 // A value this package does not define is treated as [Generic]: the safe
 // answer for an unknown server is the plain format everyone implements.
@@ -13,8 +13,9 @@ type Dialect string
 const (
 	// OpenRouter is openrouter.ai, which accepts every member below.
 	OpenRouter Dialect = ""
-	// OpenAI is api.openai.com, which takes reasoning effort as a
-	// top-level string and understands metadata and end-user ids.
+	// OpenAI is api.openai.com, which speaks /responses for conversation here:
+	// its Chat Completions refuses function tools with reasoning on GPT-6, and
+	// there is no way to choose that wire through this dialect.
 	OpenAI Dialect = "openai"
 	// LMStudio is a local LM Studio server, which speaks the OpenAI format
 	// including reasoning effort but keeps no account-level metadata.
@@ -42,25 +43,9 @@ const (
 	// ReasoningObject sends OpenRouter's "reasoning" object, which also
 	// carries the exclude flag that a display setting maps onto.
 	ReasoningObject ReasoningStyle = "object"
-	// ReasoningEffortField sends OpenAI's top-level "reasoning_effort"
-	// string, which has no place for a display setting.
+	// ReasoningEffortField sends the top-level "reasoning_effort" string, which
+	// has no place for a display setting.
 	ReasoningEffortField ReasoningStyle = "reasoning_effort"
-)
-
-// OutputCap is the member a dialect reads the output-token cap from. The zero
-// value is [CapMaxTokens], the name the original Chat Completions format
-// defined and the one every compatible server still understands.
-type OutputCap string
-
-const (
-	// CapMaxTokens is "max_tokens", the original member.
-	CapMaxTokens OutputCap = ""
-	// CapMaxCompletionTokens is "max_completion_tokens", which OpenAI's
-	// reasoning models take instead: api.openai.com refuses max_tokens on
-	// them outright (HTTP 400, "Unsupported parameter: 'max_tokens' is not
-	// supported with this model", observed 2026-09-15) rather than
-	// ignoring it, so the name is not interchangeable.
-	CapMaxCompletionTokens OutputCap = "max_completion_tokens"
 )
 
 // StrictToolStyle is how a dialect carries a tool marked [goodall.Strict]. The
@@ -97,14 +82,26 @@ const (
 	DecisionWireDecisions DecisionWire = "decisions"
 )
 
+// ConversationWire is how a dialect carries a conversation. The zero value is
+// [ConversationChat], the wire every compatible server serves.
+type ConversationWire string
+
+const (
+	// ConversationChat posts to /chat/completions.
+	ConversationChat ConversationWire = ""
+	// ConversationResponses posts OpenAI's own shape to /responses. The members
+	// are the wire's, so the Quirks that spell out Chat members do not apply.
+	ConversationResponses ConversationWire = "responses"
+)
+
 // Quirks is what one dialect accepts. It is a struct rather than a map so the
 // set of questions is fixed, the answers are typed, and a new question is a
 // compile error in the table below rather than a silently missing key.
 type Quirks struct {
-	// Reasoning is how the thinking configuration is sent.
+	// ConversationWire is how a conversation is carried.
+	ConversationWire ConversationWire
+	// Reasoning is how the thinking configuration is sent on Chat Completions.
 	Reasoning ReasoningStyle
-	// OutputCap is the member the output-token cap travels in.
-	OutputCap OutputCap
 	// StreamUsage is whether a streamed request must ask for the usage
 	// report through stream_options.include_usage. A server that needs
 	// asking and is not asked streams no usage chunk at all, so the answer
@@ -148,21 +145,24 @@ type Quirks struct {
 
 // Quirks is what this dialect accepts. The table:
 //
-//	                    OpenRouter  OpenAI            LMStudio    Generic
-//	Reasoning           object      effort            effort      none
-//	OutputCap           max_tokens  max_completion_…  max_tokens  max_tokens
-//	StreamUsage         no          yes               yes         no
-//	ReasoningDetails    yes         no                no          no
-//	CacheControl        yes         no                no          no
-//	Routing             yes         no                no          no
-//	Plugins             yes         no                no          no
-//	SessionID           yes         no                no          no
-//	Debug               yes         no                no          no
-//	Metadata            yes         yes               no          no
-//	UsageCost           yes         no                no          no
-//	StrictTools         + beta      member            refused     refused
-//	DecisionWire        System One  /decisions        System One  System One
-//	DecisionModelReq…   yes         yes               no          no
+//	                    OpenRouter  OpenAI      LMStudio    Generic
+//	ConversationWire    chat        responses   chat        chat
+//	Reasoning           object      n/a         effort      none
+//	StreamUsage         no          n/a         yes         no
+//	ReasoningDetails    yes         n/a         no          no
+//	CacheControl        yes         no          no          no
+//	Routing             yes         no          no          no
+//	Plugins             yes         no          no          no
+//	SessionID           yes         no          no          no
+//	Debug               yes         no          no          no
+//	Metadata            yes         yes         no          no
+//	UsageCost           yes         no          no          no
+//	StrictTools         + beta      member      refused     refused
+//	DecisionWire        System One  /decisions  System One  System One
+//	DecisionModelReq…   yes         yes         no          no
+//
+// The n/a rows are Chat members the Responses wire fixes for itself, so they are
+// left at their zero values.
 func (d Dialect) Quirks() Quirks {
 	switch d {
 	case OpenRouter:
@@ -182,11 +182,9 @@ func (d Dialect) Quirks() Quirks {
 		}
 	case OpenAI:
 		return Quirks{
-			Reasoning:   ReasoningEffortField,
-			OutputCap:   CapMaxCompletionTokens,
-			StreamUsage: true,
-			Metadata:    true,
-			StrictTools: StrictToolsMember,
+			ConversationWire: ConversationResponses,
+			Metadata:         true,
+			StrictTools:      StrictToolsMember,
 
 			DecisionWire:          DecisionWireDecisions,
 			DecisionModelRequired: true,

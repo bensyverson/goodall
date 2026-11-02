@@ -4,7 +4,7 @@ Two sets live here, and the file names say which is which.
 
 - **`live_*` — recorded**, by `go run ./scripts/record-fixtures -provider openrouter` and
   `-provider openai`, from the live API. The Claude recordings were re-recorded on
-  **2026-10-28**; the OpenAI ones (`live_encrypted_reasoning_*`, `live_openai_*`) date from
+  **2026-10-28**; the OpenAI one (`live_encrypted_reasoning_*`) dates from
   **2026-09-15**, and their request bodies show the older, easier cyclist question. Every byte of a `live_*.sse` or
   `live_*.json` came off the wire; the `live_*.request.json` beside each one is the body
   goodall sent to get it, indented for reading but otherwise unchanged. No headers are
@@ -21,7 +21,6 @@ Two sets live here, and the file names say which is which.
 | `live_*` (no prefix) | `openrouter.ai/api/v1` | `anthropic/claude-sonnet-5.5` |
 | `live_tool_use*` | `openrouter.ai/api/v1` | `anthropic/claude-haiku-5.5`, which still accepts a forced `tool_choice` |
 | `live_encrypted_reasoning_tool_use*` | `openrouter.ai/api/v1` | `openai/gpt-6-astra` |
-| `live_openai_*` | `api.openai.com/v1`, `Dialect: OpenAI` | `gpt-5.6-terra` |
 | `live_decision_*` | `openrouter.ai/api/v1/systemone` and `/models` | `openai/gpt-6-luna-decisions`, `scaledown/classify-1` for the limit |
 | `live_openai_decision_*` | `api.openai.com/v1/decisions`, `Dialect: OpenAI` | `gpt-6-luna` |
 
@@ -39,9 +38,7 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_pdf.sse` | A generated one-page PDF, read through the `file-parser` plugin's `native` engine. |
 | `live_debug_echo.sse` | The same question with `debug.echo_upstream_body`, so the Anthropic-shaped body OpenRouter sent upstream is on disk. |
 | `live_error.json` | An unrecognized model id: HTTP 400, not 404. |
-| `live_openai_text.sse`, `live_openai_tool_use.sse`, `live_openai_reasoning.sse` | The OpenAI dialect against api.openai.com: text, a forced tool call, and a reasoning answer. |
 | `live_strict_tool_use.sse` | Recorded 2026-10-29: a tool sent with `function.strict` under `tool_choice` auto on Claude, with the `X-Anthropic-Beta` header OpenRouter needs before it forwards the flag (headers are not captured; the unit tests assert it). |
-| `live_openai_strict_tool_use.sse` | Recorded 2026-10-29: the same strict call against api.openai.com, every parameter required as OpenAI's strict mode demands, with reasoning off. |
 | `live_decision_mixed.json` | Recorded 2026-11-02: the System One wire on `openai/gpt-6-luna-decisions`, one question of each type over an object state, with the `id`, `provider` and `usage.cost` OpenRouter adds. It cost $0.0000433. |
 | `live_decision_model_limit.json` | Recorded 2026-11-02: `scaledown/classify-1` refusing an object state with a 400 that says so. |
 | `live_decision_schema_error.json` | Recorded 2026-11-02: an unknown question type, posted by hand since the typed API cannot build one. Its message is a JSON array inside a string, which `readableMessage` turns into sentences. |
@@ -79,10 +76,11 @@ committed (the regression tests are in `dialect_test.go`):
    reasoning.** "Function tools with `reasoning_effort` are not supported for … in
    `/v1/chat/completions`. To use function tools, use `/v1/responses` or set
    `reasoning_effort` to `'none'`." It is refused on `gpt-6-astra` and `gpt-5.6-terra` alike,
-   so there is no OpenAI-dialect reasoning *round trip* here: `live_openai_tool_use.sse`
-   turns reasoning off, and `live_openai_reasoning.sse` offers no tool. The encrypted
-   reasoning round trip is recorded through OpenRouter instead, which routes upstream to
-   `/v1/responses`.
+   so the encrypted reasoning round trip here is recorded through OpenRouter, which routes
+   upstream to `/v1/responses`. The OpenAI dialect itself left Chat Completions on
+   2026-11-02 and its chat recordings (`live_openai_text`, `_tool_use`, `_reasoning`,
+   `_strict_tool_use`) were removed; its own recordings are in
+   `scripts/probe-responses/testdata`.
 4. **An OpenAI model reasons on the turn that answers, not on the turn that calls a tool.**
    At `effort: "high"`, `openai/gpt-6-astra` returned `reasoning_tokens: 0` and no
    `reasoning_details` on the tool-calling turn and 98 `reasoning_details` fragments on the

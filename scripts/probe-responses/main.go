@@ -58,19 +58,23 @@ type reasoning struct {
 // request is one body, built by the exchanges below. Input items are raw because
 // replaying a response's items byte for byte is the thing being tested.
 type request struct {
-	Model            string            `json:"model"`
-	Instructions     string            `json:"instructions,omitzero"`
-	Input            []jsontext.Value  `json:"input"`
-	Tools            []jsontext.Value  `json:"tools,omitzero"`
-	Reasoning        *reasoning        `json:"reasoning,omitzero"`
-	Include          []string          `json:"include,omitzero"`
-	Text             jsontext.Value    `json:"text,omitzero"`
-	Metadata         map[string]string `json:"metadata,omitzero"`
-	SafetyIdentifier string            `json:"safety_identifier,omitzero"`
-	PromptCacheKey   string            `json:"prompt_cache_key,omitzero"`
-	MaxOutputTokens  int               `json:"max_output_tokens"`
-	Store            bool              `json:"store"`
-	Stream           bool              `json:"stream,omitzero"`
+	Model             string            `json:"model"`
+	Instructions      string            `json:"instructions,omitzero"`
+	Input             []jsontext.Value  `json:"input"`
+	Tools             []jsontext.Value  `json:"tools,omitzero"`
+	Reasoning         *reasoning        `json:"reasoning,omitzero"`
+	Include           []string          `json:"include,omitzero"`
+	Text              jsontext.Value    `json:"text,omitzero"`
+	Metadata          map[string]string `json:"metadata,omitzero"`
+	ToolChoice        jsontext.Value    `json:"tool_choice,omitzero"`
+	ParallelToolCalls *bool             `json:"parallel_tool_calls,omitzero"`
+	Stop              []string          `json:"stop,omitzero"`
+	StopSequences     []string          `json:"stop_sequences,omitzero"`
+	SafetyIdentifier  string            `json:"safety_identifier,omitzero"`
+	PromptCacheKey    string            `json:"prompt_cache_key,omitzero"`
+	MaxOutputTokens   int               `json:"max_output_tokens"`
+	Store             bool              `json:"store"`
+	Stream            bool              `json:"stream,omitzero"`
 }
 
 // surface is one server to call.
@@ -143,7 +147,7 @@ func fatal(err error) {
 
 // exchanges is the table of recordings.
 func exchanges() []exchange {
-	return []exchange{
+	return append([]exchange{
 		{"two_turn_stream_astra", "a streamed tool call and its follow-up, items replayed verbatim", twoTurn("gpt-6-astra", "low", true)},
 		{"two_turn_stream_sol", "the same on Sol", twoTurn("gpt-6.1-sol", "low", true)},
 		{"two_turn_stream_terra", "the same on Terra", twoTurn("gpt-6.1-terra", "low", true)},
@@ -169,7 +173,7 @@ func exchanges() []exchange {
 		{"or_openai", "OpenRouter /responses, a two-turn tool call on GPT-6", routerTwoTurn("openai/gpt-6-astra")},
 		{"or_claude", "OpenRouter /responses, a two-turn tool call on Claude", routerTwoTurn("anthropic/claude-sonnet-5.5")},
 		{"or_gemini", "OpenRouter /responses, a two-turn tool call on Gemini", routerTwoTurn("google/gemini-4-argon")},
-	}
+	}, append(choiceExchanges(), replayExchanges()...)...)
 }
 
 // userMessage is one user turn as an input item.

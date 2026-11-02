@@ -286,8 +286,8 @@ func TestTranslateDropsReasoningOnDialectsThatDoNotCarryIt(t *testing.T) {
 		)},
 		Cache: goodall.CacheOff,
 	}
-	if got := messagesJSON(t, req, OpenAI); strings.Contains(got, "reasoning") {
-		t.Errorf("OpenAI dialect carried reasoning_details: %s", got)
+	if got := messagesJSON(t, req, LMStudio); strings.Contains(got, "reasoning") {
+		t.Errorf("the LM Studio dialect carried reasoning_details: %s", got)
 	}
 }
 
@@ -382,20 +382,20 @@ func TestTranslateReasoningConfig(t *testing.T) {
 			want:    `"reasoning":{"effort":"colossal"}`,
 		},
 		{
-			name:    "openai uses the top-level field",
-			dialect: OpenAI,
+			name:    "lm studio uses the top-level field",
+			dialect: LMStudio,
 			config:  goodall.ThinkingConfig{Effort: goodall.EffortMedium},
 			want:    `"reasoning_effort":"medium"`,
 		},
 		{
-			name:    "openai off is none",
-			dialect: OpenAI,
+			name:    "lm studio off is none",
+			dialect: LMStudio,
 			config:  goodall.ThinkingConfig{Effort: goodall.EffortOff},
 			want:    `"reasoning_effort":"none"`,
 		},
 		{
-			name:    "openai ignores display",
-			dialect: OpenAI,
+			name:    "lm studio ignores display",
+			dialect: LMStudio,
 			config:  goodall.ThinkingConfig{Display: goodall.DisplayOmitted},
 			absent:  `"reasoning`,
 		},

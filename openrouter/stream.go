@@ -29,7 +29,7 @@ const (
 )
 
 // Stream sends the request and yields the events it produces, neutralized into
-// goodall's event vocabulary.
+// goodall's event vocabulary, whichever conversation wire the dialect speaks.
 //
 // The stream owns the HTTP response: ranging to the end, or breaking out
 // early, closes it, and canceling ctx ends the stream with ctx's error. A
@@ -47,7 +47,7 @@ func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Strea
 		header.Set("Accept", "text/event-stream")
 		resp, err := c.http.Do(ctx, transport.Request{
 			Method: http.MethodPost,
-			URL:    c.baseURL + pathChatCompletions,
+			URL:    c.baseURL + c.conversationPath(),
 			Header: header,
 			Body:   body,
 		})
@@ -57,7 +57,10 @@ func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Strea
 		}
 		defer resp.Body.Close()
 
-		n := &neutralizer{header: resp.Header}
+		var n frameNeutralizer = &neutralizer{header: resp.Header}
+		if c.speaksResponses() {
+			n = &responsesNeutralizer{header: resp.Header}
+		}
 		for frame, err := range sse.Events(resp.Body) {
 			if err != nil {
 				if ctxErr := ctx.Err(); ctxErr != nil {
@@ -87,6 +90,13 @@ func (c *Client) Stream(ctx context.Context, req *goodall.Request) goodall.Strea
 		// reports the missing message_stop as a *ProtocolError, which
 		// is the one place that judgment belongs.
 	}
+}
+
+// frameNeutralizer is one conversation wire's reading of a stream: it turns one SSE
+// data payload into events, and reports the error that ends the stream and whether
+// this frame was the last.
+type frameNeutralizer interface {
+	frame(data string) ([]goodall.Event, *goodall.APIError, bool)
 }
 
 // neutralizer turns OpenRouter's frames into goodall events. It owns the block

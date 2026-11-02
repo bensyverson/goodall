@@ -1,0 +1,115 @@
+{
+  "id": "resp_0d505a74c8b6f3f3016ae8c4d57d2487d1bd232dfb325f6066",
+  "object": "response",
+  "created_at": 1793639637,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793639640,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6-astra",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_0d505a74c8b6f3f3016ae8c4d6a64087d1a68def2dba6c5024",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MTYaS1wjp1WN9Zj9Tu-WSQ49atW4RzeVULOc4ykVI2Ti2WdBFpCqWQDe3HIpiUcCFFI9cziB8ZIa7LlDcsgP--RmutAsl2KuHBoDMeiGfRZv3xXlouinWYjEtJm9qmxPKQOmhluUSsRwHbKTOCLiBC16r7jikN2K7UoAg0Gwe8brKbtZKR05MKqIO3RnbABzK3T1v4fdcZNwJ3dJq8PSwzwI4vxkvWmv9G8zWGX2Jjqtj3H1z7cEw1N-nWUjWWhi0zIcZnyqaI3XIUKS9bNdJ0Ruj4o25ZzKPEfd8rr31_icO2e-fU8Ht-7SMLL1xIxJr85WI4A5vaLA5qpyh4MX2v3l7e4gYr0JZupWsVxhVTSY-ODA1PeOG57YcnXBmIHMQRDCsQIMfApvELLmM7okyknbvhxw2SbH9WzfU3vk72-Es55T7SfFs7xK2cHnltTzqn8x5zA1Bo4mY0dwmxt6MStcO9YCxQvNNuJKdl3ESfFGxFA2793aSOjECipWRD8v6F1sk-a9dllpUFLTLRPmBJtRlJR4nYj57Nwv5tJA4gloc1rX6kWYIcz6CeTz_MFSgppMEGmcUGQfLkrq9DuIkoAtsTuu690ipUquFPe4Q5Hb9O6p4TRovNtPse5SGb6K1tFfOVoKGaOL8Dw8T9GBmQUbNfmdyj2YsLz_kjqL3ZvLMEIr13HwUsI49lwYxWt0pAjT8QCm5xavN3x-R1RnbIgqCsVuOg6UTTwn5ddCy_X0Gdj4Mhy9oeUPduKZNrK4a-_ghvRDYKtwS-S42rV9pXBNY4lvEXc2mtqm31p_Jn-uU0V_HMotx8xigjZRLj2xSDhTEVm1lX6ne5WJVjAmBVdIU3x4uT91DQlflPzbbhvJphK3cIxxa4R7vIE1SVokNC1aFloiT3YxwmiwYDvojnUiNBUD12DzpymxG0SCVF56LoxcxSYT5zL2pLiOQ5WZAVIa7Jj7reP3XxIpcdy6JHfWTBz9tgGLBUVrAWQZIlC6nWlOegIy_XR7LsvfOgywQXMJCva-G3InsCBtaaAe08cry2sPLgmHeH3Pd3IK8GNUq8zQi6-NI4O8jpt0oLN3-vMs5tX6kKe0LeYDuhYDMsH15GGVTLHBX8CkJDOTJDNI80bqkXGUYvYJidcrKbkUi3YCLFDcQZcppbb7zeU_RR9i3xwPVpdOouO4rNbdodOqb-ap2DfSu3EOtSK9T7lQ_oFyZ0nBQU44XSwKuAQPRFwXrC_pKjErApUxO4v5-JZFrFj3HbqCwH7KmU78YzBz8r2XHO04OO6MgFRCKzEfdq8GkKa7SXico2leeZ0g98RwTtbhILPdMeR8k89rcfo397Jl2G5PAAj5Pqt58DTGQzCllkfBfLPxNBaXudfExRR5F4HQXYecRgcxHAU0jjcRIJEhaO9jzbqOacNbw6AmyfC3tyRUgwhlY12v3brZBHHU1FYtXk3EJdBjRhMM5Q0cbQQHcZwVgb-R-HYGhxAnfl2xw6a11yfXmSLyVy80BdYqst8wuSg3_iFgsCkpCp7jQjY22Gp1sDiQnyz31_DN7Z2y-TG5SzV1N7u4w1l_l6IAbaa_ChtiCWM5Gaexlqso0UTD3Mb_Cgvvy_VYE3c0-FDE_EE_P7jAxuuQrzLX_iX5EqVmyqBxLxfDAexSBbAM9eP8EQUuv2XQ6oI0-BjZrkXGroxAxf1IgvkWknGuRl6BfR1WW0TJMBlXPT12TmPASIfzl6Iu4QKT-S7J5YijIGgRexI1gghLxsxQWfDYI85zxAwG_1REK4vDnRx2ItniRMEk-M1OytgU8fQ7YEnpgcV91mvtDfkEtI4E7CLvTMAmFi4imsdVmWL4NgOZtLE_oJEiQSdug3nZGSwq8GUVd7drn5lnz1OB0N4-emwV5AEld-3tkHHhJ2FW9FB7vlGWkRigJe9cXM7Nk-nPIz5_ebfAUltZ0DSrR0a1Xi29-zEnGj6i7RbqFys8E-QnHxWNh-u7MqYwBmRl3EH1jCQn18jhDN0Sl2nrNclIIOcdmdU6Ch74liU5kGSgj2HpP3MTgu-",
+      "summary": []
+    },
+    {
+      "id": "fc_0d505a74c8b6f3f3016ae8c4d835bc87d189488e4666773014",
+      "type": "function_call",
+      "status": "completed",
+      "arguments": "{\"city\":\"Paris\"}",
+      "call_id": "call_1AeELYjRbHhYEbU8uEs229vu",
+      "name": "get_weather"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "low",
+    "mode": "standard",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 90,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 94,
+    "output_tokens_details": {
+      "reasoning_tokens": 74
+    },
+    "total_tokens": 184
+  },
+  "user": null,
+  "metadata": {}
+}

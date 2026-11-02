@@ -22,6 +22,8 @@ const DefaultBaseURL = "https://openrouter.ai/api/v1"
 const (
 	// pathChatCompletions is the completion endpoint, streamed or not.
 	pathChatCompletions = "/chat/completions"
+	// pathResponses is OpenAI's conversation endpoint, streamed or not.
+	pathResponses = "/responses"
 	// pathModels is the catalog. OpenRouter publishes no per-model
 	// endpoint that returns a catalog entry: /models/{id} is a 404 and
 	// /models/{id}/endpoints returns a different shape with no
@@ -41,10 +43,10 @@ const (
 	queryDecisionModels = "output_modalities=decisions"
 )
 
-// Client talks to OpenRouter, or to any other server that speaks the OpenAI
-// Chat Completions format. It implements [goodall.Provider],
-// [goodall.Completer] and [goodall.ModelLister] for conversation, and
-// [decision.Decider] for decision models.
+// Client talks to OpenRouter, to any other server that speaks the OpenAI Chat
+// Completions format, or to api.openai.com on its Responses wire. It implements
+// [goodall.Provider], [goodall.Completer] and [goodall.ModelLister] for
+// conversation, and [decision.Decider] for decision models.
 //
 // A Client holds no per-call state, so one value serves every goroutine in a
 // process (invariant 12); the [goodall.Stream] it returns is single-consumer.
@@ -103,8 +105,8 @@ func WithBaseURL(url string) Option {
 	return func(c *Client) { c.baseURL = strings.TrimRight(url, "/") }
 }
 
-// WithDialect says which flavour of the Chat Completions format the server
-// speaks, which decides the members a request may carry. The zero value is
+// WithDialect says which flavor of OpenAI's format the server speaks, which
+// decides the wire and the members a request may carry. The zero value is
 // [OpenRouter].
 func WithDialect(d Dialect) Option {
 	return func(c *Client) { c.dialect = d }
@@ -122,15 +124,15 @@ func WithMaxRetries(n int) Option {
 	return func(c *Client) { c.http.MaxRetries = n }
 }
 
-// Dialect is the flavour of the Chat Completions format this client speaks.
+// Dialect is the flavor of OpenAI's format this client speaks.
 func (c *Client) Dialect() Dialect { return c.dialect }
 
 // Complete sends the request and waits for the whole answer.
 //
 // It exists alongside [Client.Stream] for the calls where streaming is refused
 // or pointless. HTTP 200 is not success: a body carrying an error object, a
-// choice carrying one, or a body with no choices at all comes back as a
-// *[goodall.APIError].
+// choice carrying one, a failed status, or a body with no answer at all comes
+// back as a *[goodall.APIError].
 func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.Response, error) {
 	body, header, err := c.requestBody(req, false)
 	if err != nil {
@@ -138,7 +140,7 @@ func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.R
 	}
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodPost,
-		URL:    c.baseURL + pathChatCompletions,
+		URL:    c.baseURL + c.conversationPath(),
 		Header: header,
 		Body:   body,
 	})
@@ -150,6 +152,9 @@ func (c *Client) Complete(ctx context.Context, req *goodall.Request) (*goodall.R
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+	if c.speaksResponses() {
+		return readResponsesBody(raw, resp.Header)
 	}
 	var decoded chatResponse
 	if err := json.Unmarshal(raw, &decoded); err != nil {
@@ -173,6 +178,9 @@ func (c *Client) requestBody(req *goodall.Request, stream bool) ([]byte, http.He
 	if req == nil {
 		return nil, nil, fmt.Errorf("openrouter: %w: the request is nil", goodall.KindInvalidRequest)
 	}
+	if c.speaksResponses() {
+		return c.responsesRequestBody(req, stream)
+	}
 	wire, err := translateRequest(req, c.dialect, stream)
 	if err != nil {
 		return nil, nil, err
@@ -186,6 +194,33 @@ func (c *Client) requestBody(req *goodall.Request, stream bool) ([]byte, http.He
 		h.Set(HeaderAnthropicBeta, wire.anthropicBeta)
 	}
 	return body, h, nil
+}
+
+// responsesRequestBody is requestBody for the Responses wire, which needs no header
+// beyond the client's own.
+func (c *Client) responsesRequestBody(req *goodall.Request, stream bool) ([]byte, http.Header, error) {
+	wire, err := translateResponsesRequest(req, c.dialect, stream)
+	if err != nil {
+		return nil, nil, err
+	}
+	body, err := json.Marshal(wire)
+	if err != nil {
+		return nil, nil, fmt.Errorf("openrouter: encoding the request: %w", err)
+	}
+	return body, c.header(), nil
+}
+
+// speaksResponses reports whether this client's conversations go to /responses.
+func (c *Client) speaksResponses() bool {
+	return c.dialect.Quirks().ConversationWire == ConversationResponses
+}
+
+// conversationPath is the endpoint this client's conversations post to.
+func (c *Client) conversationPath() string {
+	if c.speaksResponses() {
+		return pathResponses
+	}
+	return pathChatCompletions
 }
 
 // header builds the per-call headers: the bearer token when a key is set, the

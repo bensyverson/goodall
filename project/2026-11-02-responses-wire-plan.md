@@ -59,6 +59,22 @@ go run ./scripts/probe-responses -env /abs/path/.env
 - **`EffortMax` is reachable,** and `EffortOff` becomes `none`, which is a loud 400 on Astra and Sol unless the catalog says `ThinkingOffNever`.
 - **Images can travel in tool results,** which the Chat path turns into placeholders. On one run in three the model described the image, so the bytes arrive, and how well models use them is not established.
 
+> **Corrected 2026-11-02 by the build leaves (`dxKI0t`, `Ssp3XD`).** Each row below is one run, from `go run ./scripts/probe-responses -env /abs/path/.env -only <name>`, and they settle most of "Not observed".
+>
+> | Exchange | Asked | Observed |
+> |---|---|---|
+> | `tool_choice_required`, `tool_choice_named` | `"required"`, `{"type":"function","name":"get_weather"}`, on "Say hello." | 200, `function_call` both times |
+> | `tool_choice_none` | `"none"`, on a weather question | 200, `message`, no call |
+> | `parallel_false` | `false`, on two cities | 200, one call, echoed `false`. Luna, where the `parallel` row was Astra |
+> | `stop_member`, `stop_sequences_member` | `stop`, `stop_sequences` | **Both 400 `unknown_parameter`.** So the wire has no stop sequences, and goodall refuses them with a `*goodall.CapabilityError` naming the new `goodall.CapStopSequences` |
+> | `summary_absent` | An effort and no `summary` member | 200, the response reports `summary: null`, and the reasoning item has an empty `summary` and a ciphertext. So the default is **no summary** |
+> | `phase_commentary` | A sentence before the call, replayed with `phase` dropped | The turn was `[message,function_call]` with **`phase: commentary`**, so that phase does appear. Dropped on replay, 200, and the model answered. Accepted once; whether it costs quality is not established |
+> | `file_url` | `input_file` with only `file_url` | 200, quoted the PDF |
+> | `replay_done` | Follow-up replaying the reasoning item as `output_item.done` carried it | 200, **input 188, 0 reasoning tokens**, in the family of a full replay |
+> | `replay_added` | The same with the item as `output_item.added` carried it | 200, **input 135, 21 reasoning tokens**, in the family of `strip_reasoning`. So the `added` item is not merely different: replaying it loses the reasoning, with no error |
+>
+> **The reasoning item has three ciphertexts, not two.** "Take a reasoning item from `response.output_item.done`" stands, but `response.completed` carries a third `encrypted_content`, the same length as `done`'s and otherwise different (`two_turn_stream_gpt-6-astra.turn1`: 2,316 and 2,316, sharing 12 leading characters), and every `two_turn_*` row above replayed that one. `replay_done` is what shows `done`'s replays too. It also means Collect cannot equal Complete in those bytes over any one exchange, so the test compares Raw exactly apart from `encrypted_content`, and compares that one's length.
+
 ### Not observed
 
 Documented or inferred only, so a build leaf records them or says it could not:

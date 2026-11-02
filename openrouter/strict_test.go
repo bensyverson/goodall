@@ -49,7 +49,7 @@ const strictFunction = `"function":{"name":"lookup","description":"Look somethin
 	`"required":["query"],"additionalProperties":false},"strict":true}`
 
 func TestAStrictToolSendsFunctionStrictWhereTheDialectCarriesIt(t *testing.T) {
-	for _, d := range []Dialect{OpenRouter, OpenAI} {
+	for _, d := range []Dialect{OpenRouter} {
 		t.Run(d.String(), func(t *testing.T) {
 			body := marshalWire(t, strictRequest("openai/gpt-6-astra", strictLookup[lookupInput](t)), d, false)
 			if !bytes.Contains(body, []byte(strictFunction)) {
@@ -60,7 +60,7 @@ func TestAStrictToolSendsFunctionStrictWhereTheDialectCarriesIt(t *testing.T) {
 }
 
 func TestAGuidedToolSendsNoStrictMember(t *testing.T) {
-	for _, d := range []Dialect{OpenRouter, OpenAI, LMStudio, Generic} {
+	for _, d := range []Dialect{OpenRouter, LMStudio, Generic} {
 		body := marshalWire(t, strictRequest("some/model", everyFeatureRequest(t).Tools[0]), d, false)
 		if bytes.Contains(body, []byte(`"strict"`)) {
 			t.Errorf("%s: body = %s\nwant no strict member on a guided tool", d, body)
@@ -148,7 +148,7 @@ func TestTheOpenAIDialectSendsNoAnthropicBeta(t *testing.T) {
 }
 
 func TestTheRecordedStrictCallsWereSentStrictAndMatchTheirSchema(t *testing.T) {
-	for _, name := range []string{"live_strict_tool_use", "live_openai_strict_tool_use"} {
+	for _, name := range []string{"live_strict_tool_use"} {
 		t.Run(name, func(t *testing.T) {
 			sent := string(fixture(t, name+".request.json"))
 			if !strings.Contains(sent, `"strict": true`) || strings.Contains(sent, `"tool_choice"`) {

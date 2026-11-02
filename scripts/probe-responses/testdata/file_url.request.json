@@ -1,0 +1,1 @@
+{"model":"gpt-6-luna","input":[{"content":[{"text":"Quote the PDF's text.","type":"input_text"},{"file_url":"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf","type":"input_file"}],"role":"user","type":"message"}],"reasoning":{"effort":"low","summary":"auto"},"max_output_tokens":1200,"store":false}

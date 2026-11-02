@@ -68,7 +68,6 @@ type chatRequest struct {
 	ToolChoice        *toolChoice      `json:"tool_choice,omitzero"`
 	ParallelToolCalls *bool            `json:"parallel_tool_calls,omitzero"`
 	MaxTokens         int              `json:"max_tokens,omitzero"`
-	MaxCompletion     int              `json:"max_completion_tokens,omitzero"`
 	Stop              []string         `json:"stop,omitzero"`
 	Stream            bool             `json:"stream"`
 	StreamOptions     *streamOptions   `json:"stream_options,omitzero"`

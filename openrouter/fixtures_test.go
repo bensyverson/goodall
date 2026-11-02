@@ -31,12 +31,6 @@ const (
 	recordedToolCity   = "Paris"
 )
 
-// openAIDialectPrefix marks the recordings made against api.openai.com rather
-// than through OpenRouter. OpenAI reports no cost, sends no
-// native_finish_reason and carries no reasoning_details, so the assertions
-// that are about the router skip them by name.
-const openAIDialectPrefix = "live_openai_"
-
 // recordedFixtures lists the recordings matching a glob, by file name.
 //
 // The request bodies the recorder writes beside each response end in
@@ -151,9 +145,6 @@ func TestEveryOpenRouterRecordingCarriesTheCostAndTheUpstreamStopReason(t *testi
 	// normalized one. A recording that lost either would leave goodall's
 	// Cost and NativeStopReason untested against anything real.
 	for _, name := range recordedFixtures(t, "live_*.sse") {
-		if strings.HasPrefix(name, openAIDialectPrefix) {
-			continue
-		}
 		t.Run(name, func(t *testing.T) {
 			resp := collectRecording(t, name)
 			if !resp.Cost.Reported {
@@ -440,25 +431,6 @@ func TestTheRecordedRequestsShowWhatEachDialectSent(t *testing.T) {
 		t.Error("the OpenRouter thinking request sent reasoning_effort, which belongs to the OpenAI dialect")
 	}
 
-	openAI := string(fixture(t, "live_openai_reasoning.request.json"))
-	for _, member := range []string{
-		// Each of these three was a bug the live recording found:
-		// api.openai.com refuses max_tokens on a reasoning model,
-		// refuses OpenRouter's reasoning object, and streams no usage
-		// at all unless the request asks for it.
-		`"max_completion_tokens"`,
-		`"reasoning_effort"`,
-		`"stream_options"`,
-	} {
-		if !strings.Contains(openAI, member) {
-			t.Errorf("the OpenAI-dialect request sent no %s", member)
-		}
-	}
-	for _, member := range []string{`"max_tokens"`, `"reasoning":`} {
-		if strings.Contains(openAI, member) {
-			t.Errorf("the OpenAI-dialect request sent %s, which api.openai.com refuses", member)
-		}
-	}
 	if strings.Contains(string(fixture(t, "live_thinking_tool_use.request.json")), `"stream_options"`) {
 		t.Error("the OpenRouter request asked for stream_options, which OpenRouter documents as a no-op")
 	}

@@ -76,6 +76,10 @@ const (
 	// constraining the model's sampling, which a tool asks for with
 	// [WithStrictness].
 	CapStrictTools Capability = "strict_tools"
+	// CapStopSequences is [Request].StopSequences. No catalog reports it, so
+	// it is never unsupported in advance: a provider whose wire has no member
+	// for it refuses the request rather than dropping the caller's stops.
+	CapStopSequences Capability = "stop_sequences"
 )
 
 // String names the capability.
@@ -85,7 +89,7 @@ func (c Capability) String() string { return string(c) }
 func (c Capability) Known() bool {
 	switch c {
 	case CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput,
-		CapForcedToolChoice, CapStrictTools:
+		CapForcedToolChoice, CapStrictTools, CapStopSequences:
 		return true
 	}
 	return false

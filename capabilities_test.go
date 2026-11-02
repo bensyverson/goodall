@@ -97,7 +97,7 @@ func TestCapabilityString(t *testing.T) {
 }
 
 func TestCapabilityKnown(t *testing.T) {
-	for _, c := range []Capability{CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput, CapForcedToolChoice, CapStrictTools} {
+	for _, c := range []Capability{CapImageInput, CapPDFInput, CapAudioInput, CapTools, CapThinking, CapCacheControl, CapStructuredOutput, CapForcedToolChoice, CapStrictTools, CapStopSequences} {
 		if !c.Known() {
 			t.Errorf("Capability(%q).Known() = false, want true", string(c))
 		}

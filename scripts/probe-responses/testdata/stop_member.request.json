@@ -1,0 +1,1 @@
+{"model":"gpt-6-luna","input":[{"content":[{"text":"Count from one to ten in words.","type":"input_text"}],"role":"user","type":"message"}],"reasoning":{"effort":"low","summary":"auto"},"stop":["five"],"max_output_tokens":1200,"store":false}

@@ -47,9 +47,7 @@ func TestDialectQuirks(t *testing.T) {
 		{OpenAI, Quirks{
 			DecisionWire:          DecisionWireDecisions,
 			DecisionModelRequired: true,
-			Reasoning:             ReasoningEffortField,
-			OutputCap:             CapMaxCompletionTokens,
-			StreamUsage:           true,
+			ConversationWire:      ConversationResponses,
 			Metadata:              true,
 			StrictTools:           StrictToolsMember,
 		}},
@@ -171,52 +169,12 @@ func TestOpenRouterDialectSendsItsOwnMembers(t *testing.T) {
 	}
 }
 
-func TestTheOpenAIDialectCapsTheAnswerWithMaxCompletionTokens(t *testing.T) {
-	// Recorded 2026-09-15: api.openai.com refuses max_tokens on its
-	// reasoning models with HTTP 400 "Unsupported parameter: 'max_tokens'
-	// is not supported with this model. Use 'max_completion_tokens'
-	// instead." OpenRouter accepts either, so only the OpenAI dialect
-	// changes the member name.
-	req := &goodall.Request{
-		Model:     "gpt-6-astra",
-		MaxTokens: 512,
-		Messages:  []goodall.Message{goodall.UserMessage(goodall.Text{Text: "hi"})},
-	}
-	for _, tc := range []struct {
-		dialect Dialect
-		want    string
-		absent  string
-	}{
-		{OpenAI, `"max_completion_tokens":512`, `"max_tokens"`},
-		{OpenRouter, `"max_tokens":512`, `"max_completion_tokens"`},
-		{LMStudio, `"max_tokens":512`, `"max_completion_tokens"`},
-		{Generic, `"max_tokens":512`, `"max_completion_tokens"`},
-	} {
-		t.Run(tc.dialect.String(), func(t *testing.T) {
-			wire, err := translateRequest(req, tc.dialect, false)
-			if err != nil {
-				t.Fatalf("translating: %v", err)
-			}
-			body, err := json.Marshal(wire)
-			if err != nil {
-				t.Fatalf("marshalling: %v", err)
-			}
-			if !bytes.Contains(body, []byte(tc.want)) {
-				t.Errorf("the body does not carry %s:\n%s", tc.want, body)
-			}
-			if bytes.Contains(body, []byte(tc.absent)) {
-				t.Errorf("the body carries %s, which this dialect does not take:\n%s", tc.absent, body)
-			}
-		})
-	}
-}
-
 func TestTheDialectsThatMustAskForStreamedUsageDoSo(t *testing.T) {
-	// Recorded 2026-09-15: a streamed call to api.openai.com returns no
-	// usage chunk at all unless the request asked for one, so every
-	// streamed OpenAI-dialect answer reported zero tokens. OpenRouter
-	// always sends usage and documents the option as a no-op, so it is not
-	// sent there; Generic keeps to the members every server implements.
+	// Recorded 2026-09-15: a streamed Chat Completions call to api.openai.com
+	// returned no usage chunk at all unless the request asked for one, and LM
+	// Studio follows it. OpenRouter always sends usage and documents the option
+	// as a no-op, so it is not sent there; Generic keeps to the members every
+	// server implements.
 	req := &goodall.Request{
 		Model:    "some/model",
 		Messages: []goodall.Message{goodall.UserMessage(goodall.Text{Text: "hi"})},
@@ -225,7 +183,6 @@ func TestTheDialectsThatMustAskForStreamedUsageDoSo(t *testing.T) {
 		dialect Dialect
 		want    bool
 	}{
-		{OpenAI, true},
 		{LMStudio, true},
 		{OpenRouter, false},
 		{Generic, false},

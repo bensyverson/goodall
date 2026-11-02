@@ -71,7 +71,7 @@ func translateRequest(req *goodall.Request, d Dialect, stream bool) (*chatReques
 	if strictTools && t.quirks.StrictTools == StrictToolsWithAnthropicBeta {
 		out.anthropicBeta = anthropicStructuredOutputsBeta
 	}
-	t.applyOutputCap(req.MaxTokens, out)
+	out.MaxTokens = req.MaxTokens
 	if stream && t.quirks.StreamUsage {
 		out.StreamOptions = &streamOptions{IncludeUsage: true}
 	}
@@ -195,21 +195,6 @@ func (t *translator) marker(c *goodall.CacheControl) *cacheControl {
 	return &cacheControl{Type: cacheEphemeral, TTL: c.TTL}
 }
 
-// applyOutputCap writes the output-token cap into the member the dialect reads
-// it from. The two names are not interchangeable: api.openai.com refuses
-// max_tokens on a reasoning model rather than ignoring it, and a request that
-// sent both would be refused for the one it should not have sent.
-func (t *translator) applyOutputCap(max int, out *chatRequest) {
-	if max == 0 {
-		return
-	}
-	if t.quirks.OutputCap == CapMaxCompletionTokens {
-		out.MaxCompletion = max
-		return
-	}
-	out.MaxTokens = max
-}
-
 // applyReasoning writes the thinking configuration in the shape the dialect
 // takes. goodall's effort rungs are the wire's own strings, so the mapping is
 // the identity except that EffortDefault sends nothing and EffortOff sends
@@ -221,8 +206,8 @@ func (t *translator) applyOutputCap(max int, out *chatRequest) {
 // effort for EffortOff, as [goodall.EffortOff] promises: OpenRouter answers
 // "none" on such a model with a 400.
 //
-// The exclude flag has no equivalent in OpenAI's top-level reasoning_effort
-// string, so a display setting is ignored on those dialects.
+// The exclude flag has no equivalent in the top-level reasoning_effort string, so
+// a display setting is ignored on those dialects.
 func (t *translator) applyReasoning(cfg goodall.ThinkingConfig, info *goodall.ModelInfo, out *chatRequest) {
 	effort := effortString(cfg.Effort)
 	if cfg.Effort == goodall.EffortOff && info != nil && info.Capabilities.ThinkingOff == goodall.ThinkingOffNever {
