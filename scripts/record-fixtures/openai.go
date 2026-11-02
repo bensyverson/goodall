@@ -73,11 +73,13 @@ func openAIExchanges(rec *recorder, key, model string) ([]exchange, error) {
 		},
 		{
 			name: "openai_thinking_tool_use",
-			what: "reasoning plus a tool call, then a second turn replaying the encrypted reasoning item with the tool result",
+			what: "reasoning plus a tool call, then two more turns, each replaying the encrypted reasoning items before it",
 			run: func(ctx context.Context) error {
 				// High, because at low effort a model can answer with no
-				// reasoning item, leaving this a round trip of nothing.
-				return recordReasoningTurns(ctx, rec, client, "openai_thinking_tool_use", model, goodall.EffortHigh, 2, weather)
+				// reasoning item. Three turns, because gpt-6-astra and
+				// gpt-6.1-sol reasoned only on the turn that answered, 6 runs
+				// of 6 on 2026-11-02, so only a third turn replays theirs.
+				return recordReasoningTurns(ctx, rec, client, "openai_thinking_tool_use", model, goodall.EffortHigh, 3, weather)
 			},
 		},
 		{

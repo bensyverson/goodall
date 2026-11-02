@@ -1,6 +1,8 @@
 # Does goodall keep up with current models?
 
-Findings, 2026-11-02, on GPT-6 and Gemini 4 as conversational models. **Through OpenRouter and through Anthropic's API, current models run goodall's full agent loop today. Directly against OpenAI, goodall cannot run most of GPT-6 as a thinking agent, because the dialect speaks Chat Completions and OpenAI only offers tools with reasoning on Responses.** Direct Gemini is not supported and could not be tested. Decision models are covered separately in the [decision models findings](2026-11-02-decision-models-findings.md).
+Findings, 2026-11-02, on GPT-6 and Gemini 4 as conversational models. **Through OpenRouter and through Anthropic's API, current models run goodall's full agent loop today. Directly against OpenAI, all four GPT-6 models now do too, since the dialect moved to Responses the same day; when this was first written it could not, because the dialect spoke Chat Completions and OpenAI only offers tools with reasoning on Responses.** Direct Gemini is not supported and could not be tested. Decision models are covered separately in the [decision models findings](2026-11-02-decision-models-findings.md).
+
+> **Corrected 2026-11-02 (`KgGLdl`).** The OpenAI dialect now speaks `/v1/responses`. All four GPT-6 models pass `goodall.Agent` at low effort with reasoning reported, `go run ./scripts/probe-agent-loop -env /abs/.env -dialect openai -models gpt-6-astra,gpt-6.1-sol,gpt-6.1-terra,gpt-6-luna`, and the OpenAI rows below describe the old wire. Off is unchanged: Astra and Sol refuse it, Terra and Luna pass. The rows and what they do not show are in [the Responses findings](2026-11-02-responses-wire-findings.md).
 
 ## What was run
 
@@ -18,6 +20,8 @@ Findings, 2026-11-02, on GPT-6 and Gemini 4 as conversational models. **Through 
 The raw probe got 200 and a function call from `/v1/responses` on all four GPT-6 models at low effort, and 200 from OpenRouter's Chat Completions.
 
 **One limit on the passes:** every run reported `reasoning=0` in usage, so nothing here shows how much thinking happened or that goodall read a reasoning count. A pass shows the loop completes with thinking requested. Older recordings noted the same zero for `gpt-6-astra` through OpenRouter (`openrouter/fixtures_test.go`).
+
+> **Corrected 2026-11-02 (`KgGLdl`).** On the OpenAI dialect the zero came from the prompt, and goodall does read the count. A prompt with arithmetic in it drew non-zero `reasoning` on all four models over the same probe. Whether the same holds for the OpenRouter rows above was not checked by that run.
 
 ## GPT-6
 

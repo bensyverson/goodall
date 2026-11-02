@@ -1,0 +1,101 @@
+{
+  "model": "gpt-6.1-terra",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "Look up the current weather in a city.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "the city to look up, such as Paris"
+          },
+          "unit": {
+            "type": "string",
+            "description": "celsius or fahrenheit",
+            "enum": [
+              "celsius",
+              "fahrenheit"
+            ]
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": false
+    }
+  ],
+  "reasoning": {
+    "effort": "high",
+    "summary": "auto"
+  },
+  "max_output_tokens": 2048,
+  "store": false,
+  "stream": true,
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "A cyclist in Paris will ride 137 km at 23.4 km/h with two 18-minute stops, starting at 13:47. Work out to the minute when they finish, look up the weather there, and tell me whether they should expect rain during the ride."
+        }
+      ]
+    },
+    {
+      "id": "rs_01e1aa7c10ba22f1016ae8d124baa087d1a647f592c27249e7",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6NElN9ASnBXqbitNEgz7l3AAyLEkYfY3W6I2u_JEC_m3cYbEKOWrCiEtDBMo1bg6c5qE55L2vGud083uHmautFTqChk5jeaQizxlC5OiNQlOrH4zsORpj5QO68dWkgcjVRtjJQWJn1RMcyUuh3NVK9xkFu64b_jjw7uGldE1YpIt3A0vhW9uU4FY3YOix2JsO1_mVoK7gN1iugF8R-RJmyFKpKqVDc2xoFkB-yWy-ZzqPqOAvTysDNzzlYQ9GYJXD4873RnZOiDsdf2D0fxVPkZWV0VzFuhEuZNZxAZgBsxoRaCeZ10N03kk-KOXNCz32a4XELZ21Z4gizrrQLopBMnvkzSp98t_vom5J70-C1dQr8ousJH_AcASkAxXGuD64CR2cMTHDM1vHKGzfIn9iQU6lhfw-2L_wwuIE2ACIQUI_ggHvu3x4wi0bF06Sk9_jhskqgA5DN9UkBkEA-hbF2RMVrKppEdvi93q9ZDmBBSRUGRb1lqm-j-e4HM_mNT2T92eYiy_bzqpnAF67vwnxw870RsHX5cKALVFwdZPXGxWMvgrOF4S9XJaHU4XZ0x1matxYn8Hxba9S6bJpUTNP57s-0imN25tWwBf3dHyg5Ib09QThe7Ikgjzgsv2u-wCK0-lfdrPStyOA7rQGF0TTr9dwDRgUXTClhmegb1yZLhaGsV10cHZcPEL-V8MrtYO-8PSqnKxQX_I2myJKpD2zXTgdWoS7J_xJWgJhalwN7Puz2N0PG9-EDZYQ1kqocAe2ydVqARWIVAuhXek2mjeiQpumQypk14De7NlbmiQ1Vu5wXkxJEJRyiHUU_J0sN7o7WehXwXkXoh_1CplSvAZvdAnoysEZOm4OSCg344VzUZIDpLdJtv4PDyiELl2UbXktfX17rj3YSTlt165QV9uNnfghdA36CWd6RJKsi5yvHBd9UvEhNzwKmYHJo8A-bcb4-r3EvA20poMjHcwjAIfTlMM0h2TcKozsQcL53GezaacTuu7A9ThAVaVxugt5VQJk1wU54Pb6rwXSpf0o7IOOJ3xu0ZLgIaDFWzCln6cwyQ7NYedAO2aW2AGGb9_efdLREBm_6KekRoyFSsFAbkaRFIFOKa_d4z-X_AXAU04M2h4a2RfqvVkTy-VyYh9uL0wv7ruMellBUGGu5V7FkcBbH3h-bxfgoj_P0sNh3vGg_P3As-T2mLwNun77fO8BgSk1Pokcr_qg82qUpo2rrDCj8o_MMeeAUCvF8pycfRsJWYyoVHiQPNn_J7_BpQplEdtquNbaDuzmwBzSgHkqoTv7mUd8FYh2OCnW2NLXhXO-Dfpa9A7IXMm9rZe2J_K0JKNOiXNqf4OheMCQHSobXhRx3yhAdvCaylz190xNm9IfLmcLcoO4x-VkFJIRP20besw6qffobU4YgwwWggxecEF4sERi3_Q7C3R7mvMN-t8AUYZmCvsUJ5YPVXxtkudEtmUssTVC77KEOWnPZjtC1aqHT2UmdRA5Kwlq7hr7FiFq56fygk0MLWivB47tUPXUKjKVGjanKnUvqZZpQ04x2gUVg3q929MbZ5Zo5OBKeER8ugWMEk=",
+      "summary": []
+    },
+    {
+      "type": "function_call",
+      "call_id": "call_T1I00Wbo1CpIOFmpx3XRSYU0",
+      "name": "get_weather",
+      "arguments": "{\"city\":\"Paris\",\"unit\":\"celsius\"}"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "call_T1I00Wbo1CpIOFmpx3XRSYU0",
+      "output": "{\"city\":\"Paris\",\"temperature_c\":18,\"conditions\":\"light rain\"}"
+    },
+    {
+      "id": "rs_01e1aa7c10ba22f1016ae8d12720ec87d1b23043a7caf04335",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6NEqQ-ynbViUvmrA7ABTPYFDLjvtVRE0aLcWvfNvM63EHVQx1kmaZav62QV34KudAAX21b7Yjk0iGqzFFvFbIQd53eIO-ivmUEXTLSLMdJF-sv3cly-_bVioXCCYlE3yIbh6kvNnYx4k3dMHa6IUxv4feyl4_pWRfH9ig9NhFy9IWhP3DhyWo1LHYVozElf-3fIeyUY7XAGHu6WLzFzeC68hoEBG_si8aZK0WRG1G4raCtUXrsZ4J0F635ERvGg8h5SfUsDDzNF5VNpFyiXLdjfsWvpROelm2ld24jB-WiViw7CZpGEGkGm5AVUSg6_3qObVYI6DdePPJPnzj5Em1f0gK1_2ZonHcCzkyqWTrXb3wVYdSMC2QBmFt1GIbGISEjieFS8geyczahgsMA0r-LBTTJwwicci7oz2kb7l_Nhu4WFqy9FIlGsBqJy96bYMRHQdixAsUUmp6DSwi05aWrOYLocNYyVRF4GQd2lQb7YjIRpEC9poFE-FXfjEIlsXqACpQzz-HIEjhBPeVIRjKbSyl-PqMeTIDHxM8nqy0k1GZvaBFYY7GUkmE4ZbOePwpvkS5Jm7n2Q_Ob7dy31aG-qxrA3lHqznGk7R8CnKY83u7emNQbggKhBIHnFyMkAo-MIHPypGGj1GRrNWKLl7LqQrWq0oXV14F0qT8R0tEYbhJFYyQtZmgFEYfOiyBJKdweELdTmwIKXAagKnPy9DLYt2Oo7AzRheMHGK4oeUv4Jy_wvQ6iWyDXxzLbA1GHBTOHEtMD515_fgbxOqBm_KOaQ3xwGwfc4WZQhmrT6O-y9hN2odKeZpLziPsv8T5Si2sGpDxiKqVIsXEmQHpuq7SyDPrRPH67JPqOxSeBsSS7pGz98FcS-mDgkcymIC8_RIKI6t4QLYsN2kbDRBm-IhtnmEfU8eyhhGwxp3qgjE4lnIh1QzotLtdAPB0l-7YIT12s3mWHaNKNJNwH3D56CIPbRB9GszZFpmqY4Jopod56ndIPdFN7uZtBtepmid4Dkr2HyXSe85vj28L69d3vcVa2cy6AFIroaKbfmNCPIgfxLf8GOcWvV0mxRu7zMglzsye-zz6sTS4eOQi7AxTToVAikKTy-n6d3zy-5wLzTfC9nQu3qocAXEMZNiMgy9h7rIbqwZvDRTkrqztc3lrIzyWYQMvSguGOesW-J_blMJAcoyOIdfacHwdvmp2tTLVz-cz1Pd2UDNMI_tFNRRk4pfGOVZDfyzVWAkv6rjBi2pLAbhMT_aRHgdN3oaTYgVcYnZ8_7vh0mcZeWcoIml9jGh5h3m3DBkpaDxGmSEi-mR8oRMIkV_9sF5XDuZxu79x09MYkkyBgpNP5Cv1P7XCxT1PJTptHY0BAOBVxlaUQkPmtIzkuromCyf_0dXpXkkyNi8GTCVas1Pm6z2RhW9ICoJDaeuY7484ttaNC3qrtezGxCYiakKV13CQ3yLud3dVOa9GbfFmIIq9mJaSJ804oSbUO5qFbjz6sv1b781cvxT-BNG8RcFAA6GVxj-n0GeDzmx92LnS_LZasJxVuKsBlzMl7dpYrMiSu1KZcBE6KUxuAPcaPYWL2ZNFYWQpFhJuiK4F3Gq9HWwBWuGR3ZOBztD_gXvyamhcvFTow6M3jeuJf0fXulLToXJhU5cbRPlwkjjdIpw8jEBSpULXqCw0Zz_10pLmQ7BRmTLVtBN_bDPiuPxG_xnV8szI-CH_0N0P67VGgR6tmb3V9q6jCrzP-1OfA7cZn7N5qaAUZz57GIK0ICHEuRovI6lwBA6YXu9f1lZ_3FWVvFSLAfzsFUv87JClsouZokFpcbV1hULzqsN3LCWRalBIrnC1WdKV9W4ij2re66yW3s5FS39NyEp7oMEPnB2koWNFPBYrZ0ur9kYfpcMgL_HC56ykIdr-eXMSgGW1PLxOqewLk7AoAGLQUMRVKZUe6BZ5TtjLYl0eCaF9v6RvOy-8ej_R-jn3-tX7gC76iIMLdVbdY_L9T_L3C5y2F2S1cymHuI14XlBCy5bZnxuTmgRNPXTh_ZXfcOOwtYUKbpKnLCp6o-NkOo8YEabNWLI80VKuisZ440Pmd1nxBeUKjz5dZ9h59t8LDh4XiX-pA0gS88ohsoOjQ94KZaJ8JlnAkDw70r7l0cohzQSpwecWgIwLmQDuzkHiubMtRuryF6c70PfS2ZS656I51Jx3pPOpXESNpALwNlt0v8UmJKrymv8tHdO_Odj2JI4L_a4uG_Ld-4R7mmo33TmefZKDJgCLS18APsRVxxHmr2UZb3XSudws42oO3sqGb99egkIXxYN6SdtxKXCIdcV45RvkM6Y8Lts9p-SStFZeYi3pXeRoiECJ_HEO7SmKv5kVzio5ZKIIolZqE_bWqd50_eyvh9qVF3vPfSzJ9guSeXy0-xD5Rs1ZITuUOFMcLLxWv44kSWZ7oSkGZRm7vj6IE2Np-Lgg16uH0Cfe0Zr_-XfImUAwhKOmPvnI-K6FrGnu74bZewH-X9uFUMULPjMHoAiQEDVbPW8-iV-vFk4cjrd2-Oh-TkSTtT69Mt4h1qTi1G9WQ7Xn5KPFUYVDn_KHEyb8s14YmYPiokfku-USH7njWuEtUm0PeQ_KCGf_U9OjxrYkoEFlfnlHWhTX4yaM-WXMMKKx5mwsHZPp5jzcaJrmdve4aKR2jIIYGwI3XT6ap-3nrg-QHDFVVYhkfRllxcWPcmX_3bdXcTSF8jT1WvcSFBR-8lwGT5OiyQIlxDRvo6To9qSIrsxjGMJWeBentj3BAiPai1NM6RNvjDuvKfLLU0jIVwYoweIyROOrlX15dJudzFZPRg8Nuo_ymHkKsnhL7idYbFhKJa3jDG4E06ZZKuzuqOnIyYB4q8ZtcC3n431gy31EIlH2pwpyrx2bzO1kfAV3VKbwyuVvCFGUKd4oO2z-GR-KOWaPKG0RKhLv4uHuniEBvsNAqbvDXTrrYr1c_P0nxyDQegintzhcLNPTarziHdLHvf_3Wv6Cy3T0AcbZCyUT2fZhyf4KgTLpbq8IVleV9FiH3MU7ppkZuNShxAxyNd0Of6yIhUuegnYUAZEGFxMo45p44NiUstruvtVf2-Aqg==",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Considering weather and timing**\n\nI'm only able to access the current weather, not hourly forecasts. I see I need to calculate the ride time. It turns out that the ride will take about 5 hours and 51 minutes, plus an additional 36 minutes for some buffer, which brings it to around 6 hours and 27 minutes. Currently, it’s 18 degrees with light rain, so I should mention that the user should be prepared for possible rain during the ride without any guarantees. The trip would finish around 20:14 local time."
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "They’ll finish at **20:14**.\n\nThe ride takes about 5 hours 51 minutes, plus 36 minutes for stops. Paris’s current weather is **18°C with light rain**, so they should prepare for rain. The weather lookup doesn’t include an hourly forecast, though, so it can’t confirm whether rain will continue during the ride."
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Answer in one short sentence: what if they set off an hour later?"
+        }
+      ]
+    }
+  ]
+}

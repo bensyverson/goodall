@@ -18,7 +18,12 @@ import (
 
 const (
 	maxTokens = 2000
-	prompt    = "What is the weather in Paris? Use the tool, then answer in one short sentence."
+	// prompt asks for arithmetic before the tool, because a bare weather question
+	// drew no reasoning from GPT-6 at low effort, and a run with no reasoning passes
+	// with nothing replayed on its second turn.
+	prompt = "A cyclist in Paris will ride 137 km at 23.4 km/h with two 18-minute stops, starting at 13:47. " +
+		"Work out to the minute when they finish, use the tool to look up the weather there, " +
+		"then answer in one short sentence whether they should expect rain."
 	// messageLimit keeps a provider's message on its row.
 	messageLimit = 240
 )
@@ -40,6 +45,8 @@ type Result struct {
 	Usage goodall.Usage
 	// Cost is what the run cost, known only for a finished run.
 	Cost goodall.Cost
+	// TurnReasoning is each completed turn's reasoning tokens, in order.
+	TurnReasoning []int
 	// Failure says what stopped the run, empty for one that finished.
 	Failure string
 }
@@ -52,8 +59,8 @@ func (r Result) Passed() bool { return r.Finished && r.ToolCalls > 0 }
 func (r Result) String() string {
 	switch {
 	case r.Passed():
-		return fmt.Sprintf("ok turns=%d tool_calls=%d in=%d out=%d reasoning=%d cost=%s reported=%v",
-			r.Turns, r.ToolCalls, r.Usage.Input, r.Usage.Output, r.Usage.Reasoning, r.Cost.Amount, r.Cost.Reported)
+		return fmt.Sprintf("ok turns=%d tool_calls=%d in=%d out=%d reasoning=%d by_turn=%v cost=%s reported=%v",
+			r.Turns, r.ToolCalls, r.Usage.Input, r.Usage.Output, r.Usage.Reasoning, r.TurnReasoning, r.Cost.Amount, r.Cost.Reported)
 	case r.Finished:
 		return fmt.Sprintf("FAIL turns=%d: finished with no tool call", r.Turns)
 	default:
@@ -89,6 +96,7 @@ func AgentLoop(ctx context.Context, provider goodall.Provider, model string, eff
 		switch e := ev.(type) {
 		case goodall.TurnEnd:
 			result.Turns++
+			result.TurnReasoning = append(result.TurnReasoning, e.Response.Usage.Reasoning)
 		case goodall.Done:
 			result.Finished = true
 			result.Usage = e.Result.Usage

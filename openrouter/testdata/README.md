@@ -48,7 +48,7 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_openai_text.sse` / `live_openai_text_blocking.json` | Recorded 2026-11-02: a one-line answer on the Responses wire, streamed and blocking. These and the rows below are read by `responses_fixtures_test.go`, and the chat tests leave every `live_openai_*` out. |
 | `live_openai_tool_use.sse` | Recorded 2026-11-02: a forced tool call, with `strict: false` stated. |
 | `live_openai_strict_tool_use.sse` | Recorded 2026-11-02: a tool sent with `strict: true` under `tool_choice` auto. |
-| `live_openai_thinking_tool_use.sse` + `_turn2` | Recorded 2026-11-02: reasoning and a tool call at high effort, then a second turn replaying the encrypted reasoning item. The server takes a request with that item missing and says nothing, so the test compares the bytes. |
+| `live_openai_thinking_tool_use.sse` + `_turn2`, `_turn3` | Recorded 2026-11-02: reasoning and a tool call at high effort, then two more turns replaying the encrypted reasoning items. The server takes a request with that item missing and says nothing, so the test compares the bytes. |
 | `live_openai_image.sse` / `live_openai_pdf.sse` | Recorded 2026-11-02: `input_image` and `input_file`, built by the production client. |
 | `live_openai_error.json` | Recorded 2026-11-02: an unrecognized model id, HTTP 404 with `code: model_not_found`, where OpenRouter answers 400. |
 | `live_openai_decision_mixed.json` | Recorded 2026-11-02: OpenAI's own wire on `gpt-6-luna`, the question set and object state of `live_decision_mixed.json`, so the two wires can be compared. It read 433 input tokens and the same figures on both. No cost, id or host in the body. |

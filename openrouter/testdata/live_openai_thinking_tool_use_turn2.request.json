@@ -48,26 +48,21 @@
       ]
     },
     {
-      "id": "rs_07be4d90bc05bc0f016ae8ced0c3cc87d19eb651a7a291426f",
+      "id": "rs_01e1aa7c10ba22f1016ae8d124baa087d1a647f592c27249e7",
       "type": "reasoning",
       "content": [],
-      "encrypted_content": "gAAAAABq6M7TU3k9zjU9w6vqeqWlIpOeb_gbRkwriZwLUnVB9b9crkq20cxav8rknPTRR22hAZeb86Yr1PdfIyRZfwuJshrQvWzrf99yIAfSbZ3NSHbMvQyeMe_S-rNyF7bnWRKti3tNXi98SSwThWJujJgs4BjkvZ_wfhRF7q5pNzf09a9BVKlnDhyGHRDsBt3mBYpwP070xovvk03-TKMQQwYLUBT7TPbaaj-FCokPmVUDdz5C_qYxD5ZEX9DmtJtqabp7T_BIBg3a8eKnRTxXu4Yn6aC80ApAk6n182j-RwNKjWMRMiIiOee6tT9bjFMmyVEombBAyI_XTrzvC4vJMr1XV-DzBrOV3wVwfpwa-TfY_opAyl0nAsVbMOsiBaX8BA7u4SFlmCqzsZV7REmKi2PPekPx2DG0wnI7zCLxz-iIW1i7E77nk4UfEZfPHzjqiv8F82RXvw0yfGRssDTTVWPHhzQsJ6WHBOgu-g6vidi_lRAsqqqexGu0v3CjjMpWlEWPrcEcCOHvE6RwVm3Bm9ERVg3yrWk_eGbr0WNCcYT-pnhybtOv6rZuIsc0l9p-JMFwiB7Dx613JAut61PILWXJyIE4MtbTfiSMlamoulnNdcrmx5CpIqXzsufwN1YEZ40yh0Ir6sEs9KniMlU36tqVK9mrmUA-1cecEOAQrJDlc42bub9IFiUFFdnAwnoZCWUYvA7qf5gAc98LImnmbG1pUO37GrcqdOpfG4Vp1TJSAXHehDmSkDiX4D3o6UImp1EnqvqWRp7AvZz2B04JcZgFvs1-vaMkYh5eTFkgjcgefiarVsBwRkvGXLZUWRACIIariqoM_eRMMV4FzuTvC-Yw7ewFEmdbUr-TmGEs_eOgUV-4b-NvWVjlNiQF8S8hyCUJrv8qrMNAP-5oHZL8oPjEdv-2C4O9xtgrZAMwCposOxO0v0hKn0khTqc_Kdgk6GA2ndoD84vOPf4V0rXN0L-mqt8q8bYb6xkixaAxEtk-SO_qKikC7N9yDBoghqSuRJesmEm_pyU7bosQWMJvBAFkmnRyPg6-dqTbJZP_vrCK5Oh15ff9ukW9u445NgFUgR82e9_Qdrpx7kUif2RzJnVvIWKOhEfNr4SYutG0K7qbmzaGi8KEiLxPuCy_z95-TmEf5fHT3situs3BJ_Hkj1OcGLFS-6_0CMY_jxhKYDW2tmSrzk572PhL5QxuT7KzgndEikixJ6XHXe4qqfjYVc-PGgKr0oULUt1FQ1LCA0ImbaYXV_lDErv-ZGjOU-LD1TNJ1tEa4G8lxcLEga9Z3imOZGpKs6f0Z8IZAiJSvVT066TZGS8Gy54V9xuwgZQYfTuu86K_QlsjhINyuXAx5xfSfkhc_ZMCoUr9vl7t0c1kzZ7I1oEof7wUdGggQWhC_yRs07gxIObq9NLZPd-9qB5NqhJ5rSjMSSAGQ2w38kvtwagUaqe1gDkbW-ivBM9wvD2qMJqPstPlUCNA-DWrm12tw6-EjIInQUCrF6_gE8I27q7vjikpBnGNkIRkZP-7rRPrXJo0EnIvBLU6qcCLoYUPXCsfmcIT8B_5NyRoByPui-P6hpaSnEAUy2RGzeeuGxxymR5-OsgBQpaxs3u3Bg-LMbTYFafUP5drX1YuaGQqmlrKwXk3aDN4Imll9KZERfBlpb7prSAY_yIsIw_U_z0Nh87UT9x1gR8NaKXo5GLfO-osFttY5aoKMcab4YvNLeq3eUmGdMq7Gq0DU9uBkW83y1Eiv_-ZUUklG7bWmziyns04VgYLJc9A6I7nBJg1C8nfel6ZDg6lyeL1D1U9bi-1LBERUYpSk_Efw1xUAN7LUV7uMdP6jkDLaPLMnusoK9AM9bYntx0V_Vm8yd1TUwRxUvpZ3GJ1Kox71snjxBK_KdD54FksqEbK8_bclt-NExqjkJMDa9YaSFdDge-BO3_EiFmJTa2aidvboKsCcFbcakWVz8PO7Fs54kHKlKZHyD8D1jFXY-Lp2AP1kn0T5Rdxv-4_EQ==",
-      "summary": [
-        {
-          "type": "summary_text",
-          "text": "**Calculating time for Paris weather**\n\nI'm calculating a division to determine hours. So, 137 divided by 23.4 equals about 5.8547 hours, which rounds to 5 hours, 51 minutes, and 17 seconds. If I add 36 minutes, I get 6 hours, 27 minutes, and 17 seconds. If I'm finishing at 20:14:17, that makes it around 20:14. Also, I want to check the current weather in Paris using the weather tool."
-        }
-      ]
+      "encrypted_content": "gAAAAABq6NElN9ASnBXqbitNEgz7l3AAyLEkYfY3W6I2u_JEC_m3cYbEKOWrCiEtDBMo1bg6c5qE55L2vGud083uHmautFTqChk5jeaQizxlC5OiNQlOrH4zsORpj5QO68dWkgcjVRtjJQWJn1RMcyUuh3NVK9xkFu64b_jjw7uGldE1YpIt3A0vhW9uU4FY3YOix2JsO1_mVoK7gN1iugF8R-RJmyFKpKqVDc2xoFkB-yWy-ZzqPqOAvTysDNzzlYQ9GYJXD4873RnZOiDsdf2D0fxVPkZWV0VzFuhEuZNZxAZgBsxoRaCeZ10N03kk-KOXNCz32a4XELZ21Z4gizrrQLopBMnvkzSp98t_vom5J70-C1dQr8ousJH_AcASkAxXGuD64CR2cMTHDM1vHKGzfIn9iQU6lhfw-2L_wwuIE2ACIQUI_ggHvu3x4wi0bF06Sk9_jhskqgA5DN9UkBkEA-hbF2RMVrKppEdvi93q9ZDmBBSRUGRb1lqm-j-e4HM_mNT2T92eYiy_bzqpnAF67vwnxw870RsHX5cKALVFwdZPXGxWMvgrOF4S9XJaHU4XZ0x1matxYn8Hxba9S6bJpUTNP57s-0imN25tWwBf3dHyg5Ib09QThe7Ikgjzgsv2u-wCK0-lfdrPStyOA7rQGF0TTr9dwDRgUXTClhmegb1yZLhaGsV10cHZcPEL-V8MrtYO-8PSqnKxQX_I2myJKpD2zXTgdWoS7J_xJWgJhalwN7Puz2N0PG9-EDZYQ1kqocAe2ydVqARWIVAuhXek2mjeiQpumQypk14De7NlbmiQ1Vu5wXkxJEJRyiHUU_J0sN7o7WehXwXkXoh_1CplSvAZvdAnoysEZOm4OSCg344VzUZIDpLdJtv4PDyiELl2UbXktfX17rj3YSTlt165QV9uNnfghdA36CWd6RJKsi5yvHBd9UvEhNzwKmYHJo8A-bcb4-r3EvA20poMjHcwjAIfTlMM0h2TcKozsQcL53GezaacTuu7A9ThAVaVxugt5VQJk1wU54Pb6rwXSpf0o7IOOJ3xu0ZLgIaDFWzCln6cwyQ7NYedAO2aW2AGGb9_efdLREBm_6KekRoyFSsFAbkaRFIFOKa_d4z-X_AXAU04M2h4a2RfqvVkTy-VyYh9uL0wv7ruMellBUGGu5V7FkcBbH3h-bxfgoj_P0sNh3vGg_P3As-T2mLwNun77fO8BgSk1Pokcr_qg82qUpo2rrDCj8o_MMeeAUCvF8pycfRsJWYyoVHiQPNn_J7_BpQplEdtquNbaDuzmwBzSgHkqoTv7mUd8FYh2OCnW2NLXhXO-Dfpa9A7IXMm9rZe2J_K0JKNOiXNqf4OheMCQHSobXhRx3yhAdvCaylz190xNm9IfLmcLcoO4x-VkFJIRP20besw6qffobU4YgwwWggxecEF4sERi3_Q7C3R7mvMN-t8AUYZmCvsUJ5YPVXxtkudEtmUssTVC77KEOWnPZjtC1aqHT2UmdRA5Kwlq7hr7FiFq56fygk0MLWivB47tUPXUKjKVGjanKnUvqZZpQ04x2gUVg3q929MbZ5Zo5OBKeER8ugWMEk=",
+      "summary": []
     },
     {
       "type": "function_call",
-      "call_id": "call_yo1NWi1w7tb0HLT4quGVVsx0",
+      "call_id": "call_T1I00Wbo1CpIOFmpx3XRSYU0",
       "name": "get_weather",
       "arguments": "{\"city\":\"Paris\",\"unit\":\"celsius\"}"
     },
     {
       "type": "function_call_output",
-      "call_id": "call_yo1NWi1w7tb0HLT4quGVVsx0",
+      "call_id": "call_T1I00Wbo1CpIOFmpx3XRSYU0",
       "output": "{\"city\":\"Paris\",\"temperature_c\":18,\"conditions\":\"light rain\"}"
     }
   ]

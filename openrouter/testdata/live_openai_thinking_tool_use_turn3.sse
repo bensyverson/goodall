@@ -1,0 +1,72 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_01e1aa7c10ba22f1016ae8d12a97bc87d198b91143d48df5ea","object":"response","created_at":1793642794,"status":"in_progress","access_programs":{"cyber":"standard"},"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":2048,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"high","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Look up the current weather in a city.","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string","description":"the city to look up, such as Paris"},"unit":{"type":"string","description":"celsius or fahrenheit","enum":["celsius","fahrenheit"]}},"required":["city"],"additionalProperties":false},"strict":false}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+
+event: response.in_progress
+data: {"type":"response.in_progress","response":{"id":"resp_01e1aa7c10ba22f1016ae8d12a97bc87d198b91143d48df5ea","object":"response","created_at":1793642794,"status":"in_progress","access_programs":{"cyber":"standard"},"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":2048,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"high","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Look up the current weather in a city.","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string","description":"the city to look up, such as Paris"},"unit":{"type":"string","description":"celsius or fahrenheit","enum":["celsius","fahrenheit"]}},"required":["city"],"additionalProperties":false},"strict":false}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","type":"message","status":"in_progress","content":[],"phase":"final_answer","role":"assistant"},"output_index":0,"sequence_number":2}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","content_index":0,"item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","output_index":0,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":""},"sequence_number":3}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"They","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"uR1o15mwrbnK","output_index":0,"sequence_number":4}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"’d","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"RZPesDw17QbKxx","output_index":0,"sequence_number":5}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" finish","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"u3C7E4VBa","output_index":0,"sequence_number":6}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" at","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"hetSyijsmLYMF","output_index":0,"sequence_number":7}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" **","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"Fqx8cHnj7IyEL","output_index":0,"sequence_number":8}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"21","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"EdQTOJ9Km4ikQU","output_index":0,"sequence_number":9}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":":","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"RIkYHtxfmqP2j1a","output_index":0,"sequence_number":10}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"14","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"pV9fmmBY4leRdM","output_index":0,"sequence_number":11}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"**","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"w1qn49a4BX6AKp","output_index":0,"sequence_number":12}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" and","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"CEHMEKBulkO2","output_index":0,"sequence_number":13}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" should","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"nnIb65ea9","output_index":0,"sequence_number":14}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" still","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"cirY7Dzeya","output_index":0,"sequence_number":15}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" prepare","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"QuZC4ha2","output_index":0,"sequence_number":16}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" for","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"9dhCCW7K5oEy","output_index":0,"sequence_number":17}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" rain","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"oxef0t0JE4d","output_index":0,"sequence_number":18}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":".","item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"obfuscation":"f20eybHNqvvVBuT","output_index":0,"sequence_number":19}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","content_index":0,"item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","logprobs":[],"output_index":0,"sequence_number":20,"text":"They’d finish at **21:14** and should still prepare for rain."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","content_index":0,"item_id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","output_index":0,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":"They’d finish at **21:14** and should still prepare for rain."},"sequence_number":21}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","type":"message","status":"completed","content":[{"type":"output_text","annotations":[],"logprobs":[],"text":"They’d finish at **21:14** and should still prepare for rain."}],"phase":"final_answer","role":"assistant"},"output_index":0,"sequence_number":22}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_01e1aa7c10ba22f1016ae8d12a97bc87d198b91143d48df5ea","object":"response","created_at":1793642794,"status":"completed","access_programs":{"cyber":"standard"},"background":false,"completed_at":1793642795,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":2048,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[{"id":"msg_01e1aa7c10ba22f1016ae8d12b630487d18b430fdcd99c14e0","type":"message","status":"completed","content":[{"type":"output_text","annotations":[],"logprobs":[],"text":"They’d finish at **21:14** and should still prepare for rain."}],"phase":"final_answer","role":"assistant"}],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"high","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"default","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Look up the current weather in a city.","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string","description":"the city to look up, such as Paris"},"unit":{"type":"string","description":"celsius or fahrenheit","enum":["celsius","fahrenheit"]}},"required":["city"],"additionalProperties":false},"strict":false}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":{"input_tokens":439,"input_tokens_details":{"cache_write_tokens":0,"cached_tokens":0},"output_tokens":20,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":459},"user":null,"metadata":{}},"sequence_number":23}
+

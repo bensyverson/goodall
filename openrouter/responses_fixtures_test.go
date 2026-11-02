@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -170,6 +171,16 @@ func TestTheRecordedResponsesTurnReplaysItsReasoningByteForByte(t *testing.T) {
 	second := recordedResponsesStream(t, "live_openai_thinking_tool_use_turn2.sse")
 	if second.StopReason != goodall.StopEndTurn || second.Message.Text() == "" {
 		t.Errorf("turn two: stop = %s, text = %q", second.StopReason, second.Message.Text())
+	}
+
+	// Turn three is sent the history again, so turn one's item travels a second time.
+	sent := itemsSent(t, string(fixture(t, "live_openai_thinking_tool_use_turn3.request.json")))
+	if !slices.ContainsFunc(sent, func(item string) bool { return compacted(t, jsontext.Value(item)) == want }) {
+		t.Errorf("turn three's request lost the reasoning item:\n%s", want)
+	}
+	third := recordedResponsesStream(t, "live_openai_thinking_tool_use_turn3.sse")
+	if third.StopReason != goodall.StopEndTurn || third.Message.Text() == "" {
+		t.Errorf("turn three: stop = %s, text = %q", third.StopReason, third.Message.Text())
 	}
 }
 

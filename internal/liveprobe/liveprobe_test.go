@@ -45,3 +45,14 @@ func TestAStoppedRunDoesNotPassAndCarriesTheMessage(t *testing.T) {
 		t.Errorf("the row lost the refusal: %s", got)
 	}
 }
+
+// Only reasoning on a turn before the last gets replayed, so a total cannot say
+// whether a run's second turn carried any.
+func TestARowSaysWhichTurnReasoned(t *testing.T) {
+	got := Result{Finished: true, Turns: 2, ToolCalls: 1,
+		Usage:         goodall.Usage{Input: 1, Output: 2, Reasoning: 45},
+		TurnReasoning: []int{45, 0}}
+	if !strings.Contains(got.String(), "reasoning=45 by_turn=[45 0]") {
+		t.Errorf("row = %s", got)
+	}
+}
