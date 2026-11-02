@@ -105,3 +105,7 @@ Google's API directly, rather than through OpenRouter. Gemini 4 Argon and the cu
 ## 2026-11-02 Rewriting git history to remove an OpenRouter account id
 
 `openrouter/testdata/live_error.json` carried OpenRouter's `user_id` in `968b9b6`, and that commit is public. The recorder now redacts it and the current file is clean as of `f93e8fc`. The owner ruled on 2026-11-02 to leave history as it is: the value is an account identifier and not a key, and a rewrite would change the hashes of every later commit while existing clones and GitHub could still hold the old one. What would un-park it: evidence that the id can be used against the account, or a real key found in history, which would need revoking first in any case.
+
+## 2026-11-02 Local servers in scripts/check-drift
+
+The drift check leaves out LM Studio, llama.cpp, Ollama and LocalAI, and its report says so. They are not vendor APIs a key can reach, so a scheduled run on a machine with no server would report "not checked" every time, teaching a reader to ignore that line, and the model a server has loaded varies by machine. `go test ./...` already runs the LM Studio tests when a server answers. Un-park this if a local server's update breaks goodall without the live tests noticing, or if a consumer depends on one.

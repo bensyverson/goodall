@@ -27,19 +27,12 @@ import (
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/internal/dotenv"
+	"github.com/bensyverson/goodall/internal/liveprobe"
 	"github.com/bensyverson/goodall/openrouter"
 )
 
-const (
-	runTimeout = 3 * time.Minute
-	maxTokens  = 2000
-	prompt     = "What is the weather in Paris? Use the tool, then answer in one short sentence."
-)
-
-// weatherInput is the probe tool's input.
-type weatherInput struct {
-	City string `json:"city" desc:"the city to look up"`
-}
+// runTimeout bounds one model's run.
+const runTimeout = 3 * time.Minute
 
 func main() {
 	envPath := flag.String("env", ".env", "path to the .env holding the API keys")
@@ -65,58 +58,10 @@ func main() {
 		fatal(fmt.Errorf("unknown dialect %q", *dialect))
 	}
 	for model := range strings.SplitSeq(*models, ",") {
-		fmt.Printf("%-32s %s\n", model, runOne(provider, model, goodall.Effort(*effort)))
+		ctx, cancel := context.WithTimeout(context.Background(), runTimeout)
+		fmt.Printf("%-32s %s\n", model, liveprobe.AgentLoop(ctx, provider, model, goodall.Effort(*effort)))
+		cancel()
 	}
-}
-
-// runOne drives one agent to a terminal event and renders what it did.
-func runOne(provider goodall.Provider, model string, effort goodall.Effort) string {
-	ctx, cancel := context.WithTimeout(context.Background(), runTimeout)
-	defer cancel()
-	calls := 0
-	weather, err := goodall.NewTool("get_weather", "Get the weather for a city",
-		func(_ context.Context, in weatherInput) (goodall.ToolResult, error) {
-			calls++
-			return goodall.TextResult("Sunny, 21C in " + in.City), nil
-		})
-	if err != nil {
-		return "tool: " + err.Error()
-	}
-	agent := &goodall.Agent{
-		Provider:  provider,
-		Model:     model,
-		Tools:     []goodall.Tool{weather},
-		Thinking:  goodall.ThinkingConfig{Effort: effort},
-		MaxTokens: maxTokens,
-	}
-	var conv goodall.Conversation
-	turns := 0
-	for ev, err := range agent.Run(ctx, conv, goodall.Text{Text: prompt}) {
-		if err != nil {
-			return "FAIL iterator: " + err.Error()
-		}
-		switch e := ev.(type) {
-		case goodall.TurnEnd:
-			turns++
-		case goodall.Done:
-			return fmt.Sprintf("ok turns=%d tool_calls=%d in=%d out=%d reasoning=%d cost=%s reported=%v",
-				turns, calls, e.Result.Usage.Input, e.Result.Usage.Output, e.Result.Usage.Reasoning,
-				e.Result.Cost.Amount, e.Result.Cost.Reported)
-		case goodall.Stopped:
-			return fmt.Sprintf("FAIL turns=%d tool_calls=%d cause=%s kind=%s: %s",
-				turns, calls, e.Cause, e.Kind, clip(e.Message))
-		}
-	}
-	return "FAIL no terminal event"
-}
-
-// clip keeps a provider's message on its row.
-func clip(s string) string {
-	s = strings.Join(strings.Fields(s), " ")
-	if len(s) > 240 {
-		return s[:240] + "…"
-	}
-	return s
 }
 
 func fatal(err error) {

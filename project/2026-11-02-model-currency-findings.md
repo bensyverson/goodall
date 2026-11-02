@@ -53,4 +53,6 @@ The OpenAI dialect reported the tools-with-reasoning 400 as `kind=unknown`, thou
 
 ## Why this went unnoticed
 
+> **Landed 2026-11-02:** `scripts/check-drift` now looks outward; see [its findings](2026-11-02-check-drift-findings.md).
+
 Nothing in the repo looks outward between sessions. `go test ./...` replays against the pinned models, so a new model family, a stale pin or a moved feature stays invisible until someone asks, as happened here. On this one date, a look found GPT-6.1, Gemini 4, Jev 1.14 with a fourth question type, decision models on five local servers, and the Responses trigger firing.
