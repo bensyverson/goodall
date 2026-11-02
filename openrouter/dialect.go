@@ -92,8 +92,9 @@ type DecisionWire string
 const (
 	// DecisionWireSystemOne posts the System One shape.
 	DecisionWireSystemOne DecisionWire = ""
-	// DecisionWireRefused refuses the call before anything is sent.
-	DecisionWireRefused DecisionWire = "refused"
+	// DecisionWireDecisions posts OpenAI's own shape to /decisions. Its server
+	// answers the System One shape with a 400 about a member it wants instead.
+	DecisionWireDecisions DecisionWire = "decisions"
 )
 
 // Quirks is what one dialect accepts. It is a struct rather than a map so the
@@ -137,8 +138,7 @@ type Quirks struct {
 	// StrictTools is how a strict tool is carried, or whether it is
 	// refused.
 	StrictTools StrictToolStyle
-	// DecisionWire is how a decision request is carried, or whether it is
-	// refused.
+	// DecisionWire is how a decision request is carried.
 	DecisionWire DecisionWire
 	// DecisionModelRequired is whether a decision request with no model is
 	// refused locally. A local server may have only one model loaded and
@@ -161,8 +161,8 @@ type Quirks struct {
 //	Metadata            yes         yes               no          no
 //	UsageCost           yes         no                no          no
 //	StrictTools         + beta      member            refused     refused
-//	DecisionWire        System One  refused           System One  System One
-//	DecisionModelReq…   yes         no                no          no
+//	DecisionWire        System One  /decisions        System One  System One
+//	DecisionModelReq…   yes         yes               no          no
 func (d Dialect) Quirks() Quirks {
 	switch d {
 	case OpenRouter:
@@ -188,7 +188,8 @@ func (d Dialect) Quirks() Quirks {
 			Metadata:    true,
 			StrictTools: StrictToolsMember,
 
-			DecisionWire: DecisionWireRefused,
+			DecisionWire:          DecisionWireDecisions,
+			DecisionModelRequired: true,
 		}
 	case LMStudio:
 		return Quirks{Reasoning: ReasoningEffortField, StreamUsage: true}

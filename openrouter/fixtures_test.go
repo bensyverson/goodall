@@ -127,9 +127,10 @@ func TestEveryRecordedBlockingResponseDecodes(t *testing.T) {
 			// asserted on where errors are.
 			continue
 		}
-		if strings.HasPrefix(name, "live_decision_") {
-			// These are the decision wire's, not completions, and
-			// decide_fixtures_test.go reads them.
+		if strings.HasPrefix(name, "live_decision_") || strings.HasPrefix(name, "live_openai_decision_") {
+			// These are the decision wires', not completions, and
+			// decide_fixtures_test.go and decide_openai_fixtures_test.go
+			// read them.
 			continue
 		}
 		t.Run(name, func(t *testing.T) {

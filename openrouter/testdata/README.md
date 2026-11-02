@@ -23,6 +23,7 @@ Two sets live here, and the file names say which is which.
 | `live_encrypted_reasoning_tool_use*` | `openrouter.ai/api/v1` | `openai/gpt-6-astra` |
 | `live_openai_*` | `api.openai.com/v1`, `Dialect: OpenAI` | `gpt-5.6-terra` |
 | `live_decision_*` | `openrouter.ai/api/v1/systemone` and `/models` | `openai/gpt-6-luna-decisions`, `scaledown/classify-1` for the limit |
+| `live_openai_decision_*` | `api.openai.com/v1/decisions`, `Dialect: OpenAI` | `gpt-6-luna` |
 
 The constants and the reasons for each choice are in `internal/livemodel`.
 
@@ -45,6 +46,10 @@ The constants and the reasons for each choice are in `internal/livemodel`.
 | `live_decision_model_limit.json` | Recorded 2026-11-02: `scaledown/classify-1` refusing an object state with a 400 that says so. |
 | `live_decision_schema_error.json` | Recorded 2026-11-02: an unknown question type, posted by hand since the typed API cannot build one. Its message is a JSON array inside a string, which `readableMessage` turns into sentences. |
 | `live_decision_models.json` | Recorded 2026-11-02: `GET /models?output_modalities=decisions`, 33 rows, no request file because it is a GET. |
+| `live_openai_decision_mixed.json` | Recorded 2026-11-02: OpenAI's own wire on `gpt-6-luna`, the question set and object state of `live_decision_mixed.json`, so the two wires can be compared. It read 433 input tokens and the same figures on both. No cost, id or host in the body. |
+| `live_openai_decision_criteria.json` | Recorded 2026-11-02: a predicate with true and false descriptions, folded into the instructions, over a string state. |
+| `live_openai_decision_one_option.json` | Recorded 2026-11-02: a choice with one option, refused with a 400 and a string `code`. |
+| `live_openai_decision_too_deep.json` | Recorded 2026-11-02: a state past 32 levels, refused with a 400 and a null `code`. |
 
 The recorder replaces the `user_id` on an error envelope with `<redacted>`, since it names the account behind the key. That is the one way a `live_*` file differs from the wire. `live_error.json` predates the recorder's redaction and was edited by hand to match on 2026-11-02.
 

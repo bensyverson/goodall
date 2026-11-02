@@ -25,6 +25,8 @@ The roster stays one agent in order, since the leaves share `openrouter/`. A new
 
 - **An account id is in public git history.** `openrouter/testdata/live_error.json` carried OpenRouter's `user_id` from `968b9b6`, on `origin/main` in a public repo. The current file is redacted and the recorder now redacts, but only rewriting history removes the old value. It is an account identifier and not a key. Rewriting published history is the owner's call and has not been done.
 
+> **Resolved 2026-11-02.** The owner ruled to leave history as it is. See [the backlog](backlog.md).
+
 ## Worth knowing
 
 - **Triage has one run after the move.** It sorted as calibrated but differed in close calls and escalations. Run-to-run spread was not measured, so no cause is established (the calibration is in [the triage plan](2026-09-17-triage-example-plan.md), and the run is in the notes on `4UKauU`).

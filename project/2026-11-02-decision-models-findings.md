@@ -95,7 +95,7 @@ Read from the code, except where marked:
 - **Errors carry the wrong provider name.** A failure through OpenRouter is stamped `typesafe`.
 - **`Models` would return nothing.** It reads a `models` member and OpenRouter answers with `data`, so the likely result is an empty list and no error. Not run.
 - **`DefaultModel` is a TypeSafe alias.** OpenRouter documents mapping `jev-latest` to `~typesafe/jev-latest`, so it works there by accommodation. Not run.
-- **OpenAI's wire is not reachable at all.** Sending the System One shape there gets 400, "Missing required parameter: 'input'" (observed).
+- **OpenAI's wire is not reachable at all.** Sending the System One shape there gets 400, "Missing required parameter: 'input'" (observed). *(Since built: see [The OpenAI wire](#the-openai-wire).)*
 - **The name.** `typesafe.New(openRouterKey, …)` asking Microsoft's model a question reads as a mistake, and the question types, `Tool`, `AuthoredTool` and `Route` are not about TypeSafe.
 
 ## Options
@@ -133,9 +133,77 @@ Building both wires together is what proves the types are neutral. A neutral pac
 ## What B has to settle while building
 
 - **Refusals.** A neutral `RefusalAnswer` whose typed accessor returns an error. OpenRouter's response schema has no refusal variant, so what it does with an OpenAI refusal is unknown; the accessors already fail loudly on a missing or unknown answer, so neither case reads as a zero value.
-- **Noul criteria on OpenAI.** A predicate has no criteria member, so `True` and `False` must fold into the instructions on that wire, or be refused locally. Folding is an adapter making a prompting decision, so measure it. Choice descriptions and score labels map directly.
-- **JSON evidence on OpenAI.** A string becomes `input`. Anything else becomes an `input_json` part, documented as an object or an array of objects, with limits of 32 levels, 10,000 values and 256 KiB. An array of strings needs a rule.
+- **Noul criteria on OpenAI.** *Settled: folded, as measured in [The OpenAI wire](#predicate-criteria-folded).* A predicate has no criteria member, so `True` and `False` must fold into the instructions on that wire, or be refused locally. Folding is an adapter making a prompting decision, so measure it. Choice descriptions and score labels map directly.
+- **JSON evidence on OpenAI.** *Settled: see [The OpenAI wire](#the-state-rule).* A string becomes `input`. Anything else becomes an `input_json` part, documented as an object or an array of objects, with limits of 32 levels, 10,000 values and 256 KiB. An array of strings needs a rule.
 - **Which OpenRouter path.** `/api/v1/systemone` is not labeled alpha and carried the sweep, whereas `/api/alpha/decisions` is the documented primary but says alpha in its URL and was only exercised twice. Start on `systemone`; it is one constant to change.
+
+## The OpenAI wire
+
+Built 2026-11-02 in `openrouter/decide_openai.go`. Every figure here came from `go run ./scripts/probe-openai-decisions -env /abs/path/.env` with the `-mode` named beside it, against `gpt-6-luna` on `api.openai.com` and `openai/gpt-6-luna-decisions` on OpenRouter. The tool run's code was uncommitted on top of `bd411f8`, since the leaf's agent does not commit; it is pinned by the SHA-256 of `openrouter/decide_openai.go`, `7257d55e…`, and of the probe's `criteria.go`, `ec04ef2f…`.
+
+### The state rule
+
+A state is judged by what it marshals to, not its Go type. **A string is `input`. An object or an array of objects, empty ones included, is one user message holding one `input_json` part. Anything else is refused before any call**, with `KindInvalidRequest` and a sentence naming what would be accepted.
+
+Observed with `-mode states`, one call each:
+
+| What `data` held | Answer |
+|---|---|
+| object, array of objects, `{}`, `[]` | 200 |
+| array of strings, array mixing objects and strings, array of arrays | 400, `invalid_type`, "Invalid type for 'input[0].content[0].data[0]': expected an object…" |
+| string, number, boolean, null | 400, `invalid_type`, "Invalid type for 'input[0].content[0].data'…" |
+| 33 levels of objects | 400, null `code`, "input_json data exceeds the maximum depth of 32" |
+| one 300 KiB string in an object | 400, null `code`, "input_json data exceeds the maximum serialized size of 262144 bytes" |
+
+The limit of 10,000 values was not provoked. An object as bare `input` is a 400 too, so the message wrapper is not optional.
+
+**Why refuse rather than convert.** The two ways to make a list of strings fit both decide how the model reads the caller's data: inventing an object key, or writing the list out as JSON text in `input`. Neither has been measured, the server is clear about what it takes, and the way out is one line in the caller's own hands, who knows what the list is. The refusal costs no call, and it reads better than the server's sentence, which names an inner path of a message the caller never wrote. It reaches a model through `Tool` and `AuthoredTool` as an error result it can act on, and ends a `Route` the way any failed judgment does, so neither adapter breaks. The 32 levels and 256 KiB stay the server's to state, as the plan rules for limits, and each arrives as a sentence.
+
+The other wire does not have this rule: System One takes any JSON, so a list of strings that works there is refused here. That is a real gap in "one set of questions over every backend", and it is in the state rather than the questions.
+
+An object state reads alike on both wires. The recorded mixed exchange, the same ticket and questions on each, came back with 433 input tokens on both and identical figures (`openrouter/testdata/live_decision_mixed.json` against `live_openai_decision_mixed.json`, held together by `TestBothWiresReadAsTheSameNeutralShapes`).
+
+### Predicate criteria: folded
+
+**`True` and `False` are written into the instructions: the question, a blank line, then `True: …` and `False: …` on a line each, leaving out one that is empty.** A question written for Jev and a question written for Luna are then the same value, which is the goal, and a developer does not need to know this wire has no member for them. Refusal would have broken that for an option the neutral type advertises and `AuthoredTool` offers to a model. It was the fallback if folding measured badly.
+
+Measured with `-mode criteria -runs 3`, every arm through `Client.Decide`. `openrouter_criteria` sends the descriptions as System One criteria, `openai_criteria` folds them, and the last two arms frame them differently in the instructions:
+
+| Case | OpenRouter, none | OpenAI, none | **OpenRouter, criteria** | **OpenAI, folded** | one newline | `Yes:` and `No:` |
+|---|---|---|---|---|---|---|
+| urgency, soft ticket | 0.83 | 0.83 | **0.19** | **0.19** | 0.21 | 0.15 |
+| sarcasm, literal words | 0 | 0 | **0** | **0** | 0 | 0.01 |
+| refund window | 0.50 | 0.50 | **0** | **0** | 0 | 0.68 |
+| mild satisfaction | 0.21 | 0.21 | **1** | **1** | 0.72 | 0.99 |
+| sales direction | 1 | 1 | **0** | **0** | 0 | 0 |
+| bug or feature | 0.97 | 0.97 | **0.82** | **0.82** | 0.80 | 0.99 |
+
+Input tokens matched on both routes in every row, with and without criteria (for example 177 and 194 on the first). All three framed arms matched those counts too, so tokens alone did not choose among them; the probabilities did.
+
+What this says:
+
+- **The measurement can see a difference.** Criteria moved the answer in 5 of the 6 rows, and the two neighboring spellings missed OpenRouter in 3 and 5 of the 6.
+- **There is no run-to-run noise to swallow an effect.** All 138 answered calls of this run repeated their arm's figure exactly, as did the 110 of an earlier run at `-runs 5`. So the spellings differ by more than chance.
+- **The fold was checked on cases it was not picked from.** An earlier run, with the single newline as the shipped spelling, missed OpenRouter on urgency (0.21 against 0.19) while the blank line hit it. The refund, satisfaction, sales and bug rows were written after that choice.
+- **OpenRouter very probably folds the same way.** That is still inference: 6 cases on one model on one day, and what OpenRouter sends upstream is not visible. If it changes its folding, these wires will part without an error.
+
+The cases are chosen to be movable, not a sample of real questions, and nothing here says the fold judges well, only that it judges as the other route does.
+
+**One-sided descriptions have no comparison.** OpenRouter refuses them: `True` alone is a 400, "questions.q.criteria.false: Invalid input", and `False` alone the mirror of it, 8 calls each. So the neutral type's "optional" on each is not true of every backend. OpenAI's wire has only text, so it folds whichever is present, and that does move the answer (0.84 to 0 with `True` alone, and 1 to 0.31 with `False` alone), but nothing says it is what a server taking one-sided criteria would do.
+
+### What was seen and not documented
+
+- **The error shape** is on neither page read: `{"error":{"message","type","param","code"}}`, with `code` a string such as `invalid_type` or null.
+- **The body names no id**, as documented, and every response carries `x-request-id`, so `Answers.Generation` is that.
+- **`output_tokens` was 0** on every call, as the reference's example shows.
+- **A refusal was never drawn**, in any call here. Its handling rests on the documented shape, with only `type` and `name`. A boolean choice value, likewise.
+- **A choice with one option** passes `decision.Questions.Validate` and draws a 400 here, "array too short". The limits of 2 to 255 choices, 2 to 10 levels and 400 questions stay the server's to state, as the plan rules.
+
+The answer members arrive in another order than the reference lists them, which matters to nothing.
+
+### What the calls cost
+
+294 calls in all: 16 `-mode states`, 9 `-mode spellings`, 120 and 144 `-mode criteria`, 4 recordings and one live test. 29 of them were 400s. At the catalog's $0.10 per million input tokens, roughly 50,000 tokens is about $0.005; that is arithmetic, not a figure either server stated.
 
 ## Not established
 

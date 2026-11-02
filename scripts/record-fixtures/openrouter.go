@@ -75,7 +75,7 @@ func openAIExchanges(rec *recorder, key, model string) ([]exchange, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []exchange{
+	return append([]exchange{
 		{
 			name: "openai_text",
 			what: "a one-line answer from api.openai.com under the OpenAI dialect, streamed",
@@ -123,7 +123,7 @@ func openAIExchanges(rec *recorder, key, model string) ([]exchange, error) {
 				return err
 			},
 		},
-	}, nil
+	}, openAIDecisionExchanges(rec, client)...), nil
 }
 
 // chatCompletionExchanges is the OpenRouter set. It is a function of the

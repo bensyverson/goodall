@@ -1,0 +1,1 @@
+{"error":{"message":"input_json data exceeds the maximum depth of 32","type":"invalid_request_error","param":"input[0].content[0].data","code":null}}

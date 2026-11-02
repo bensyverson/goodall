@@ -186,23 +186,6 @@ func TestDecideRefusesABadRequestBeforeAnyRequest(t *testing.T) {
 	}
 }
 
-// TestTheOpenAIDialectRefusesLocally: its server answers the System One shape
-// with a 400 about a member it wants instead, so sending it would be a request
-// known to fail, on the caller's account.
-func TestTheOpenAIDialectRefusesLocally(t *testing.T) {
-	client, seen := decideServer(t, http.StatusOK, decideBody(), WithDialect(OpenAI))
-	_, err := client.Decide(t.Context(), &decision.Request{Model: "gpt-6-luna", State: "s", Questions: decideQuestions()})
-	if !errors.Is(err, goodall.KindInvalidRequest) {
-		t.Errorf("error is %v, want KindInvalidRequest", err)
-	}
-	if err != nil && !strings.Contains(err.Error(), OpenAI.String()) {
-		t.Errorf("error %q does not name the dialect", err)
-	}
-	if seen.calls != 0 {
-		t.Errorf("the client made %d calls for a request it should have refused", seen.calls)
-	}
-}
-
 // TestLocalDialectsTakeTheSameWire is only that they are dispatched to it. What
 // local servers do with it is proved in the local-servers work.
 func TestLocalDialectsTakeTheSameWire(t *testing.T) {

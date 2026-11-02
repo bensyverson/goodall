@@ -1,6 +1,7 @@
-// The decision wire: a Client answering typed questions rather than a
-// conversation, over the System One shape the shared codec knows. What the codec
-// leaves alone is what OpenRouter adds to that shape, which is read here.
+// The decision wires: a Client answering typed questions rather than a
+// conversation. Most servers take the System One shape the shared codec knows, and
+// what the codec leaves alone is what OpenRouter adds to that shape, which is read
+// here. OpenAI's own spelling is in decide_openai.go.
 
 package openrouter
 
@@ -23,18 +24,26 @@ var _ decision.Decider = (*Client)(nil)
 // Decide evaluates the request's state against its questions and returns one
 // answer per question, implementing [decision.Decider]. The dialect chooses the
 // wire: [OpenRouter], [LMStudio] and [Generic] take System One, relative to the
-// base URL, and [OpenAI] is refused here because its server answers that shape
-// with a 400.
+// base URL, and [OpenAI] takes its own POST /decisions, relative to the base URL
+// too, so a client reaches it with WithBaseURL("https://api.openai.com/v1").
 //
-// Under the OpenRouter dialect a request with no model is refused before any
-// call. Thresholds do not travel between models and OpenRouter's own guidance is
-// never to pick one from memory, so this client has no default to offer.
+// Under the OpenRouter and OpenAI dialects a request with no model is refused
+// before any call. Thresholds do not travel between models and OpenRouter's own
+// guidance is never to pick one from memory, so this client has no default to
+// offer.
 //
 // A model's own limit, such as a question type it does not take, arrives as a 400
 // whose sentence is the message of the *[goodall.APIError], since the catalog
 // says nothing a table of capabilities could be built from. Answers report the
 // cost in USD where the dialect's server charges one, the generation id and the
 // serving host.
+//
+// Under the OpenAI dialect a state must marshal to a string, an object or a list
+// of objects; anything else is refused before any call, because the server would
+// refuse it too. A [decision.Predicate]'s True and False have no member on that
+// wire and are written into its instructions, in a form measured against the same
+// question through OpenRouter. No cost is stated there, so [decision.Answers].Cost
+// stays unreported, meaning not known.
 //
 // A retried call may be billed twice, as on any call whose response was lost
 // after the server evaluated it; [WithMaxRetries] with a negative value gives
@@ -44,32 +53,53 @@ func (c *Client) Decide(ctx context.Context, req *decision.Request) (*decision.A
 		return nil, err
 	}
 	quirks := c.dialect.Quirks()
-	if quirks.DecisionWire == DecisionWireRefused {
-		return nil, fmt.Errorf("openrouter: %w: the %s dialect has no decision wire yet", goodall.KindInvalidRequest, c.dialect)
-	}
 	if req.Model == "" && quirks.DecisionModelRequired {
-		return nil, fmt.Errorf("openrouter: %w: a decision request needs a model under the %s dialect, because thresholds do not travel between models; DecisionModels lists them",
-			goodall.KindInvalidRequest, c.dialect)
+		hint := ""
+		if c.dialect == OpenRouter {
+			hint = "; DecisionModels lists them"
+		}
+		return nil, fmt.Errorf("openrouter: %w: a decision request needs a model under the %s dialect, because thresholds do not travel between models%s",
+			goodall.KindInvalidRequest, c.dialect, hint)
+	}
+	if quirks.DecisionWire == DecisionWireDecisions {
+		body, err := encodeDecisionsRequest(req)
+		if err != nil {
+			return nil, err
+		}
+		raw, header, err := c.postDecision(ctx, pathDecisions, body)
+		if err != nil {
+			return nil, err
+		}
+		return decodeDecisions(raw, header)
 	}
 	body, err := systemone.EncodeRequest(req)
 	if err != nil {
 		return nil, fmt.Errorf("openrouter: %w", err)
 	}
+	raw, header, err := c.postDecision(ctx, pathSystemOne, body)
+	if err != nil {
+		return nil, err
+	}
+	return decodeDecision(raw, header, quirks)
+}
+
+// postDecision makes the call either wire makes, returning the whole body.
+func (c *Client) postDecision(ctx context.Context, path string, body []byte) ([]byte, http.Header, error) {
 	resp, err := c.http.Do(ctx, transport.Request{
 		Method: http.MethodPost,
-		URL:    c.baseURL + pathSystemOne,
+		URL:    c.baseURL + path,
 		Header: c.header(),
 		Body:   body,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return decodeDecision(raw, resp.Header, quirks)
+	return raw, resp.Header, nil
 }
 
 // wireDecisionExtras is what OpenRouter adds to a System One response, and the

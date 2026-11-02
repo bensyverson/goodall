@@ -86,6 +86,12 @@ const OpenAI = "gpt-5.6-terra"
 // two can be held side by side. This is the concrete catalog id, never an alias.
 const OpenRouterDecision = "openai/gpt-6-luna-decisions"
 
+// OpenAIDecision is the decision model the OpenAI wire's recordings and live test
+// use against api.openai.com itself. OpenAI's reference says of the member, on
+// 2026-11-02, "Only gpt-6-luna is supported". It is the same model as
+// [OpenRouterDecision], which is what lets the two wires be held side by side.
+const OpenAIDecision = "gpt-6-luna"
+
 // OpenRouterDecisionLimited is the decision model whose own limit the refusal
 // recording provokes: in the same sweep it answered a string state and refused an
 // object state with a 400 saying so.

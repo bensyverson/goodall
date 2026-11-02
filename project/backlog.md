@@ -101,3 +101,7 @@ Cloudflare, Perplexity, Microsoft and the rest were exercised only through OpenR
 ## 2026-11-02 Direct Gemini
 
 Google's API directly, rather than through OpenRouter. Gemini 4 Argon and the current Flash models already run goodall's full agent loop through OpenRouter ([findings](2026-11-02-model-currency-findings.md)), and the owner ruled on 2026-11-02 that this is enough for now. The `Generic` dialect could reach Google's OpenAI-compatible route, but goodall has no `extra_content` member for thought signatures, so it probably fails on the second turn; no Google key was available to test that. Revive when a consumer needs Google directly for data handling, price or a feature OpenRouter does not carry. The first step is a key and `scripts/probe-agent-loop`.
+
+## 2026-11-02 Rewriting git history to remove an OpenRouter account id
+
+`openrouter/testdata/live_error.json` carried OpenRouter's `user_id` in `968b9b6`, and that commit is public. The recorder now redacts it and the current file is clean as of `f93e8fc`. The owner ruled on 2026-11-02 to leave history as it is: the value is an account identifier and not a key, and a rewrite would change the hashes of every later commit while existing clones and GitHub could still hold the old one. What would un-park it: evidence that the id can be used against the account, or a real key found in history, which would need revoking first in any case.

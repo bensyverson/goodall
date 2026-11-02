@@ -33,6 +33,9 @@ const (
 	// System One. OpenRouter also serves the same shape at /api/alpha/decisions;
 	// this one is not labeled alpha and carried the 2026-11-02 sweep.
 	pathSystemOne = "/systemone"
+	// pathDecisions is OpenAI's decision endpoint, a different shape from
+	// System One under a path of its own.
+	pathDecisions = "/decisions"
 	// queryDecisionModels is the filter the decision models need, since the
 	// default list leaves them out.
 	queryDecisionModels = "output_modalities=decisions"
