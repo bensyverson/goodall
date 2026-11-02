@@ -4,7 +4,9 @@
 // in [github.com/bensyverson/goodall/decision]; this package holds only what is
 // TypeSafe's own: the endpoint, the key, the default model, the error bodies and
 // the model catalog. Like every decision model it is deliberately not a
-// [goodall.Provider].
+// [goodall.Provider]. Jev is one decision model among many: other vendors' are
+// reached through [github.com/bensyverson/goodall/openrouter] with the same
+// questions, and OpenRouter serves Jev too.
 //
 // What it shares with the provider packages is everything below the API: the
 // same HTTP transport with its retries and Retry-After handling, the same
@@ -33,5 +35,6 @@
 //
 // Set [decision.Request.Model], or pin it with [decision.WithModel] on an
 // adapter, wherever a threshold depends on the model; left empty it is
-// [DefaultModel], an alias that moves.
+// [DefaultModel], an alias that moves. This is the only client with a default
+// model, since the alias is TypeSafe's own.
 package typesafe

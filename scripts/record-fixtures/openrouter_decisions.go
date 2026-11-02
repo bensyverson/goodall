@@ -96,7 +96,7 @@ func decisionExchanges(rec *recorder, client *openrouter.Client, key string) []e
 // recordDecisionRefusal makes one call expected to be refused and records the
 // error envelope. A call that succeeds is itself a failure, since a fixture
 // holding an answer would make the refusal test assert nothing.
-func recordDecisionRefusal(ctx context.Context, rec *recorder, client *openrouter.Client, name string, req *decision.Request) error {
+func recordDecisionRefusal(ctx context.Context, rec *recorder, client decision.Decider, name string, req *decision.Request) error {
 	_, callErr := client.Decide(ctx, req)
 	if callErr == nil {
 		rec.transport.taken()

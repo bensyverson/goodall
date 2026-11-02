@@ -9,6 +9,7 @@ import (
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/anthropic"
 	"github.com/bensyverson/goodall/decision"
+	"github.com/bensyverson/goodall/openrouter"
 	"github.com/bensyverson/goodall/typesafe"
 )
 
@@ -138,5 +139,58 @@ func ExampleRoute() {
 		if delta, ok := ev.(goodall.TextDelta); ok {
 			fmt.Print(delta.Text)
 		}
+	}
+}
+
+// The same questions asked of a model that is not Jev. A decision model is chosen
+// by a client and a model, so nothing about the questions changes, and because the
+// thresholds that read an answer do not travel between models, this client has no
+// default: the call names one, read from the catalog rather than remembered.
+func ExampleDecider() {
+	client := openrouter.New(openrouter.WithAPIKey(os.Getenv("OPENROUTER_API_KEY")))
+
+	catalog, err := client.DecisionModels(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(len(catalog), "decision models on offer")
+
+	answers, err := client.Decide(context.Background(), &decision.Request{
+		Model:     "openai/gpt-6-luna-decisions",
+		State:     "Help! My payouts have been failing for 3 days and I have staff to pay.",
+		Questions: triageQuestions,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	department, err := answers.Choice("department")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(department.Choice, "answered by", answers.Model, "at", answers.Cost.Amount, answers.Cost.Currency)
+}
+
+// The other two ways to reach a model that is not Jev: OpenAI's own wire and a
+// server on this machine. Each is the same client under another dialect, and a
+// tool or a route takes any of them, so the adapters do not change either.
+func ExampleDecider_otherServers() {
+	openAI := openrouter.New(
+		openrouter.WithAPIKey(os.Getenv("OPENAI_API_KEY")),
+		openrouter.WithBaseURL("https://api.openai.com/v1"),
+		openrouter.WithDialect(openrouter.OpenAI),
+	)
+	if _, err := decision.Tool(openAI, "triage_ticket", "Decide which team a support ticket belongs to.",
+		triageQuestions, decision.WithModel("gpt-6-luna")); err != nil {
+		log.Fatal(err)
+	}
+
+	// No key and no model: the server answers with what is loaded.
+	local := openrouter.New(
+		openrouter.WithBaseURL("http://localhost:1234/v1"),
+		openrouter.WithDialect(openrouter.LMStudio),
+	)
+	if _, err := decision.Tool(local, "triage_ticket", "Decide which team a support ticket belongs to.",
+		triageQuestions); err != nil {
+		log.Fatal(err)
 	}
 }

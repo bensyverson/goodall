@@ -87,6 +87,34 @@ chat.WriteSSE(w, chat.Redact(svc.Subscribe(r.Context(), r.PathValue("id")), svc.
 
 Both compile as `ExampleService_Send` and `ExampleWriteSSE` in the `chat` package. Implement `chat.ThreadStore` to persist threads elsewhere; `chat/storetest` is the contract test.
 
+## Quick start: a decision model that is not Jev
+
+A decision model judges a state against typed questions, in one cheap blocking call. Choose a client and a model, and the questions stay the same:
+
+```go
+client := openrouter.New(openrouter.WithAPIKey(os.Getenv("OPENROUTER_API_KEY")))
+
+answers, err := client.Decide(ctx, &decision.Request{
+	Model: "openai/gpt-6-luna-decisions", // client.DecisionModels lists the catalog
+	State: "Help! My payouts have been failing for 3 days and I have staff to pay.",
+	Questions: decision.Questions{
+		{ID: "department", Question: decision.Choice{
+			Instructions: "Which team should handle this ticket?",
+			Options: []decision.Option{
+				{Key: "billing", Description: "Payments, payouts, invoicing, refunds"},
+				{Key: "technical", Description: "Bugs, outages, integrations"},
+			},
+		}},
+	},
+})
+if err != nil {
+	log.Fatal(err)
+}
+department, err := answers.Choice("department")
+```
+
+`openrouter.WithBaseURL` and `openrouter.WithDialect` point the same client at OpenAI's own wire or at a local server, and `typesafe.New` is TypeSafe's. `decision.Tool`, `decision.AuthoredTool` and `decision.Route` take any of them. A threshold tuned on one model does not carry to another, so only TypeSafe's client has a default model. These compile as `ExampleDecider` and `ExampleDecider_otherServers` in the `decision` package.
+
 ## The examples
 
 Three runnable previews live under `examples/`, all against the keys in `.env`:
@@ -100,7 +128,7 @@ go run ./examples/triage                       # triage a mailbox: a judge, a de
 
 In the terminal, type a line and press return. Ctrl-C while the answer is streaming stops it and keeps what had arrived, so the next line carries on from there; Ctrl-C at the prompt exits. `-model` names another model and `-thinking high` asks for more reasoning and shows its summary. The web page streams the answer over server-sent events and, reloaded mid-answer, catches up with the partial message and keeps streaming; it never receives the system prompt.
 
-The triage example is the delegation one. It reads a mailbox, Apple Mail's store, a Maildir, an mbox, or a synthetic inbox bundled in the binary, which is the default so it runs with no mail on the machine, and asks TypeSafe's Jev about every message in parallel: which department it belongs to, whether it is waiting on a reply, whether it is waiting today. Replies are drafted by a cheaper model through `goodall.AgentTool`, checked by four small inspectors rather than one vague judge, sent back to the strong model once if any inspector fires, and escalated to you if the rewrite is still flagged. It moves nothing: the output is a report of proposed routes and drafts. The judge and both models only ever see a filtered record of each message, sender, subject, date and a bounded snippet with quoted replies and markup stripped and attachments never decoded, and every question and threshold lives in one file, `examples/triage/questions.go`. It needs `TYPESAFE_API_KEY` alongside the provider key; `-source apple -path ~/Library/Mail/V10 -n 30` runs it on real mail. The plan is [project/2026-09-17-triage-example-plan.md](project/2026-09-17-triage-example-plan.md).
+The triage example is the delegation one. It reads a mailbox, Apple Mail's store, a Maildir, an mbox, or a synthetic inbox bundled in the binary, which is the default so it runs with no mail on the machine, and asks TypeSafe's Jev about every message in parallel: which department it belongs to, whether it is waiting on a reply, whether it is waiting today. Replies are drafted by a cheaper model through `goodall.AgentTool`, checked by four small inspectors rather than one vague judge, sent back to the strong model once if any inspector fires, and escalated to you if the rewrite is still flagged. It moves nothing: the output is a report of proposed routes and drafts. The judge and both models only ever see a filtered record of each message, sender, subject, date and a bounded snippet with quoted replies and markup stripped and attachments never decoded, and every question and threshold lives in one file, `examples/triage/questions.go`. It needs `TYPESAFE_API_KEY` alongside the provider key; `-source apple -path ~/Library/Mail/V10 -n 30` runs it on real mail. `-judge-backend` and `-judge-model` name another judge, such as `-judge-backend openai -judge-model gpt-6-luna`. Its thresholds are tuned to the pinned Jev and do not carry, so such a run shows the seam and says nothing about that judge's quality, and its report says so. The plan is [project/2026-09-17-triage-example-plan.md](project/2026-09-17-triage-example-plan.md).
 
 ## What is in the box
 
@@ -108,9 +136,9 @@ The triage example is the delegation one. It reads a mailbox, Apple Mail's store
 |---|---|
 | `goodall` | Blocks, messages and conversations; tools with inferred schemas; the provider seam; the streaming event model; the agent loop with budgets, hooks, approval (`Defer` holds a whole turn for a person to approve), awaited calls (`Await` holds one call for an answer while the turn's others run) and resume; capability pre-flight against the model catalog |
 | `goodall/anthropic` | The Messages API: streaming and blocking, thinking (adaptive and budget), images and PDFs, cache control, the models catalog |
-| `goodall/openrouter` | Chat Completions with typed dialects for OpenRouter, OpenAI, LM Studio and generic servers: reasoning details round-tripped verbatim, cost reporting, the catalog with prices; also a `decision.Decider`, reaching OpenRouter's decision models with their reported cost and GPT-6 Luna on OpenAI directly |
+| `goodall/openrouter` | Chat Completions with typed dialects for OpenRouter, OpenAI, LM Studio and generic servers: reasoning details round-tripped verbatim, cost reporting, the catalog with prices; also a `decision.Decider`, reaching OpenRouter's decision models with their reported cost, GPT-6 Luna on OpenAI directly and a decision model on a local server |
 | `goodall/chat` | Threads, stores, the service that owns runs, the redacted view and the redacted stream, SSE and NDJSON writers, a chat-safe Markdown subset |
-| `goodall/decision` | Decision models from any vendor: one state plus typed questions in, one typed answer per question out, behind a `Decider` seam. Not a provider; it sits beside them, as a tool an agent calls (`Tool`, `AuthoredTool`) or a hook that routes a turn (`Route`), and [the findings](project/2026-09-17-typesafe-jev-findings.md#when-to-reach-for-a-judgment-model) say when to reach for one |
+| `goodall/decision` | Decision models from any vendor: one state plus typed questions in, one typed answer per question out, behind a `Decider` seam. Not a provider; it sits beside them, as a tool an agent calls (`Tool`, `AuthoredTool`) or a hook that routes a turn (`Route`), and [the findings](project/2026-09-17-typesafe-jev-findings.md#when-to-reach-for-a-judgment-model) say when to reach for one. One suite runs the same questions through every backend and adapter, in `internal/conformance` |
 | `goodall/typesafe` | A `decision.Decider` for TypeSafe's Jev, a judgment model, with its model catalog |
 
 ## Reading further

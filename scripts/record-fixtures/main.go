@@ -16,6 +16,7 @@
 //	go run ./scripts/record-fixtures -provider openrouter
 //	go run ./scripts/record-fixtures -provider openrouter -only thinking_tool_use
 //	go run ./scripts/record-fixtures -provider openai -list
+//	go run ./scripts/record-fixtures -provider conformance -only openai_text
 //
 // -out defaults to the chosen provider's own testdata directory, so a run that
 // names a provider and nothing else writes where that provider's tests read.
@@ -28,6 +29,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"flag"
 	"fmt"
@@ -71,6 +73,10 @@ type providerSpec struct {
 	// recorder, which owns the recording http.Client and writes the
 	// files, the API key and the model to record against.
 	exchanges func(rec *recorder, key, model string) ([]exchange, error)
+	// envExchanges replaces exchanges for recordings that span several keys. It
+	// is given the .env path and looks up each key when its exchange runs, so
+	// -only needs only the one it records. key and defaultModel stay empty.
+	envExchanges func(rec *recorder, env string) []exchange
 }
 
 // providers is the -provider table. One entry per provider; see the package
@@ -99,6 +105,10 @@ var providers = map[string]providerSpec{
 		defaultModel: livemodel.TypeSafe,
 		outDir:       "typesafe/testdata",
 		exchanges:    typeSafeExchanges,
+	},
+	"conformance": {
+		outDir:       "internal/conformance/testdata",
+		envExchanges: conformanceExchanges,
 	},
 }
 
@@ -130,18 +140,23 @@ func run() error {
 		*out = spec.outDir
 	}
 
-	// The key is looked up before anything else so a run with no key fails
-	// on the first line rather than after the first HTTP 401. -list needs
-	// no key, since it makes no call.
-	key, haveKey := dotenv.Lookup(*env, spec.key)
-	if !haveKey && !*list {
-		return fmt.Errorf("no %s in %s; recording needs a live key, and nothing was written", spec.key, *env)
-	}
-
 	rec := newRecorder(*out)
-	built, err := spec.exchanges(rec, key, *model)
-	if err != nil {
-		return err
+	var built []exchange
+	if spec.envExchanges != nil {
+		built = spec.envExchanges(rec, *env)
+	} else {
+		// The key is looked up before anything else so a run with no key fails
+		// on the first line rather than after the first HTTP 401. -list needs
+		// no key, since it makes no call.
+		key, haveKey := dotenv.Lookup(*env, spec.key)
+		if !haveKey && !*list {
+			return fmt.Errorf("no %s in %s; recording needs a live key, and nothing was written", spec.key, *env)
+		}
+		var err error
+		built, err = spec.exchanges(rec, key, *model)
+		if err != nil {
+			return err
+		}
 	}
 	if *list {
 		for _, ex := range built {
@@ -161,7 +176,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	fmt.Printf("recording %s against %s into %s\n", *provider, *model, *out)
+	fmt.Printf("recording %s against %s into %s\n", *provider, cmp.Or(*model, "the models each exchange names"), *out)
 	for _, ex := range selected {
 		fmt.Printf("  %s — %s\n", ex.name, ex.what)
 		if err := ex.run(ctx); err != nil {

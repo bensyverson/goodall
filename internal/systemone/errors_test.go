@@ -35,6 +35,14 @@ func TestErrorMessageReadsEveryShapeServersSend(t *testing.T) {
 			`{"detail": [{"loc": ["a"], "msg": "one"}, {"msg": "two"}]}`,
 			"a: one; two",
 		},
+		"TypeSafe's detail object, for an unknown model": {
+			`{"detail":{"error_type":"api_usage_error","message":"Unknown model: no-such-model"}}`,
+			"Unknown model: no-such-model",
+		},
+		"a detail object with no sentence": {
+			`{"detail":{"error_type":"api_usage_error"}}`,
+			`{"error_type":"api_usage_error"}`,
+		},
 		"a detail string": {
 			`{"detail": "Not Found"}`,
 			"Not Found",

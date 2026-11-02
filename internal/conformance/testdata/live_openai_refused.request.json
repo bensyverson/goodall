@@ -1,0 +1,64 @@
+{
+  "model": "no-such-model",
+  "input": [
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_json",
+          "data": {
+            "subject": "Payouts failing since Tuesday",
+            "body": "Help! My payouts have been failing for 3 days and I have staff to pay.",
+            "plan": "growth"
+          }
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "type": "choice",
+      "name": "department",
+      "instructions": "Which team should handle this ticket?",
+      "choices": [
+        {
+          "value": "billing",
+          "description": "Payments, payouts, invoicing, refunds"
+        },
+        {
+          "value": "technical",
+          "description": "Bugs, outages, integrations"
+        },
+        {
+          "value": "sales",
+          "description": "Pricing, upgrades, new accounts"
+        }
+      ]
+    },
+    {
+      "type": "predicate",
+      "name": "is_urgent",
+      "instructions": "Does this ticket convey urgency?\n\nTrue: Money or work is blocked right now\nFalse: The sender can wait"
+    },
+    {
+      "type": "score",
+      "name": "frustration",
+      "instructions": "How frustrated is the customer?",
+      "levels": [
+        {
+          "label": "Calm"
+        },
+        {
+          "label": "Mildly annoyed"
+        },
+        {
+          "label": "Frustrated"
+        },
+        {
+          "label": "Furious"
+        }
+      ]
+    }
+  ]
+}

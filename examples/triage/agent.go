@@ -25,7 +25,7 @@ type deps struct {
 	Models modelSet
 	// Judge is the judgment client every question goes to.
 	Judge decision.Decider
-	// JudgeModel is the pinned Jev version.
+	// JudgeModel is the model every judgment asks for.
 	JudgeModel string
 }
 

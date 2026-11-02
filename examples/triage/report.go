@@ -37,6 +37,9 @@ const (
 func writeReport(out io.Writer, o options, in *inbox, st *store) {
 	fmt.Fprintf(out, "\n%s\n", strings.Repeat("=", 72))
 	fmt.Fprintf(out, "Triage report: %s, %s, nothing moved or sent\n", in.Source, count(len(in.Records), "message"))
+	if note := o.calibrationNote(); note != "" {
+		fmt.Fprintf(out, "%s\n", note)
+	}
 	if cause, message, stopped := st.stop(); stopped {
 		fmt.Fprintf(out, "The run ended early (%s): %s\n", cause, message)
 	}
@@ -147,16 +150,26 @@ func writeSpend(out io.Writer, o options, st *store) {
 		entry := st.spentOn(tool)
 		judge.Calls += entry.Calls
 		judge.Usage = judge.Usage.Add(entry.Usage)
+		judge.Cost = judge.Cost.Add(entry.Cost)
 	}
 	// The routing judgment is a hook rather than a tool call, so it
 	// reaches no ToolCallEnd and is not in these figures. It is one small
 	// call per run.
 	fmt.Fprintf(out, "\nSPEND (the routing judgment is a hook rather than a call, so it is not counted here)\n")
-	fmt.Fprintf(out, "  %-20s %s in %s, %s\n", "judge ("+o.JudgeModel+")",
-		count(st.judgmentCount(), "judgment"), count(judge.Calls, "tool call"), tokens(judge.Usage))
+	fmt.Fprintf(out, "  %-20s %s in %s, %s%s\n", "judge ("+o.judgeLabel()+")",
+		count(st.judgmentCount(), "judgment"), count(judge.Calls, "tool call"), tokens(judge.Usage), reportedCost(judge.Cost))
 	writeDelegateSpend(out, st, toolDraft, "drafts")
 	writeDelegateSpend(out, st, toolRedraft, "redrafts")
 	fmt.Fprintf(out, "  %-20s %s\n", "this agent", tokens(st.parentUsage()))
+}
+
+// reportedCost is a cost the server stated, ready to follow a token count, and
+// nothing for one it did not, since a zero would read as free.
+func reportedCost(cost goodall.Cost) string {
+	if !cost.Reported {
+		return ""
+	}
+	return fmt.Sprintf(", %v %s", cost.Amount, cost.Currency)
 }
 
 // writeDelegateSpend prints one delegate's line, which is what its child runs

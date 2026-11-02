@@ -83,6 +83,8 @@ type spend struct {
 	Calls int
 	// Usage is the sum of what those calls declared.
 	Usage goodall.Usage
+	// Cost is the sum of what those calls reported, unreported when any did not.
+	Cost goodall.Cost
 }
 
 // store is what the run produced, in memory, for the report to read. It is
@@ -192,6 +194,7 @@ func (s *store) observe(ev goodall.Event) {
 	entry := s.spend[end.ToolUse.Name]
 	entry.Calls++
 	entry.Usage = entry.Usage.Add(end.Usage)
+	entry.Cost = entry.Cost.Add(end.Cost)
 	s.spend[end.ToolUse.Name] = entry
 }
 

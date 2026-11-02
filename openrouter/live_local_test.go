@@ -1,28 +1,14 @@
 package openrouter_test
 
 import (
-	"cmp"
 	"errors"
-	"net/http"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/bensyverson/goodall"
 	"github.com/bensyverson/goodall/decision"
+	"github.com/bensyverson/goodall/internal/livemodel"
 	"github.com/bensyverson/goodall/openrouter"
 )
-
-// lmStudioURLName points the local test at another server. It holds no secret, and
-// the test needs no key.
-const lmStudioURLName = "GOODALL_LMSTUDIO_URL"
-
-// lmStudioURL is LM Studio's documented default.
-const lmStudioURL = "http://localhost:1234/v1"
-
-// lmStudioNoModels is the code LM Studio answers with when nothing is loaded, which
-// is a machine not set up for this test rather than a failure of the client.
-const lmStudioNoModels = "noModelsLoaded"
 
 // liveLMStudio returns a keyless client, or skips loudly when no server answers.
 // It costs nothing, so it runs whenever a server is up.
@@ -31,13 +17,10 @@ func liveLMStudio(t *testing.T) *openrouter.Client {
 	if testing.Short() {
 		t.Skip("skipping the live LM Studio test under -short")
 	}
-	base := cmp.Or(os.Getenv(lmStudioURLName), lmStudioURL)
-	probe := http.Client{Timeout: 2 * time.Second}
-	resp, err := probe.Get(base + "/models")
-	if err != nil {
-		t.Skipf("no local server at %s (%v); start LM Studio, load a decision model, or set %s", base, err, lmStudioURLName)
+	base := livemodel.LMStudioBase()
+	if err := livemodel.ProbeLMStudio(); err != nil {
+		t.Skipf("no local server at %s (%v); start LM Studio, load a decision model, or set %s", base, err, livemodel.LMStudioURLName)
 	}
-	resp.Body.Close()
 	return openrouter.New(openrouter.WithBaseURL(base), openrouter.WithDialect(openrouter.LMStudio))
 }
 
@@ -66,8 +49,8 @@ func TestLiveLMStudioDecideAnswersEveryQuestionType(t *testing.T) {
 			}},
 		},
 	})
-	if apiErr, ok := errors.AsType[*goodall.APIError](err); ok && apiErr.Type == lmStudioNoModels {
-		t.Skipf("the server at %s has no model loaded; run lms load with a decision model", lmStudioURL)
+	if apiErr, ok := errors.AsType[*goodall.APIError](err); ok && apiErr.Type == livemodel.LMStudioNoModels {
+		t.Skipf("the server at %s has no model loaded; run lms load with a decision model", livemodel.LMStudioBase())
 	}
 	if err != nil {
 		t.Fatalf("the live judgment failed: %v", err)

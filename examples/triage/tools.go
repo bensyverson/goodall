@@ -185,6 +185,7 @@ func triageMessages(ctx context.Context, judge decision.Decider, model string, i
 	type outcome struct {
 		verdict triageVerdict
 		usage   goodall.Usage
+		cost    goodall.Cost
 		err     error
 	}
 	results := make([]outcome, len(ids))
@@ -202,7 +203,7 @@ func triageMessages(ctx context.Context, judge decision.Decider, model string, i
 				return
 			}
 			verdict, err := readTriage(answers)
-			results[i] = outcome{verdict: verdict, usage: answers.Usage, err: err}
+			results[i] = outcome{verdict: verdict, usage: answers.Usage, cost: answers.Cost, err: err}
 		})
 	}
 	wg.Wait()
@@ -210,8 +211,10 @@ func triageMessages(ctx context.Context, judge decision.Decider, model string, i
 	st.recordJudgments(len(ids))
 	report := triageReport{}
 	var total goodall.Usage
+	var cost goodall.Cost
 	for i, id := range ids {
 		total = total.Add(results[i].usage)
+		cost = cost.Add(results[i].cost)
 		if err := results[i].err; err != nil {
 			st.recordTriageFailure(id, err.Error())
 			report.Failed = append(report.Failed, judgeFailure{ID: id, Error: err.Error()})
@@ -224,9 +227,9 @@ func triageMessages(ctx context.Context, judge decision.Decider, model string, i
 	if err != nil {
 		return goodall.ToolOutcome{}, err
 	}
-	// The cost stays unreported: TypeSafe publishes its prices on its
-	// website rather than on the response, and a zero would read as free.
-	return goodall.ToolOutcome{Result: result, Usage: total}, nil
+	// The cost is whatever the judge reported: TypeSafe publishes its prices on
+	// its website rather than on the response, and a zero would read as free.
+	return goodall.ToolOutcome{Result: result, Usage: total, Cost: cost}, nil
 }
 
 // resolveIDs turns what the model named into message ids, refusing an id the
@@ -346,7 +349,7 @@ func checkDraft(ctx context.Context, judge decision.Decider, model string, in *i
 	}
 	fired, err := flagged(answers)
 	if err != nil {
-		return goodall.ToolOutcome{Usage: answers.Usage}, err
+		return goodall.ToolOutcome{Usage: answers.Usage, Cost: answers.Cost}, err
 	}
 
 	attempt := checkAttempt{Draft: req.Draft, Fired: fired, Probabilities: map[questionID]float64{}}
@@ -370,5 +373,5 @@ func checkDraft(ctx context.Context, judge decision.Decider, model string, in *i
 	if err != nil {
 		return goodall.ToolOutcome{}, err
 	}
-	return goodall.ToolOutcome{Result: result, Usage: answers.Usage}, nil
+	return goodall.ToolOutcome{Result: result, Usage: answers.Usage, Cost: answers.Cost}, nil
 }

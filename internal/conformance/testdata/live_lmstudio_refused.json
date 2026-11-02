@@ -1,0 +1,8 @@
+{
+    "error": {
+        "message": "Invalid model identifier \"no-such-model\". Please specify a valid downloaded model (e.g., julia-1).",
+        "type": "invalid_request_error",
+        "param": "model",
+        "code": "invalidModelIdentifier"
+    }
+}

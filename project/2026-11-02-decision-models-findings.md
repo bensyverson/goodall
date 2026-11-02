@@ -106,6 +106,8 @@ llama.cpp, Ollama and LocalAI remain documented and not run.
 
 ## What falls short today
 
+> **Landed 2026-11-02, goodall v1.5:** every item below is resolved, and this section describes the code before that work. `goodall/decision` holds the questions, the answers and the adapters with no vendor names. `openrouter.Client` implements `decision.Decider`, with `Answers.Cost`, `Generation` and `ServedBy` filled from what OpenRouter reports, errors stamped `openrouter`, a `DecisionModels` catalog, no default model, and OpenAI's wire under the OpenAI dialect. `typesafe.Client` keeps `jev-latest` as a default of its own and is no longer the way to reach another vendor. [The conformance suite](#the-conformance-suite) proves it.
+
 Read from the code, except where marked:
 
 - **`Answers.Cost` is documented as never reported**, and through OpenRouter the money is on the response and dropped. So are `id` and `provider`.
@@ -221,6 +223,25 @@ The answer members arrive in another order than the reference lists them, which 
 ### What the calls cost
 
 294 calls in all: 16 `-mode states`, 9 `-mode spellings`, 120 and 144 `-mode criteria`, 4 recordings and one live test. 29 of them were 400s. At the catalog's $0.10 per million input tokens, roughly 50,000 tokens is about $0.005; that is arithmetic, not a figure either server stated.
+
+## The conformance suite
+
+Built 2026-11-02 in `internal/conformance`, one table of backends read by both the suite and `go run ./scripts/record-fixtures -provider conformance`. The same three questions, over one ticket as an object and as a string, go through `decision.Tool`, `AuthoredTool` and `Route` on TypeSafe (`jev-1.13.0`), OpenRouter (`openai/gpt-6-luna-decisions`), OpenAI (`gpt-6-luna`) and LM Studio 0.4.28+2 with nothing named. `go test -short ./internal/conformance` runs them from fixtures with no `.env`, and `GOODALL_ENV_FILE=/abs/path/.env go test -count=1 -v ./internal/conformance -run TestLiveConformance` runs them live. It asserts structure and accessors, never one model's judgment. The offline replay answers only a request whose bytes match a recording, which is what proves `Tool` and `AuthoredTool` send what `Decide` sends.
+
+**It found one real bug.** Each backend is also asked of a model that does not exist, so a server's own refusal has to reach the consumer as its sentence. TypeSafe answers that with a 400 of `{"detail":{"error_type":"api_usage_error","message":"Unknown model: no-such-model"}}`, a third shape of `detail` beside the string and the list the reader knew, and `systemone.ErrorMessage` reported the inner object as raw JSON. It now reads the message. The same request is a 400 on OpenRouter, whose sentence names `typesafe/no-such-model`, so a bare id is apparently taken as TypeSafe's, and on LM Studio, and a 404 of kind `not_found` on OpenAI. So the status of one mistake differs by server, and only the sentence is common to all four.
+
+### The sweep, re-run through Decide
+
+Run 2026-11-02 with `go run ./scripts/probe-decisions -env /abs/path/.env -out /abs/dir`, now through `openrouter.Client.Decide`, with `DecisionModels` as the catalog:
+
+| | The first sweep, through `typesafe.Client` | This sweep, through `openrouter.Client.Decide` |
+|---|---|---|
+| Catalog | 33 rows, 27 concrete models | 33 rows, 27 concrete models |
+| Readable | 49 of 54 | **49 of 54** |
+| Failing | `respan/span-01` and `respan/span-01-lite` on both states, `scaledown/classify-1` on the object state | the same 5 calls, naming the same limits |
+| Reported cost of the readable calls | $0.000982 | $0.000982339 |
+
+**There is no difference to explain**, in the count or in which calls. The figure is not a measure of stability: it is one sweep on the same day as the last, against a catalog of the same size. The questions and the states are the same, and the path that changed is the one under test. `cloudflare/clef` was served by DeepInfra and PrimeIntellect on the two calls this time, again from two hosts.
 
 ## Not established
 

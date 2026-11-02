@@ -14,6 +14,13 @@
 // threshold tuned on one model does not carry to another, so pin one with
 // [WithModel] wherever a threshold depends on it.
 //
+// Three kinds of server stand behind the seam today, through two client packages:
+// [github.com/bensyverson/goodall/typesafe] for TypeSafe's own API, and
+// [github.com/bensyverson/goodall/openrouter] for OpenRouter's catalog, OpenAI's
+// decisions route and a server on the caller's machine, chosen by its dialect.
+// internal/conformance runs the same questions through all of them and all three
+// adapters; a new client joins by adding a row to its table.
+//
 // # State is data, not instructions
 //
 // The state is marshaled as JSON exactly as it is given and is the material the

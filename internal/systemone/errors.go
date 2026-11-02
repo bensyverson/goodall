@@ -7,10 +7,12 @@ import (
 )
 
 // wireErrorBody is the shapes an error body takes on this wire, which every server
-// words its own way: a "detail" that is a string or a per-field list, a plain
-// "message", and an "error" that is a string or an object with a message.
+// words its own way: a "detail" that is a string, an object with a message or a
+// per-field list, a plain "message", and an "error" that is a string or an object
+// with a message.
 type wireErrorBody struct {
-	// Detail is a validation failure: a string, or a list of per-field
+	// Detail is a failure of the request: a string, an object with a message,
+	// which is how TypeSafe answers an unknown model, or a list of per-field
 	// objects.
 	Detail jsontext.Value `json:"detail,omitzero"`
 	// Message is the plain message form.
@@ -53,8 +55,8 @@ func ErrorMessage(body []byte) string {
 	return nestedMessage(w.Error)
 }
 
-// detailMessage renders a validation body's detail member, which is either a
-// string or a list of per-field objects. A list is joined so that a body naming
+// detailMessage renders a body's detail member, which is a string, an object with
+// a message or a list of per-field objects. A list is joined so that a body naming
 // three bad questions names all three.
 func detailMessage(detail jsontext.Value) string {
 	if len(detail) == 0 {
@@ -63,6 +65,12 @@ func detailMessage(detail jsontext.Value) string {
 	var text string
 	if json.Unmarshal(detail, &text) == nil {
 		return text
+	}
+	var object struct {
+		Message string `json:"message"`
+	}
+	if json.Unmarshal(detail, &object) == nil && object.Message != "" {
+		return object.Message
 	}
 	var entries []wireErrorDetail
 	if json.Unmarshal(detail, &entries) != nil {

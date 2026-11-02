@@ -18,11 +18,16 @@
 //	go run ./examples/triage
 //	go run ./examples/triage -source apple -path ~/Library/Mail/V10 -n 30
 //	go run ./examples/triage "which of these can wait until Monday?"
+//	go run ./examples/triage -judge-backend openai -judge-model gpt-6-luna
 //
 // With no flags it runs on a synthetic inbox bundled in the binary, so the
 // example works with no mail on the machine. The keys come from the
 // environment or from the repository's .env: ANTHROPIC_API_KEY or
 // OPENROUTER_API_KEY for the conversation, and TYPESAFE_API_KEY for the judge.
+//
+// The judge stays on its pinned Jev unless -judge-backend names another server.
+// The thresholds are tuned to that Jev and do not carry, so the report says that a
+// run on any other judge shows the seam and not the judge's quality.
 package main
 
 import (
@@ -42,7 +47,6 @@ import (
 	"github.com/bensyverson/goodall/examples/triage/mailbox"
 	"github.com/bensyverson/goodall/internal/dotenv"
 	"github.com/bensyverson/goodall/openrouter"
-	"github.com/bensyverson/goodall/typesafe"
 )
 
 // sampleFS carries the bundled inbox, so the example runs from any directory
@@ -88,6 +92,7 @@ const (
 	anthropicKeyEnv  = "ANTHROPIC_API_KEY"
 	openRouterKeyEnv = "OPENROUTER_API_KEY"
 	typeSafeKeyEnv   = "TYPESAFE_API_KEY"
+	openAIKeyEnv     = "OPENAI_API_KEY"
 )
 
 // The flag defaults. The message limit is what one run of this example is
@@ -115,8 +120,10 @@ type options struct {
 	Snippet int
 	// Provider is which API the conversation talks to.
 	Provider providerName
-	// JudgeModel is the pinned Jev version, since thresholds are tuned
-	// against one.
+	// JudgeBackend is which server answers the judgments.
+	JudgeBackend judgeBackend
+	// JudgeModel is the model asked, since thresholds are tuned against one.
+	// Empty leaves the choice to a local server.
 	JudgeModel string
 	// Instruction is what the person asked for.
 	Instruction string
@@ -165,20 +172,31 @@ func parseOptions(args []string, usageOut io.Writer) (options, error) {
 	limit := fs.Int("n", defaultLimit, "how many messages to read, newest first")
 	snippet := fs.Int("snippet", defaultSnippet, "how many runes of each message's text the models and the judge see")
 	provider := fs.String("provider", string(anthropicProvider), "which API to talk to: anthropic or openrouter")
-	judgeModel := fs.String("judge-model", defaultJudgeModel, "the Jev version the judgments are asked of")
+	backend := fs.String("judge-backend", string(judgeTypeSafe), "which server judges: typesafe, openrouter, openai or lmstudio")
+	judgeModel := fs.String("judge-model", "", "the model the judgments are asked of: "+defaultJudgeModel+" unless named on typesafe, required on openrouter and openai, and what is loaded on lmstudio")
 	fs.Usage = func() { usage(fs) }
 	if err := fs.Parse(args); err != nil {
 		return options{}, err
 	}
 
+	// Only TypeSafe gets a default, and only when nothing was named: an explicit
+	// empty model is a mistake, and every other server's model is the caller's to
+	// choose, since the thresholds were not tuned on any of them.
+	named := false
+	fs.Visit(func(f *flag.Flag) { named = named || f.Name == "judge-model" })
+	if !named && judgeBackend(*backend) == judgeTypeSafe {
+		*judgeModel = defaultJudgeModel
+	}
+
 	opts := options{
-		Source:      sourceKind(*source),
-		Path:        *path,
-		Limit:       *limit,
-		Snippet:     *snippet,
-		Provider:    providerName(*provider),
-		JudgeModel:  *judgeModel,
-		Instruction: defaultInstruction,
+		Source:       sourceKind(*source),
+		Path:         *path,
+		Limit:        *limit,
+		Snippet:      *snippet,
+		Provider:     providerName(*provider),
+		JudgeBackend: judgeBackend(*backend),
+		JudgeModel:   *judgeModel,
+		Instruction:  defaultInstruction,
 	}
 	if fs.NArg() > 0 {
 		opts.Instruction = strings.Join(fs.Args(), " ")
@@ -210,8 +228,14 @@ func (o options) validate() error {
 	if o.Snippet < 1 {
 		return fmt.Errorf("-snippet is %d; the judge needs some text to judge", o.Snippet)
 	}
-	if o.JudgeModel == "" {
-		return errors.New("-judge-model is empty; pin the version your thresholds were tuned against")
+	switch o.JudgeBackend {
+	case judgeTypeSafe, judgeOpenRouter, judgeOpenAI:
+		if o.JudgeModel == "" {
+			return fmt.Errorf("-judge-model is empty; name the model %s should ask, and pin the version your thresholds were tuned against", o.JudgeBackend)
+		}
+	case judgeLMStudio:
+	default:
+		return fmt.Errorf("unknown -judge-backend %q; it is %s, %s, %s or %s", o.JudgeBackend, judgeTypeSafe, judgeOpenRouter, judgeOpenAI, judgeLMStudio)
 	}
 	return nil
 }
@@ -283,7 +307,7 @@ func expandHome(path string) string {
 // agents, and the judge. The three agents differ by model, not by client, so
 // switching provider moves the whole cascade at once.
 func newDeps(o options) (deps, error) {
-	judgeKey, err := apiKey(typeSafeKeyEnv)
+	judge, err := newJudgeClient(o.JudgeBackend)
 	if err != nil {
 		return deps{}, err
 	}
@@ -296,7 +320,7 @@ func newDeps(o options) (deps, error) {
 		Strong:     provider,
 		Cheap:      provider,
 		Models:     models,
-		Judge:      typesafe.New(judgeKey),
+		Judge:      judge,
 		JudgeModel: o.JudgeModel,
 	}, nil
 }
@@ -346,7 +370,9 @@ func usage(fs *flag.FlagSet) {
 	fmt.Fprintf(out, "Triage a mailbox with a judgment model, draft replies with a cheaper one,\n")
 	fmt.Fprintf(out, "check every draft, and print a report. Nothing is moved, flagged or sent.\n\n")
 	fmt.Fprintf(out, "The keys come from %s or %s and from %s,\n", anthropicKeyEnv, openRouterKeyEnv, typeSafeKeyEnv)
-	fmt.Fprintf(out, "read from the environment or from the repository's .env.\n\n")
+	fmt.Fprintf(out, "read from the environment or from the repository's .env. A judge on another\n")
+	fmt.Fprintf(out, "server uses %s or %s, and lmstudio needs none. The thresholds\n", openRouterKeyEnv, openAIKeyEnv)
+	fmt.Fprintf(out, "are tuned to %s, so a run on any other judge shows the seam and not quality.\n\n", defaultJudgeModel)
 	fmt.Fprintf(out, "Flags:\n")
 	fs.PrintDefaults()
 	fmt.Fprintf(out, "\nWith no flags it runs on a synthetic inbox bundled in the binary.\n")
