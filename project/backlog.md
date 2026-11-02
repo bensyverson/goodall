@@ -30,6 +30,8 @@ The Swift library resized images before sending and could replace media with a d
 
 OpenRouter also serves `/responses` (GA, stateless) and an Anthropic-shaped `/messages`. Chat Completions is the v1 target because it is the compatibility standard for local servers too. Revive if a feature lands only on one of the other endpoints; the Messages skin may already work through the Anthropic client with a base-URL override.
 
+> **Trigger fired 2026-11-02, for OpenAI's Responses.** Tools with reasoning on GPT-6 now work only on `/v1/responses` when calling OpenAI directly ([findings](2026-11-02-model-currency-findings.md)). OpenRouter's Chat Completions still carries them, so the OpenRouter part of this entry stands. The owner ruled the same day that it needs its own plan, after the decision work; that is `yEETo1` in `job`.
+
 ## 2026-09-14 Client-side rate limiting and concurrency caps
 
 Retries honor `Retry-After`; a token-bucket limiter is not built in because Anthropic's limits are token-based and a naive semaphore does not model them. Consumers can wrap the injected HTTP client. Revive if a consumer needs a shared limiter across many threads.
@@ -83,3 +85,23 @@ typesafe-go's `Choice[T ~string]` returns a `ChoiceAnswer[T]` keyed by the calle
 ## 2026-10-29 Rewriting optional parameters for OpenAI's strict mode
 
 OpenAI's strict mode needs every property listed in `required`, with an optional one spelled as a `null` type option (`"type": ["string", "null"]`); a strict tool with an optional parameter is a 400 there (verified live 2026-10-29, see the architecture plan's "Built 2026-10-29" block). goodall refuses such a request before sending instead of rewriting the schema, because `goodall.Schema` has one `Type` and no null form, and because a rewrite changes what the handler receives: an absent field would arrive as JSON `null`, and the missing-required check and the input decode would both have to read it as absent. Parked as the user's call. Revive when a consumer needs strict tools with optional parameters on an OpenAI model; the work is a nullable form on `Schema`, a translation-time rewrite on the OpenAI rule set, and a decode path that reads `null` as absent.
+
+## 2026-11-02 Images and Box questions on decision models
+
+Most decision models take images, Jev 1.14 answers a `box` question, and the surfaces disagree: `assets` with references on TypeSafe, `image_url` parts in the `state` array on OpenRouter, `input_image` parts on OpenAI, which also takes them per question ([findings](2026-11-02-decision-models-findings.md)). Parked because no consumer needs them yet and three syntaxes want a neutral image type of their own; a Box answer already arrives as an `UnknownAnswer`, and a caller can already put OpenRouter's parts in the `state`. Revive when a consumer has an image to judge. `goodall.Block` already has a neutral image to start from.
+
+## 2026-11-02 OpenAI's conversation input and prompt-cache controls on decisions
+
+`/v1/decisions` takes messages, tool calls and tool outputs as `input`, which could let a `goodall.Conversation` be judged directly, and it has explicit cache breakpoints, a cache key and a TTL. Neither has an equivalent on the System One wire, and neither was exercised. Parked because `decision` starts from what every wire shares. Revive when an agent wants a decision over its own history and rendering that history into the `state` proves worse, or when a consumer's repeated evidence is large enough for the cache discount to matter.
+
+## 2026-11-02 Decision vendors' own direct APIs
+
+Cloudflare, Perplexity, Microsoft and the rest were exercised only through OpenRouter, and whether each has a direct API, and in which shape, was not checked. Parked because OpenRouter already reaches them with one key. Revive when a consumer needs one directly for data handling, price or availability; a server speaking System One needs only a base URL, and one with its own wire is a new translation behind `Decider`.
+
+## 2026-11-02 The Jev Router
+
+`typesafe/jev-router` is documented as an ordinary model on Chat Completions that picks a model and effort per request, so `goodall/openrouter` may already drive it. Not run. It is a conversational model rather than a decision model, so it is outside the decision work. Revive when a consumer wants routing without writing a `Route`; the first step is one live call and a look at what the response's `model` reports.
+
+## 2026-11-02 Direct Gemini
+
+Google's API directly, rather than through OpenRouter. Gemini 4 Argon and the current Flash models already run goodall's full agent loop through OpenRouter ([findings](2026-11-02-model-currency-findings.md)), and the owner ruled on 2026-11-02 that this is enough for now. The `Generic` dialect could reach Google's OpenAI-compatible route, but goodall has no `extra_content` member for thought signatures, so it probably fails on the second turn; no Google key was available to test that. Revive when a consumer needs Google directly for data handling, price or a feature OpenRouter does not carry. The first step is a key and `scripts/probe-agent-loop`.

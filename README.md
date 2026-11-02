@@ -120,6 +120,9 @@ The triage example is the delegation one. It reads a mailbox, Apple Mail's store
 - [project/2026-09-17-typesafe-jev-findings.md](project/2026-09-17-typesafe-jev-findings.md): what TypeSafe's Jev is, where a judgment model fits beside the providers, and the options for subagents.
 - [project/2026-09-17-typesafe-go-comparison.md](project/2026-09-17-typesafe-go-comparison.md): how `goodall/typesafe` differs from 2389's typesafe-go, and what was taken from it.
 - [project/2026-09-17-triage-example-plan.md](project/2026-09-17-triage-example-plan.md): the plan for the triage example over real or demo mail, with the Apple Mail store format as observed.
+- [project/2026-11-02-decision-models-findings.md](project/2026-11-02-decision-models-findings.md): which decision models beyond Jev goodall can reach, the wires they speak, and the ruling for a neutral package.
+- [project/2026-11-02-decision-models-plan.md](project/2026-11-02-decision-models-plan.md): the plan for that neutral package and its wires.
+- [project/2026-11-02-model-currency-findings.md](project/2026-11-02-model-currency-findings.md): how goodall fares against GPT-6 and Gemini 4, by route.
 - [project/backlog.md](project/backlog.md): what was decided against, and what would change that.
 - `go test -short ./...` is the offline suite. With a `.env` present, a plain `go test ./...` also runs the live tests against both providers and spends real tokens.
 

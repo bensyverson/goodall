@@ -14,6 +14,8 @@ No live call was made when this was written; every fact below came from document
 
 > **Corrected 2026-09-17 by the client leaf (Qsv3Ux).** The premise above no longer holds: `TYPESAFE_API_KEY` was in `.env` after all, and `go run ./scripts/record-fixtures -provider typesafe -env .env` recorded four live exchanges into `typesafe/testdata` against `jev-1.13.0`. The wire shape below is now **observed**, and it was right about the request, the answers, the usage members and the four error statuses. Four things it did not say are in the block quote at the end of ["The wire"](#the-wire-verified-against-apimd).
 
+> **Superseded in part 2026-11-02** by the [decision models findings](2026-11-02-decision-models-findings.md). Jev 1.14 now exists and `jev-latest` no longer points at 1.13. Jev accepts images and answers a fourth question type, `box`, behind the `TypeSafe-Danger-Zone-Images` header, so "no image input" below is out of date. An unknown question type drew a 422 here and drew a 400 on `jev-1.14.0` on 2026-11-02, with a generic message; both map to `KindInvalidRequest`. And Jev is no longer alone: OpenRouter's catalog lists 27 concrete decision models.
+
 ## What Jev is
 
 Jev is not a conversational model and it does not call tools. It is a **judgment service**: one request carries a `state` (text, a JSON object or an array) and a map of typed **questions**, and the answer is one typed value per question, all evaluated in parallel over the same state. There is no text output, no reasoning trace, no image input and no streaming; the response is one JSON body.
