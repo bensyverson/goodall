@@ -76,4 +76,4 @@ launchctl kickstart gui/$(id -u)/com.bensyverson.goodall.drift-check    # one ru
 
 The log is `local/drift-check.log`. The Skill reports and files, and leaves its report uncommitted for the owner, who also runs `-accept`. Until then, the same findings come back each week.
 
-`claude -p "/drift-check"` was run by hand on 2026-11-02 and completed: no drift, nothing filed. It ran from an existing session's environment, so running under launchd itself, with its bare environment and any permission prompts, is what the `kickstart` above tests.
+**Installed and tested on 2026-11-02.** The owner ran the commands above, and the `kickstart` run under launchd finished with `last exit code = 0` (`launchctl print gui/$(id -u)/com.bensyverson.goodall.drift-check`): no drift, nothing unchecked, nothing filed, USD 0.008466183 reported across 54 of 75 calls. That run had nothing to judge, so the Skill's judgment has only been exercised by [the rehearsal](2026-11-02-drift-report-rehearsal.md). It has not yet fired on the calendar.
