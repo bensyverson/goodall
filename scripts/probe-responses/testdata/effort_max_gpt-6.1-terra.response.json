@@ -1,0 +1,122 @@
+{
+  "id": "resp_025ccb5631b080d8016ae8c2120da087d1b7403a23f61094cf",
+  "object": "response",
+  "created_at": 1793638930,
+  "status": "completed",
+  "access_programs": {
+    "cyber": "standard"
+  },
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793638934,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6.1-terra",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_025ccb5631b080d8016ae8c212d4e487d18f512d327bd4b6f4",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MIWo_tonMaFcN299SohAousLZqiaMpSPMa6xbYJ33P3ZREptvxGSYCxT4MIzvOYq51QRzHi6sd44W6qQv9c6h8BiyfAxGFwSI_Gt6-8BMnD38vkMu_NaqLcFTOXJBSudccPTCFYrxtGoECOHBhoo8IdVUQ83Z8loIWbdGD26VlkFWCQihv6B49LtOXr6O1GKb922SDn-XdlK1UdTelDHsNl9oDAtgNCS6EdiuQcrjxG-MHYmKgZ6yMqBKCyOrgGRbILEFMhRVstcjk3zPE7_srZgAjb-DcwFLdqE5Jm62-TVt2yjlbdyetfBW6jiKGp6z0UhwtpTxj6cvW7u0N7n6fno61RAg8DIxccUlR2lCvAF0f_AMV_6iFn-6Owz2BMRUCXQvJAHDtWIlJUjCuSNmW_0S7L22m8JdvEA3bVcgLEnQ_eIUJrLc_RMlSHrHqsgxvU0ink-FcMMNB16KbxTGh0tX_SHOhu0Wuc0nxwaKDpm9AQ4tzUenb2mx9YnL0BH8QK20Os_uQNFJ3Ecb__Nb5qlxEIjeFWZgKvSMo5633rHU5EPQNA17O3ZGpfUZtY8V_qtYU_K_sV65F8Q0xIb2d9_1u9lOdihi0kantTGVfz7i0D2Re2QhWMBVEepADdGephTEdg9x39e4fhlFJAS_u7gUDQ-_iy3cIoSCPS_JMP9b_7BWWj0nFlKcw-5OUBx51BGcHXsVgLgaQ1wHlDUpKcZvOhJk0eBpDFgnCM_M_rpvTjGYTPnBmbWc1u5rY0rpVdSUPJEXfqgEsUPOsWyS_mKZy4x7bw5ahVlrPi_HoAzt0wkZfyy_fQY3MyWGzVknzpHpvpphoPRNFACq4m2eaVc24Anz26IyS2Co8HwXd3cmkeYLSIsQeat_9DkICbD6WWbAaszdcD3YSpwgOyF4AWTu_SVoCQFrkAPCR1UW2Go6yLCb9VR-rjXdteHuBm_Mtt2I2UerFUBTgDs7XbylLOrXa60f8cC-bZ34PMQwnMEVIaecNSx3RNsUmyizGlofO61CiDhaDRTGXAbd-ShQc5xYQ1xHiy4-8t7oGMfZELLsM-geEerlXNohRKoBT1eTFJfo2WloIaclumNldf_XfCB2k7rBELGLPSkwYq-M9-bTgA9u3Pf6sO-l2TiSO7ZhLUI9koGlwOJDmxEn2-ym2sxWvCoKyxZ6TJqWvyYD7nuyQg6GMCFm51jxMRPWabXAR2ldh9BTcSPOJ7zZq31UKk06LXuhNXTxdqSE5r7_2ApgC36x2iEoh9zcLhXDg27ajH-3WyRRlNdQqvSs5iO2tpTdmCYE_Wn8SFpMw4XU4zRLPoA4wBlr_u8N64yRXtZSRRG0yUo5sFIsTi5L1LT84Ibs5cHhrGUo7QAUyTqH6lOofJ1zLXadq5YLzdPxkrYsb1qt23gkYQcjqRJmOSln1KAXHn2LvefRU4l4JPFFdb13qr33-27r6rkEA9ifA20EirWI0S6KbDIm7rOREkMyHR8KW20_nDE_MZWXkAu3lAHSYCFrzyCsEmGRdMP3PzwBNJdPJKjnpKaCfbc0ffuKU4dkqKKQFQPf9wR0vJQBq-lYFeITlaZf0M4D2xxHrRRQP57l0rhyu8iAbw5DNPoeGNwdmJ8G1lfT8g9UhBDRGiPwInJqi7xHRRIfidnHhNNin5xxxbGSig7x1770udF0H388ZMqhEpE-esJMLsqLgtmS0Bc_5CPxiqejPtMktvSP37zt6xJjGK_0oYAScdxtMEbHV2uyvhRVma2Ux0bLiXSoid5Ev9nOXpEgSbDfuMTv44PxsLVh3a4jECBetwdddP--unO_gugU1c226SqOZ6jyCDJVSgNZkGw6sgtTH05NxodBY_9hWzpA-ohHJG3xJL3-lXlCSb__rHkvhbkP1zqNt4CbRDWn6LTYQaGS6ybfqtSLHswgXGRGmGeN-Q90kIDmOEEWv-jDmhh0G6YfSaI_PzKuG--viqIWDtip18Um36rX2knHC0SSjFcjUQY3S1cE4rqikmgr6-JTUQNuuTg5j2pLGFMZmBP50FZA2_yktzpxQEJKXYAGE9ZeKV72mwZyWqnj6AwbJwC8mKVl-NZeUh53PMaJQdjmZdz5ESPblOKRtdHvj4pRtWQF7g79zlIFGAC2BXSTKmVRFfUZvAIgp7zZIlxKiRNXnVgUMT6xwepLRQQ1I70_4Cp21NRIOw_BExgehVxyvvFqcGVWJivLGUL_wjssbNSy5GSkxNHxbcKRs4q4P7XTZFWG0I6FBwcpCNN2MBtdScG8U5jYyyCnKGvIQRyM6bXuALUnN4jGlj67M-ZETsiaVjf6i9RIRNwsoA7OoXjUSF1lBDtqD3e1mkO3p4gxEvcLD5zZbtq-IaA7ifd9TeGSpgl5NdY71FQNCIW4uDQMku4SdsS0cesFX_SO8-OFF7AA_PTICEuCbQoTI88ZiZrzuekw4XPALyLQ9cSNothx476u87hEKylBOKJcqCkuLxFUYcchI7H6oSIhHxDYam4wykOImqqOx9lr5ubLn2c7oJYckexLyZcxt6hA-o_Rbzc0BMEYy5vJFFSjApBFr73H7J1qhKrth91prgnYKpBPBWtG3RgD426VCXhF931TzYzIua82oLKmKhqPvy8wjHaLdsDkpAFCbhm9AhzYMD4KSlqRL6X3HlLd5j47Jzy9hYbPHbcsVFZwxYKRnkFfWHy7Y6KF_DnxCQ-1KnkNZ1XALS-FkjDkOyz4fWberdz4ym2D9wBbVPJ5XadniX6YJJfkJdYp5gKRBIP5X6zjvE9F8qK7wkN4SfiqUkioQP6GnRMBYyxNc_Vpo7",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Calculating prime sums**\n\nI need to solve a problem accurately and then call for the weather. First, I'll list the prime numbers below 60: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, and 59. Now, let's carefully compute the sum: adding these up gives me a total of 440. When I divide that by 11, it gives me 40, which is even. Now I can use the weather tool for Paris!"
+        }
+      ]
+    },
+    {
+      "id": "fc_025ccb5631b080d8016ae8c2169e6487d18e6b30cb1a336525",
+      "type": "function_call",
+      "status": "completed",
+      "arguments": "{\"city\":\"Paris\"}",
+      "call_id": "call_s7XqkhQ0OMCdqHK67FjWMFVg",
+      "name": "get_weather"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "max",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 90,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 176,
+    "output_tokens_details": {
+      "reasoning_tokens": 156
+    },
+    "total_tokens": 266
+  },
+  "user": null,
+  "metadata": {}
+}

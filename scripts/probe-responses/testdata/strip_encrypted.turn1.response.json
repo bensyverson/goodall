@@ -1,0 +1,115 @@
+{
+  "id": "resp_0b63d0c8892b5586016ae8c1e7409487d1a9f24eb4c782ee73",
+  "object": "response",
+  "created_at": 1793638887,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793638891,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6-astra",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_0b63d0c8892b5586016ae8c1e81e1887d19503aa335897fc9f",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MHrVyZhYHduCEm5iNKk266q7nQ2OvoaxaBe828Ymnn8H6j8fun7LnsdqnyRxXygNg94Pr_NpbQHv4eaBqAHg50peGyZT44pPN85Va0t94X-ngvl1e8WF6dpyVOxM_0MNHrFeMgQmLBR2TTcCYWOgeIyAlRrr-rCA0OKEPX9cJfJQ9u5ixHRaF_OGglZNGogCBU92pW8aKD2y-9AbPTh-tOZDvLHLna77tOBhQqYxPalHYRUBvEyob3BAYQ-GTx-O-FXRydppA5Xx1ovTUoB3Jssl5xOwJGic0-0ssThiWTrLGhkA8XTNC-AoIaNQWqZNCDGlNpn242drTZUBGksDH2ldm5WjAuhyRWRYCHjRaA2LnCc52vwWCPUxiVP7P9Pn-0tJqF6XZtbA3-P13w9bqFMtd9IpFoSaqSM5WiuUauoNNlzq2zyqpV_37i8BGyNoLJM08nbnK2BYwDe1uMaTKvXTi311BFq2-kIw5KoXY2Y-79_zfAROFCkuVk98rqCmvKDlO1P9TfFPTnI5GsJcctS0fNlp8gvRVUAsu-L-1Aan2vtXof0CaUFDMR-nvxZHNstnQMNrbigunbjWrXCoGzgGEJJlvF7nkXyRPa605qQqFaVElXS5F4Offc3rEd1pVpnPputif683_W7cz-2T1QyUm6hV-A3nYlmM082Ba5P9O0iSzOmyYpAvA1QQ7eZL2mqUuXiWfFvLqa-Xb5Ywro1rYabTqSzDcYBB2qp-k8YqGCzsSr46eGXohgQ1YdxvHwTkT322tzoYJQihXTysDni0Z80P_JPRxFGfUdwbUYBTPPnXV7B48xUOZZxxMPAlyXdod4TmeM-SuThTSU3Zf1XyeoapYfYPnA3OrObfFvKzGGMvucM2wiZXKXAsAIrwYxmndsKuQYN_zGHi8pbSn9LGbvF6b1f3QsJWMdGIj0XL8ZoTPBA7lBz-DAEHW3Vnc6KIq3moOyqoZb7TIS142gZH98_Sj5vAMKp_olR3jtnneH1xlGDK8gqL7JzafkwEtCAte6yg6sD--TGDDdQ-76VcBXbzQivhEdB1SxYAe2UW-gN3xt2_lQUC4CkcY7yyYkzrdxZA939vHVv78Wl9laCCA7XYdzY6Mc4ImPSLpzcLhp-Sl9KVVvbwbB_raG2gRJByWTczgyjtn_PdheNUAlbBtsgAJ_LfGj6j2OTowDt6gn-sNWPS4o8SUnehM2A6qFGm8QkB-QDeCSqtbcMsLEK38feRXFk0St_qg7vUgvmSpf6YsB1pitOSm396DpXA0zV3jFdTgfunDUoVlhlDBlxRCaIkMF_rCkKvx2T0Sxpb_lc1T_zwvWPEnm_h3bC8Wlya2mJ2fTNtytH4vwKEPk62O6n1YFiPTK3ij4LAsp6s3jgElIHgmC5RX-jtJS_l2Fmpo5dm2xOa1F-koAvkT7YsoOBT4hpXIjW1cnw1BFrpBFF_qm0FGEdU2mAG0OQWKlmJHnJbQq6rl4NcOCZ6NxWaax52mnSUfBCUo249kAZdbMIUXgEfAtdpp8uMLAG5k8QM7TqCGMREai-jkOMMqLazdnrkobtW0KQMmduzndJaNXVZb3MgQ19RDwLBbwzHrIYkrC_K7bW9c1Lb5z_SqxSC3Xw7UxWSqvOemsDkumCepj4TCKh9_QDaO9JiZDoF86Ber9BC3Tohjv3ep-P3L3AfOtBBplcif3pyukMaHgHbllU2WhGUw3gM0GOMDs7sXLlFI5MH83Zf5n-OUEE8L8bTgEQQm6stCSjr9PpUAgSZNUTdkyYbhVF9MgnJd6vstw4X0O4-39gpz2s-UiDnYZMX9R9gEs3JRRtOBcMCOkkJ5r66wrYoxctIWiApUOzdonwd3jRKv0Yf2V1TqtkrjaqJ6-08XJZtDdzsEXHPCo-mzn2h2n8pITeInbZv2QaLxu2f_ur7_VhiX6HuIo0DSckmlblFZoRa-jicY7VYBEFQPtzpbWn05LYx9aS0YGXLQ_WItiVM2LiAUI2aJU-K0WC76324ZUN9kIkDhSSJojQ-I9JmdbsbBr6RpXfOnjOoTBgZpA-Qo7E6dfJ2uDJ6ChowJ0XZ6zEiLjly4Z-5ActP4VgpTVOAkpeoCHYhzAOqTQjmQzcyOKUSIPRi5EgHerz-Vhu24yuZm9LMR0KEW_gpHM=",
+      "summary": []
+    },
+    {
+      "id": "fc_0b63d0c8892b5586016ae8c1eb486c87d1b89e4222debd5bcc",
+      "type": "function_call",
+      "status": "completed",
+      "arguments": "{\"city\":\"Paris\"}",
+      "call_id": "call_yAeoiW3CrY4JFDcPIWZSPNlE",
+      "name": "get_weather"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "low",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 90,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 104,
+    "output_tokens_details": {
+      "reasoning_tokens": 84
+    },
+    "total_tokens": 194
+  },
+  "user": null,
+  "metadata": {}
+}

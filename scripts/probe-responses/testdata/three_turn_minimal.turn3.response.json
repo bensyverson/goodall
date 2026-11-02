@@ -1,0 +1,122 @@
+{
+  "id": "resp_040bd60ef32f823d016ae8c1faa54487d1b86458efe7985d82",
+  "object": "response",
+  "created_at": 1793638906,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793638907,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6-astra",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_040bd60ef32f823d016ae8c1fbab2487d1abc1e708e79ad04a",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MH8waC3AuzWUMFOfDjaLP20tl4bqx7wYKYZZFP3xAUx6_r7DjV4zMteWgaEBTNBSdDGEbb20dtH7kAn5pb7KCOHlpGUa4cenIjG3BTGBUr2JNVqmxmofdWLTfO4c-3m4yBpVajwOHyEXHR8seYaD7rQ19KdPCtZR3ysZoP8dDZONmbqtBqnq6sjZ4ywpdX0nFpjfqVcoH2yLa3L4qBpDm6gJ5QE8EIFfc0pDWdUQauc3I9hfn-Q3l-csmRUl9uAEqQ99Otch_c0yI-Qu9b4V4l-Sx-_WkafNbUNOLMjHoF_t6_WLWzo-JqTjFp1GXX3Atlc8i2N8CAGhhx6D8MlaNgCpJe-0Vqw9yFXgBGG6WVU3BPDo0I1Zk6kX-ylnrF35xZwQV_kYIskke9pUzxijJqGBeVNAGN4wUeEGue5p4vtenFTRNVM_gyPmWNYm0UqAjF12W_oeADCAHkJ2vH_9lJrmuBWYMIhCbdvjuz4f5rQktYykE2fP0LzpoCyx65Y_lKwSbsydLsDmi9D_dhVjWtWR5iRzbrNlCbkWqjLxniwvGR0HXWUWF_p6SywY-aCFLo5Zn357ZFadoqhiQev7wiWGpTvA98sSlNP5rdg7Yo7g3HR2S8SwkzNaUJ-r8w_99sGa1hM26dbSi0yGR0ZZeQkkoWUbPGD_s8GHPBHLyn1tkRTwGVHqe_QGHBs8TRX7PXQPbVdPBPSDtdIw5oT64MO6X0-hvajpU6N2_n3e3L8MBGy1htRJ7Pfn8y9ojnJ8S7d-1dPd2C762VciO-OTJoeAyAo1kvkPlJOBJ4ABUq7hGQh12p3vBmwYpa7G3zaSh-I17X25aNjqIP4mXhYo52xK-gU7N-gzRp6T-i_P0JHL6NKlqpPuZeArzmen5w-CC6zn7-fo4vwfCFQvT1EQBktOhCpzGztSUnqa6Yg3tZGoVnjkDrRnzVhcmnFU68B8MjJtIj6136WPZqKhYaUr-K1Sv42NW5DGy017Bi89XZhYy6uQnu93tqojvpeaJN6LxoetdMK-mRd-yUZPd2j3WAHWt9RjHhZHWPJpiEKLqketANqKGTpVDm7pfnvJ6C5AqNikSlqf7MO0Si4idXVV9CxICUBaMazJa4yYU28nnKV99WLGsfwTjKJE6D8F4afD41Kp6yfGkVKhCL-KOC_Hvy0uv34SO-0FOFYMVJL5wqRmCmTc8xIA8dLeZ62PDMtyvmToABMLAporO79NuF3titFIeeWeS4N3FLo-4MeDGlEmqKxjkDq1emme0tmi7mWvPwum8IfodeAOmqYmmvqaUrnTcggMd5ASBfccuIj5kYuknzAKW-mic-Q-1RvmnyjeVCBzQ_lZyjdOhXrJpVjCe1MuGRIvv1cwA5euJe9LQ0pLy1337uSJEMPCqflvdpv_8EP3w4og2ZBUsfKh_sqfxF8WY2CP3zMb3MbN47gemNPllT-yF1vs03jzLBvm5B5liwGL90XCKXjoi7SilFksOleARsGbrxslQrZp2O7xfiv3OR6IR0m69FOD7ZjOKiUG9pncAvW1zdUNU0BxH3W8e9qDz8GJJnyr3AhornLnEP1PKM=",
+      "summary": []
+    },
+    {
+      "id": "msg_040bd60ef32f823d016ae8c1fbe36087d1bf9aa8b5eaaeb572",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "Paris"
+        }
+      ],
+      "phase": "final_answer",
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "low",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 252,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 18,
+    "output_tokens_details": {
+      "reasoning_tokens": 11
+    },
+    "total_tokens": 270
+  },
+  "user": null,
+  "metadata": {}
+}

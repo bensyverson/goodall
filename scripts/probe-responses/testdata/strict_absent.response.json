@@ -1,0 +1,124 @@
+{
+  "id": "resp_02c8bee18011506e016ae8c21ff9f487d1ace44cdba5e2bf73",
+  "object": "response",
+  "created_at": 1793638944,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793638947,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6-astra",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_02c8bee18011506e016ae8c220cb2c87d1b52f76843ed06566",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MIj1ZQZ5Hp1NWUPUKgARM3Knb-8_lQAZrFEreGr9A3FqG0BerBCWPs8_B2MWs9vUVuMfwNEpM6h0gMNQbqBV-SYH7QQyVO5iZ2Ij2I-rVhJDzyKIRgjeBd8qvd1vra88UvojjQwQsDAZ2HlhILNZslWFoSN_UN9vbxRGjbJZJOd0Bi7p-bTU4mQoqRm-9sfh2ibbzp9tVnRpp_0Y75e3yCUJLPOe-pcI2BFhGeFI0HEzTlJAcAMgnScyl-Fd_PdMno9Mcz6sgqlfEIPUX3SSNAB07NjaLNyMg8yiweObVql2KKthJ88LsET1wCQCRJMmCHD609g9iJVBXcWZo76OtIgcrkTpjiz4IFk0IEF-JM7py1dzrdVTHrn8MR45yUbW0dAHUiB03ZKaShezGGQbvc2Gp14JdyqO2_rc8nGCUST9IB4V7XzTrRC5GW0XVcHKqP65O5Oyl9_XiHXVCZTH1oN3lY8h2_buWDOhgLgjX4hziIvKiHE7MAZ4ppE_N5BK6XRN7y1Dkli6-_6ZFlehAMGApYhLdGWI_9D1fYiZ-AH9W_018c2IGgoXrELfwMaUyWp-vQBWtH8wHSIIq-aZzSHDbJXF0HCrMZy2T3bX3ziyykS82ZEgOpKrnkpnc8erJjDxeChjrGDOuzqr-5b8s_uLEHrlrpgIjK7XvscFD2F84AHpZn7Wp-PTs-Y0-BFLhVS1heRumLlQ0jgG_nk11T_x1F48Wwvlxt-qrr0w-aM_pbRQuiq0ZpU60mFEkhx0U2mB1xxHrdlfXET0aPDbdQwwHwr0LFgUHHshyCLHx_wkIS2lGwkCqTXFGhDlajYcfkm8D_uf1kBn-wc8yQQIdBQ1oxZoUtlIUeNHGLdGNWyUqcmkN9lhHMGqkD2QmiwOtwCs1ODnVW0lRUzG8TdZHoNPFgegG_GUlN0QUZ8WmNAcs_aIRe1arsBSEJbfwQLvAVtXtLanUQK_bqxRDypDQJtVOmnrOug6XITI6JSPSjYTT88ScO28L7t-Z1veOXfnUt_57537p5l-5XTq2TrTNR-p4D279scWm2VVZIvEdsYxT8D9xT174e0xlCQXPzoAH5dlX7zH4FnyBctZmG8J_dZnhgIKjuzk5wkAQICyNkat5t_GzxU-yzpFmrce846nGIxzcvbZBmh1sYDExKv19-AsNfRx2QKqumzObaXjnf4ZTcvMs3exhl0Y7TuDDQB6FFJ3IjAYtrhkl7R_cylRv_7K6V03W7PDIqCr-NzuW5rfdKV1w3n3OUyDH1PPoc3nnMhIUfyrAizuWzY49b3ZQeh3-_tLN3nTKyiKWQ4t63NuWqDfqn_wFp_TWuNLrrAKhRsgaCYU-3CPxiNe37puDtsKgYO3HhBnWZbP0Nv_iIEdFWiE6SKtYubdTJHiJwtXf0pYnluMM0huzwf7_ff7gNpbTS2eMm-1aCm7HkM0ZJTJpL6Ipxb7JIE4l1MAe4bqQ-5ctLGJLUWD1yrdlLCkT_JbnHxO5pMKHxjtc7h_hyPv6BaaZVDi1eUJ-QAYPsSk8eaqPQvt86j-lb-hCgjiGH39oRrSofrRUFwkUpdyrndb_AAjXrlI4hjEosyW2ZEIjCFMWioXnNaehmWyQGL_OOPl4nOaZAyrMCkxlqmGu2ItXLNsivBz87U5kQ8QHo9tVgAQpR231hvQ97Q6g6QnAgcpePzr_ZzGGgfwjRtAtFmcMSqk6vevS51NRCOKwhS6OW9z40avfGzq_MzeeFe5F0Sch0wGsQWknRVnatuygSmT6kv4CsPFmFTqrr8NYzrm7UkjRogZHWRKjAcGGVC1sjYnNzzQw-crZa09tpzlYHrIBYJsmMMYNOH0r_lT9i1s3sCFd7vCmN4q6VdDvfu_9J1KTOpa0f2Z4ESk3rgjyPZTuHSS4xWSljMTi3oqE4ifuZHh-Pi0wmq_2R7HlL4kVZ_mg==",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Calculating prime sums**\n\nI'm trying to calculate the sum of primes below 60. Those are: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, and 59. When I add them up, they total 440! So it makes sense that 440 divided by 11 gives me 40, which has me thinking about Paris \u2014 probably because 440 and 11 just feel connected somehow."
+        }
+      ]
+    },
+    {
+      "id": "fc_02c8bee18011506e016ae8c2238b6c87d185251105ee2ced8b",
+      "type": "function_call",
+      "status": "completed",
+      "arguments": "{\"city\":\"Paris\",\"units\":\"celsius\"}",
+      "call_id": "call_KYelbd0JCQD2Q4tXELLaiFF6",
+      "name": "get_weather"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "low",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "units": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city",
+          "units"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 94,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 84,
+    "output_tokens_details": {
+      "reasoning_tokens": 59
+    },
+    "total_tokens": 178
+  },
+  "user": null,
+  "metadata": {}
+}

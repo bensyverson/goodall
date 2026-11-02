@@ -32,6 +32,8 @@ OpenRouter also serves `/responses` (GA, stateless) and an Anthropic-shaped `/me
 
 > **Trigger fired 2026-11-02, for OpenAI's Responses.** Tools with reasoning on GPT-6 now work only on `/v1/responses` when calling OpenAI directly ([findings](2026-11-02-model-currency-findings.md)). OpenRouter's Chat Completions still carries them, so the OpenRouter part of this entry stands. The owner ruled the same day that it needs its own plan, after the decision work; that is `yEETo1` in `job`.
 
+> **Ruled 2026-11-02: OpenRouter's part stays parked.** OpenAI's Responses is being built for direct OpenAI only. OpenRouter's `/responses` passed two-turn tool calls on three vendors, with its small differences recorded in [the plan](2026-11-02-responses-wire-plan.md). The trigger is unchanged: a feature that lands only on one of its other endpoints.
+
 ## 2026-09-14 Client-side rate limiting and concurrency caps
 
 Retries honor `Retry-After`; a token-bucket limiter is not built in because Anthropic's limits are token-based and a naive semaphore does not model them. Consumers can wrap the injected HTTP client. Revive if a consumer needs a shared limiter across many threads.
@@ -109,3 +111,7 @@ Google's API directly, rather than through OpenRouter. Gemini 4 Argon and the cu
 ## 2026-11-02 Local servers in scripts/check-drift
 
 The drift check leaves out LM Studio, llama.cpp, Ollama and LocalAI, and its report says so. They are not vendor APIs a key can reach, so a scheduled run on a machine with no server would report "not checked" every time, teaching a reader to ignore that line, and the model a server has loaded varies by machine. `go test ./...` already runs the LM Studio tests when a server answers. Un-park this if a local server's update breaks goodall without the live tests noticing, or if a consumer depends on one.
+
+## 2026-11-02 GPT-6's async tool calling, mid-turn steering and `configuration_update`
+
+Optional Responses features, parked by [the Responses plan](2026-11-02-responses-wire-plan.md). Async tools (`async: true`, a result returned later by `call_id`) change what one turn of a run means, steering needs a WebSocket transport goodall does not have, and `configuration_update` changes effort mid-history where goodall already states it on every request. None was recorded. Revive async or steering when a consumer needs a long tool or a mid-run instruction that a pause with `Await` cannot serve, and `configuration_update` if keeping request-level effort steady is shown to save real cache money.

@@ -44,3 +44,4 @@ vendor/
 
 # macOS
 .DS_Store
+/probe-responses

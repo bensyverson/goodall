@@ -151,6 +151,7 @@ The triage example is the delegation one. It reads a mailbox, Apple Mail's store
 - [project/2026-09-17-triage-example-plan.md](project/2026-09-17-triage-example-plan.md): the plan for the triage example over real or demo mail, with the Apple Mail store format as observed.
 - [project/2026-11-02-decision-models-findings.md](project/2026-11-02-decision-models-findings.md): which decision models beyond Jev goodall can reach, the wires they speak, and the ruling for a neutral package.
 - [project/2026-11-02-decision-models-plan.md](project/2026-11-02-decision-models-plan.md): the plan for that neutral package and its wires.
+- [project/2026-11-02-responses-wire-plan.md](project/2026-11-02-responses-wire-plan.md): the plan for moving direct OpenAI onto its Responses API, with what the API was observed to do.
 - [project/2026-11-02-model-currency-findings.md](project/2026-11-02-model-currency-findings.md): how goodall fares against GPT-6 and Gemini 4, by route.
 - [project/backlog.md](project/backlog.md): what was decided against, and what would change that.
 - `go test -short ./...` is the offline suite. With a `.env` present, a plain `go test ./...` also runs the live tests against both providers and spends real tokens.

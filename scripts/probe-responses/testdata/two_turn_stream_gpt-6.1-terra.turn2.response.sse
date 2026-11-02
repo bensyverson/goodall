@@ -1,0 +1,114 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_0e8237fd5bcaedc8016ae8c1d1e28887d1a0f9c82c25ff783c","object":"response","created_at":1793638865,"status":"in_progress","access_programs":{"cyber":"standard"},"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":1200,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"low","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Get the weather for a city","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+
+event: response.in_progress
+data: {"type":"response.in_progress","response":{"id":"resp_0e8237fd5bcaedc8016ae8c1d1e28887d1a0f9c82c25ff783c","object":"response","created_at":1793638865,"status":"in_progress","access_programs":{"cyber":"standard"},"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":1200,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"low","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Get the weather for a city","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","type":"message","status":"in_progress","content":[],"phase":"final_answer","role":"assistant"},"output_index":0,"sequence_number":2}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","content_index":0,"item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","output_index":0,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":""},"sequence_number":3}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"The","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"kVFs0r7Vwoi1k","output_index":0,"sequence_number":4}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" primes","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"o4Tx1EGMX","output_index":0,"sequence_number":5}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" sum","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"ojcSgEfc3D0G","output_index":0,"sequence_number":6}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" to","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"lMUChOrB1LWaQ","output_index":0,"sequence_number":7}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"cdGKN2dkBW62bbU","output_index":0,"sequence_number":8}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"440","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"wnex93LDjcc7r","output_index":0,"sequence_number":9}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":";","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"2XL9nA8a2X0MNXl","output_index":0,"sequence_number":10}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"JVj6QonFfSUk7YE","output_index":0,"sequence_number":11}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"440","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"EOuRQbLS1O42M","output_index":0,"sequence_number":12}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ÷","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"J5vTQrHtLxhtlb","output_index":0,"sequence_number":13}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"tk2t2Mdgoxbozsx","output_index":0,"sequence_number":14}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"11","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"KWDAgdDJImQw0n","output_index":0,"sequence_number":15}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" =","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"3KXUThFHX5fQDW","output_index":0,"sequence_number":16}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"AJmJiVkQb8NvVB5","output_index":0,"sequence_number":17}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"40","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"6f3aBceNjoXuJ9","output_index":0,"sequence_number":18}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":",","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"5aNAXPDHdLlw2p1","output_index":0,"sequence_number":19}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" which","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"ZmllBiUXFT","output_index":0,"sequence_number":20}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" is","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"NewFcv6DeQbHZ","output_index":0,"sequence_number":21}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" even","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"Ji6UzT3G6c6","output_index":0,"sequence_number":22}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":".\n\n","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"FwQg0ITVP5I4X","output_index":0,"sequence_number":23}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"**","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"XolaNwVAqoj5dP","output_index":0,"sequence_number":24}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"Paris","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"KiiWbc6bMwV","output_index":0,"sequence_number":25}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" weather","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"vGIXyREK","output_index":0,"sequence_number":26}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":":**","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"rcm0fZ2q8KY1t","output_index":0,"sequence_number":27}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"IsdYZqbFBYp9iz0","output_index":0,"sequence_number":28}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"18","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"Ssyqq8FvjekRlQ","output_index":0,"sequence_number":29}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"°C","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"ezvjgcCHgBNQF6","output_index":0,"sequence_number":30}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" and","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"oJag5n3DqP4p","output_index":0,"sequence_number":31}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" clear","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"2JR09NaSLS","output_index":0,"sequence_number":32}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":".","item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"obfuscation":"CsDmMZfoWG7LQDT","output_index":0,"sequence_number":33}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","content_index":0,"item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","logprobs":[],"output_index":0,"sequence_number":34,"text":"The primes sum to 440; 440 ÷ 11 = 40, which is even.\n\n**Paris weather:** 18°C and clear."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","content_index":0,"item_id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","output_index":0,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":"The primes sum to 440; 440 ÷ 11 = 40, which is even.\n\n**Paris weather:** 18°C and clear."},"sequence_number":35}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","type":"message","status":"completed","content":[{"type":"output_text","annotations":[],"logprobs":[],"text":"The primes sum to 440; 440 ÷ 11 = 40, which is even.\n\n**Paris weather:** 18°C and clear."}],"phase":"final_answer","role":"assistant"},"output_index":0,"sequence_number":36}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_0e8237fd5bcaedc8016ae8c1d1e28887d1a0f9c82c25ff783c","object":"response","created_at":1793638865,"status":"completed","access_programs":{"cyber":"standard"},"background":false,"completed_at":1793638866,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":1200,"max_tool_calls":null,"model":"gpt-6.1-terra","moderation":null,"output":[{"id":"msg_0e8237fd5bcaedc8016ae8c1d2910087d1b406297fa31a358c","type":"message","status":"completed","content":[{"type":"output_text","annotations":[],"logprobs":[],"text":"The primes sum to 440; 440 ÷ 11 = 40, which is even.\n\n**Paris weather:** 18°C and clear."}],"phase":"final_answer","role":"assistant"}],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"low","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"default","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Get the weather for a city","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":{"input_tokens":191,"input_tokens_details":{"cache_write_tokens":0,"cached_tokens":0},"output_tokens":35,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":226},"user":null,"metadata":{}},"sequence_number":37}
+

@@ -1,0 +1,115 @@
+{
+  "id": "resp_0845636ed5798b29016ae8c207260487d1bd1a860e7064d26e",
+  "object": "response",
+  "created_at": 1793638919,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793638929,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6.1-sol",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_0845636ed5798b29016ae8c20e606487d1a602ebe037f523fe",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MIRr4CQAV7F5vIu4DmybAnaBQ_LG0BW6-ymoj9D3ZDiYZn6PR-u9s_rDT7JK4NzHP6biWgS53nnwGL_HOJFKmYAEtNUHfVPEGbgr04akKgRsMr41X3QZdVj85y7PlBZuf1u1cPEzOHj5yGWijeuD5cxMufVzZmZbgQv90aSFDAN4jUj3QQI2kdOhZlw51sTLEqS6NX_FvQqGJmd_BddMCRR68qk6DA1tP7KlOv8ZHQ5vnLybFfyKZuiJ9AJdfYtk80esc66mGPXQ9W3HCkjVKxds3yrSzpaRjbkIKJzJWCazS_-PevxWL3WQ6mb2kXRyClNcVr4caYyfHeRinP28VYMV4Y-Yi9sDxmkO8TwSBPMQoz794baG-VSX1Vl6ND-QuFFZJO2LTNmfnmh1MuY8a5bX_OKxpJevCfdZNglElu0UCo7Zk6VWc0p7dsjkXAquU0TswF4yw-Wwt4irhO6iIRPsJQ4F6P-74R2dnFTa3C2PoFhygBm4uPnOG4gn4pAKi_hiQG6LMpb-OuV_pFUDXjK7AtRq76rug8697aPZxuWf6n2TTgKofrdjTAQvdlHpSaozF_YeR8gqtM0Cw1LjU-tSa9VADH9SjUCuSBIu-sLawoipdxqEhEF4qnqUluXtlBgqhzFFNiHCAae7mmPUM6-Q7-lq3T1HvoxP2bOdPdE92XnC-basuuTCYav17X1c38S9coZhOFxQWPAEdhVlAluyIQKgLXY1vOqc2yqqLCg_fBQf0-qsABAMxi6N-8eFKjckrI3H0NDmHV6u5yhDSGB0ViKcG0ZF5qUxKv_UEbErqK0nN8b3Sm7xLHdq9N89K9e6bRa4rbkbi64z-_goZoM7FcrM3gN4tmEbWN5JgZGyptJBZBpaHf-FfOeFwPkT1BuvE-suwaqolSPOokcA4kzjvkWig_mda450CXX31NDoUK5EPdXlrqGyCT0cJ8O2OWv4nuvL5v6GiX3E3K6BfijvOWhXoA-SCCuOfWqdnl-kJIY91nsE9s4FvZJnP2eVH7aC8WZw1-eKYyyV95FmrEv69gje9YjFoUwrWbXoZI-at9BMpxKJ7kh8xV79wa9vlEkW7R-oX169hLtxNYZ9TKqrokazGubW5KdCPSSRDKp5PMTLVZHP7pSZtPsfbIdzVqGLrv7MoTTG-AUsykJzYB35FxWsXIvrV5V9mPqs2_5xmXA8_rhIp_2_G17BphhLTiojUtSwDawv6zeaSWmDusw2Z21Km4iAYjsAsgcJEIk28YP-aNZDPLUGrxD0rDYQY_5T0qXTUpJaO-4dEonrBZKivQHf7ilqBOersg8si2C7mjURq7kukcTIoxzdFB6yddhU8KwJf7SEbU3NftG3CcxDcUlROP1JaJjvUx-aF-6Gg-K9IGATCBJFGqd4YhIx9VKXtO5MG1tD5_UuGk__NQgon3qlW-BC8zzzBVRFBaGJuK9WDhiXLlTo2COrYz294g7Pvn59_92NLq-ge7bHSzCOuPyI2Ri64Sy8XIyazIomW_vOlvqa-qlotv8JX5RMovmBHGtP31sHWZn_VYcjcazghowdulu8xPYR0k3paXzD5asIgbQupFGqfDf0STc7prVeGMAkNtQMMhLzyAyFU6OncLGdtNYteudJIhbCwWF6lIwXGDvtimFVwCfJQIq1EX3gmdZ2aJ4k-x7c2VFTpOncBram1aL-mLmTTQA0nrymttv-peLUrNJ8rfEuDlpAQFuxfERQ8bIrJoXwkaISL4s8-FgcvKNeQRcSFb1Jn19iiumHBAqBHkpgmH3wGKJqb5Q78nGVSGcEUQWB4FcvH-ikW4QquudsW4_8fEGTRkvYM1TnobA7JXHhl3Wlwd0S9KYixB5RlGspHcFZhgTA5grrqdDbAkIUBwyijOAA_rbCwv2TgLE2zwMfU9zUMO1_5EvG5bq0d3wmdt6dTMmsDW5rvUddIvjtEBZNSK3MU7jkEUWFe5NFcCgdTKEYNnxlwD3uVtdoPBBcvgll5xEGEU0EdZiJIxiZ2cbABXZayCFRRcXqw3BDDjCUHdF4bkZ5P7ubLKgW4xJRmYcWZBvbclgHg_rB8_BKOfi8vzagVHAqhes2IuxThfg6_XpeFNlT1_-9HgCjNDrKZzGSR7d9QpEs9pTRWAwLjKJy5dmOdsvBD64JnY8Yg1WuOX7LonJUSbRdPU5L58N1IfAHErWwrYMh8GIK-wx_SKi6_muZyQ2B5dyFwm1CN7X2CXYBNiiaYqysS4RacRDjj3TYBirNNdVIsTlB7r3AesBMicUmYBCKHt9ECmgMFPGzKhxJPO1_6AKttAonjjgPdbisaQoNi_cdws1eKuoxxmlr-23n48c2pUaFnSi_8Mfi9t7ztRgLXd_hrEpSbGX56hOY0aVmjgmq4auTylUY9wL5blUG0BRX5VRcSLqY-uUNqLhWChtcC8haFqZc0UOC4n3_tUx0Z3rEGdHaDt_jipVhbghlkEm-nbX16fx9qFCZc7xDKA_SKKdZzRLuXdqu_PEDPbioo7GDDDDQvOhrNH8YxXIhvjU7YDQHlle8jb4UezCLCEBOIowBAv6mzXjozMhjXiatniS7zWV0EyxyOIGxRP3EpmduLUk9PWBcuzvZD4Vf6P7JlTw8jx6_X5TrGwPz3JBBjMxkasWotBnhgQUoPOfZEV7XX73KVlonxV-CAcVB4sZ0icJbmUpKSqc5_7G4RX0v1dX907vLFlvBQ9bu_ukHusmCGGwKpdktoOC3mp0hrxGLFkCAN6MEYs-NWtFX3vjqf13VRYkq9xoOCPai1JGwMA2nsxpcXR_qmaQh0rqbURet9JpRg62yMt13embbg6lJE3tZJOXSDC7GVfPJHjKcxDbgumy7RCgbBbuBx07xDRj7Sa5cJGQYlzeCnI0VC77k55tDtU2E_5Vs3g1ebBMYTwRlMFPH1REpEk7XgtMc2orBLCwRhtlXoi-TvDUxwtars7f1ueeOC4Er14kJwrj_gEt_iVLpx4NGZQDNtWkP1hcZAH8LJtJSfUI6RdwqV0gAzABTt7va-jSD1WorSYD67qSWCnnily72WBzk39ujtgc_sRrgm6os6qxvlwyEsrtqH4s85ZIv6cimmoYieMtCVvLj0nYn0_Nf7edR1I_GlhrdzpmpM0xs7PCRxvq2OtmNlwK_f_XAAA7zeSo6Azv2lPzEs80QL-EGfd1IEkLLp_rp9twtk2Dsgh-N97irp3Yx7IQysqhtZdCFxrgx6lC62Kq6fMouWMkow6feUUNpej-li8pVq8y3PVTw_UfOt5abn6d8DRRWd4ov8RQwj4ADZF9JlrFN9c4Zu6T6w1_swkWBdwQnmvS5SHx-0EMJqL67DS10oCE-WizmkloHwXL7xvgqGlI77LnYd2Cu_7L6dYgWvNcBM8vj2wTArvO7uB0jxZfPjS_paG2GN_z8Ww0iiw0pUsxoBU3fnJqABSxncg1mpSox9SMyMCIBknYpVzWgsTRb76U2rzlI91HUOPsCwm2BGRck2l2JwSKJLq_Jr0eYrcotkqPQEvv4RnwywaMJ40gI1CThWVZa_hap26rpl0BFYLd76RrfY8KKhnmidgZ9HncyiPwzpeuk2FffUvWCa1vssc3nRQE-i3IRO4DKsG0AYHIaf4yu5a8XvELIvC6daSNMxQ8900dpYV8tNnzFfXpfDV5Ujj92Ef1kkzbcUdtwHra3kukMnoJMV5ikxfG9PHtR6a-7BKoK8i56Ht7kGeUd1anQlLZLTOeH1P1G_zkyaSWxsfv0Fl21-nLe7XWT8IjW-FzUYoi3BghBUaCCjDgomUPCT9IhG6UhBY5pAnWTQUl37AJg6K9LS8J0QYFTxZB9Glo_yjwGv1BXrACGEiyi4ANbJy5Vu2mJj2arIp6rk4Cywdi1Z7JN2qaC4ePiUJK",
+      "summary": []
+    },
+    {
+      "id": "fc_0845636ed5798b29016ae8c211b2a487d18cf6a6efd6a1112b",
+      "type": "function_call",
+      "status": "completed",
+      "arguments": "{\"city\":\"Paris\"}",
+      "call_id": "call_6mSt0cpv3Cd4oae9vLgWEi3n",
+      "name": "get_weather"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "max",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 90,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 269,
+    "output_tokens_details": {
+      "reasoning_tokens": 249
+    },
+    "total_tokens": 359
+  },
+  "user": null,
+  "metadata": {}
+}

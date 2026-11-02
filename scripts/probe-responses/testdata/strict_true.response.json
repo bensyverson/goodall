@@ -1,0 +1,8 @@
+{
+  "error": {
+    "message": "Invalid schema for function 'get_weather': In context=(), 'additionalProperties' is required to be supplied and to be false.",
+    "type": "invalid_request_error",
+    "param": "tools[0].parameters",
+    "code": "invalid_function_parameters"
+  }
+}

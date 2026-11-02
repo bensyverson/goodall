@@ -1,0 +1,107 @@
+{
+  "id": "resp_06ef9223e9063cae016ae8c25af1c487d19d5a54fb159104f0",
+  "object": "response",
+  "created_at": 1793639003,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793639005,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6-luna",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_06ef9223e9063cae016ae8c25bb45487d18aa72ac35b4f190e",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MJdctHfS8OCk0gqoayUKZ7910cCZYhJwgqhrPYIgk9QwrfljQEeIMwYKaLpaiQ_dJGdtgg5CPwfU-5NOVYeNbcn4h-zM1klitTCi-z-2woQ8FuQgdu1SavQ4f_Cy-Ab2C91zlUCG5hYr9C8hkekVLnlnpLx2Y0xS09Esq_P_9YK8a3pscr9r-NYPfMJHYj2YvYAJBVzc0dlelrJTfu7GGEug13mOS7xjSJu7pB_6NnRFo8nCGg1HVCpoRmE6v96UXBdfs9mk9vZ7BLTzs27qxUk7vNivsQNaoMjR0Q6UhnJ_UpCFSp7emmy6qTHHmeoDfdnwTPXJDwxGbCmY6LWB3EcR4K1lP5lueh5z6TZXtIW9N-1dctfry7Ml6dItu-q52So4JEwq9Odg6zPPoAn8Wl6Z7aLj4GQWwRpy9zRCZAH6Pj_tNxlA3zkSqoXKVbp2I8YEiZA-hO75HN09OTC1PTvGdLprC-liLDaLGbsbiWVPmzJAAZi7ypGaQEdL27F1mAidWVwk08IY3i--5cY7FRCSxsF6xNdPDWDZ6daKV-BtqlPrs9pJ_eluOc6Cwk9yeI9e5PcsYPw0hzdlMGLKL1QP1b2afw5XYeX2NkF3VKbv6_hSS508V1NaCgxSvze-_gkNuSh0ijSRC5goq7KobwKkQr6F9j-kP_fCeCgSLnQFaeJXoSsDtPctjNeDe9QsWiFMsK5dO_JrTCvA43Dc82mxt4vfayN_7Wc4JIw57r7_OQiEWSbri8hDT7KjLhRYwUAmHjrjWxIyZ9oscC59Ppz3qoewpe_xnIUdF4Dwq177Tp6noNdYQEOA_8r0hWxApQFp7vsLFMSBtDgpbtGB2tO6pnWRFfflUKrobryWN7zKU2R_7v-QvcogbB-TOM5245XINJZs1Dc527o4e6ExLF8rQ-qqi-wU5xK55tiqKh1c968K8R6SOhkd4eW-matwv1VmYxjPAIROoB5Lxp-jpWrMHOLyg8PlsWrulvGWHJpIQ8WOchyQpwckTAASAitwXmaGG0PcpyCWgC1oRQR-2Oq_Y5Z2LqfeFy0wD-Y-Xbia7BPbqlWl-STbXmPsaD2Dlv4tVEZS1Off296mkZ9c7egyYeBYmbZIcSU5ChIABhP4gSF1PAUCK5K5Xwezk05NVEj6EKs6dm1uOfp8OvhKO1lk-gzh1IRNa-EZD06Xn5WkH3B1ux43TsJ4-pFzab9_ID_fKNBOVftOTYJJ6VctPlnTJxWcQ_O8NmjBSm5s1WXCBXjfY9cYEfqAn_r2uKC3I6zWbOsdfNOdEEcB7HDl26fm2z0P6ZLD35fpDqDejLkZ9DLSEP-q2c5_3jegXzt4AU2FPTcxuZEmfTQKMMZ1_i930Tudm6_6XofeeN7CA7_xruM1hRuVnj8TSrqXyJWiNVEDGYKrPG9YhMbVjY5TOQnph1sgkSYQheVHNbSJJj4XgwwyW7dmgW_zZVKQQ2kY04dC5bsfSlUO5PBS6vKisnRo_KoAzoJoLRI7-DaYbnQlQmZfgLfT2_3wH06jJzE-JIub_V8ptUc9AhD0neLTWfOIY0QRSfHCjTCLkVMO3euiWsemvOdcSWAJAPxxabT-U1CZMNKX4OzJ9hJi1WMiqImusOWIxkCv6e84Qnjd8ymx1i6clCZZSYHdIbmuwM33Ok1TsxhcNIUTDGqVAcz6Qae963mlGlSQLcoIoHNV9N7aUvJk9zATHnr17M9_ZGMZjFd2GXYkdLBcq7fpJ5J3HD6JrC0gWEYHfD0RWrT5hbfZ7AIaYmE8rAPpkiwmzrG0CTNORFuV8JfvmzzXx94z7TnTFdo4Zw1Lc53QPkVkshzuTjJKu6BI1ysxlJ3y839Gu1wTluZ_uOOhmLHXavhx5smupBR6oSey09MVkqcemJwqF4=",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Clarifying image needs**\n\nI\u2019m considering whether we need an image of an orange color. It looks like a square shape, and I might need to confirm that it\u2019s definitely orange. I also need to include a name for this color and the quote from a PDF: \"Marmalade on the tortoise.\" It seems important to ensure I get the color and the quote exactly right for clarity! Let's make sure we cover all the details."
+        }
+      ]
+    },
+    {
+      "id": "msg_06ef9223e9063cae016ae8c25d8aa887d195c47e8a54b557fa",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "Color: orange. PDF text: \u201cMarmalade on the tortoise.\u201d"
+        }
+      ],
+      "phase": "final_answer",
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "low",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 50,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 61,
+    "output_tokens_details": {
+      "reasoning_tokens": 39
+    },
+    "total_tokens": 111
+  },
+  "user": null,
+  "metadata": {}
+}

@@ -1,0 +1,1 @@
+{"model":"gpt-6-luna","input":[{"content":[{"text":"Write a long poem about tortoises.","type":"input_text"}],"role":"user","type":"message"}],"reasoning":{"effort":"low","summary":"auto"},"include":["reasoning.encrypted_content"],"max_output_tokens":16,"store":false,"stream":true}

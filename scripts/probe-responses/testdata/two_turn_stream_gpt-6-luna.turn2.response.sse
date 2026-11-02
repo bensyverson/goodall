@@ -1,0 +1,126 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_0c2198a873629f53016ae8c1d4b4d487d19045e3eaf8ea693c","object":"response","created_at":1793638868,"status":"in_progress","access_programs":null,"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":1200,"max_tool_calls":null,"model":"gpt-6-luna","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"low","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Get the weather for a city","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+
+event: response.in_progress
+data: {"type":"response.in_progress","response":{"id":"resp_0c2198a873629f53016ae8c1d4b4d487d19045e3eaf8ea693c","object":"response","created_at":1793638868,"status":"in_progress","access_programs":null,"background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":1200,"max_tool_calls":null,"model":"gpt-6-luna","moderation":null,"output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"low","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"auto","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Get the weather for a city","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","type":"message","status":"in_progress","content":[],"phase":"final_answer","role":"assistant"},"output_index":0,"sequence_number":2}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","content_index":0,"item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","output_index":0,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":""},"sequence_number":3}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"The","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"YsE1yZiO50hsv","output_index":0,"sequence_number":4}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" prime","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"i4NTP62lHS","output_index":0,"sequence_number":5}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" numbers","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"uLbGynLs","output_index":0,"sequence_number":6}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" below","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"svQO1skvkM","output_index":0,"sequence_number":7}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"Wd4wOY44jAdMhTy","output_index":0,"sequence_number":8}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"60","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"02m2xWQxNYJ4nG","output_index":0,"sequence_number":9}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" sum","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"YpVLb1KpOaB0","output_index":0,"sequence_number":10}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" to","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"IJq5vaCCBbnwQ","output_index":0,"sequence_number":11}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"oxXzENnHfCRS67v","output_index":0,"sequence_number":12}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"440","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"BvhdZGgoDZvYm","output_index":0,"sequence_number":13}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":".","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"qgJSvGxdAWx0zzp","output_index":0,"sequence_number":14}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" Div","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"VHB3ov9AhXGI","output_index":0,"sequence_number":15}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"iding","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"icJOPwLJJh5","output_index":0,"sequence_number":16}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" by","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"irFCIBYAeP4DL","output_index":0,"sequence_number":17}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"z632k3bTzhweCLd","output_index":0,"sequence_number":18}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"11","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"weY0O469FJpket","output_index":0,"sequence_number":19}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" gives","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"SlYZ30EGnB","output_index":0,"sequence_number":20}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"kEZmkcoq8x5pztV","output_index":0,"sequence_number":21}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"40","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"PyyvTkDFakC8bP","output_index":0,"sequence_number":22}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":",","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"KLM8D6MWQXk6Ezh","output_index":0,"sequence_number":23}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" which","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"AMKU4zYU0z","output_index":0,"sequence_number":24}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" is","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"ICoGy41NYg5Hh","output_index":0,"sequence_number":25}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" even","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"5tDaJ5m5iNf","output_index":0,"sequence_number":26}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":",","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"KEZv25Aa4fJEdVL","output_index":0,"sequence_number":27}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" so","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"WMrOhIvfcD1yA","output_index":0,"sequence_number":28}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" the","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"fjzB4C1av4yL","output_index":0,"sequence_number":29}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" weather","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"NEHYEKxb","output_index":0,"sequence_number":30}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" should","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"q3wwd6Ig5","output_index":0,"sequence_number":31}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" be","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"k9COVhq3qWmfd","output_index":0,"sequence_number":32}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" for","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"XmbaZNY22MNP","output_index":0,"sequence_number":33}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" Paris","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"ocUWKcAai8","output_index":0,"sequence_number":34}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"—not","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"CEvN0aZ6eHss","output_index":0,"sequence_number":35}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" Lima","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"woaxd2pi08N","output_index":0,"sequence_number":36}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":".","item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"obfuscation":"xfEdZcQROcw30Th","output_index":0,"sequence_number":37}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","content_index":0,"item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","logprobs":[],"output_index":0,"sequence_number":38,"text":"The prime numbers below 60 sum to 440. Dividing by 11 gives 40, which is even, so the weather should be for Paris—not Lima."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","content_index":0,"item_id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","output_index":0,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":"The prime numbers below 60 sum to 440. Dividing by 11 gives 40, which is even, so the weather should be for Paris—not Lima."},"sequence_number":39}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","type":"message","status":"completed","content":[{"type":"output_text","annotations":[],"logprobs":[],"text":"The prime numbers below 60 sum to 440. Dividing by 11 gives 40, which is even, so the weather should be for Paris—not Lima."}],"phase":"final_answer","role":"assistant"},"output_index":0,"sequence_number":40}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_0c2198a873629f53016ae8c1d4b4d487d19045e3eaf8ea693c","object":"response","created_at":1793638868,"status":"completed","access_programs":null,"background":false,"completed_at":1793638869,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":1200,"max_tool_calls":null,"model":"gpt-6-luna","moderation":null,"output":[{"id":"msg_0c2198a873629f53016ae8c1d53d4487d1beb989ba3c6c1d9f","type":"message","status":"completed","content":[{"type":"output_text","annotations":[],"logprobs":[],"text":"The prime numbers below 60 sum to 440. Dividing by 11 gives 40, which is even, so the weather should be for Paris—not Lima."}],"phase":"final_answer","role":"assistant"}],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":"24h","reasoning":{"context":"all_turns","effort":"low","mode":"standard","summary":"detailed"},"safety_identifier":null,"service_tier":"default","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tool_usage":{"image_gen":{"input_tokens":0,"input_tokens_details":{"image_tokens":0,"text_tokens":0},"output_tokens":0,"output_tokens_details":{"image_tokens":0,"text_tokens":0},"total_tokens":0},"web_search":{"num_requests":0}},"tools":[{"type":"function","description":"Get the weather for a city","name":"get_weather","output_schema":null,"parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false},"strict":true}],"top_logprobs":0,"top_p":0.98,"truncation":"disabled","usage":{"input_tokens":130,"input_tokens_details":{"cache_write_tokens":0,"cached_tokens":0},"output_tokens":38,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":168},"user":null,"metadata":{}},"sequence_number":41}
+

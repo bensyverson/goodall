@@ -1,0 +1,1 @@
+{"model":"gpt-6-luna","instructions":"Answer with the single word: tortoise.","input":[{"content":[{"text":"What is your answer?","type":"input_text"}],"role":"user","type":"message"}],"reasoning":{"effort":"low","summary":"auto"},"include":["reasoning.encrypted_content"],"max_output_tokens":1200,"store":false}

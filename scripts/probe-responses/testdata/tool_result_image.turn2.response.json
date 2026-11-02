@@ -1,0 +1,122 @@
+{
+  "id": "resp_053e2d2ec5ee3ad8016ae8c2b4d46087d1967e43b19981de2e",
+  "object": "response",
+  "created_at": 1793639092,
+  "status": "completed",
+  "access_programs": null,
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1793639096,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 1200,
+  "max_tool_calls": null,
+  "model": "gpt-6-luna",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_053e2d2ec5ee3ad8016ae8c2b598f087d1bc9a6db6e50c3bbc",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABq6MK4y5jlU7GpNIR8lJ-IYzPjuPuMQyT8AYp02GZdvIw3p8Eu-efEwTjY90Hjb3Wh06IrM1Tk1qoAy4CRMz0HkN40mAqvQVL3734mKNb3sKCkPpija6KN5_h40nSmo5hAoFctD8mJ1h6ABdbZZLgfpvNOBAYk76Ogaapgw6jPYIuf8dfnHj9aeskM2ppqRgrikje5vcbFieW5TZR2ufTiazH08x_ssml4eWaMINUsw_Lx50pWu3e4471IJb5aAJh8DrZr0VRWoYY-6Td1ChTJSoariiT9-wOggcSBmbNVnGY8kBVqQg8LjIQjKFSss49LyntH-y-lQxEa22hERR0rKLuKgOZFSDf86g30W7C1FAghcMdufhsBLpIjcSzR-aALn05elFXlEWajzxL3hQZtUX_p-zEOc8o05ukwcgV5Vn1tAqnnvRwbnW30WR20GI0fZbA4uUX48OZ2cP_9JBXsduQpGypTGSAz-WFpIaJuY7JUOweGr6pkV6267aoxxr53bhVGd2uWUrWhIvW13bdQz3o9pDLE2-1kkTxootg2xrTbBBbb50T_xCqXI_9mZMUZ_CgnTrQpi77N_QMaISIITa8wPXzNkKLcgS7jPV1YoVwlx7WdBf2tnvAAO7cx2tdk9HAbU4gWe1OMy_fTKsBSYp97cOBX-2LLQ5kS8WMpNG5srFO8qIGUZeYLfM9aIZQK8gIcZKLagnAx4Lev7X3y1cJl6UCppptWqMw8VjDf9v2hBbCufsMCJ4Yoy-qr_RKHoxqU2KFsPYZw-XAKvkYfAOvvyYWPJh8Xuy8EvjnAjWravvqiAu-yMUMKtZC52ABbwObXn4KqGY3p0wWDXm9D8yx9ft4w_yJYvjuImKuXJbEKKNlwexJay50FoYfal8cp1my49iPVV1AF4STwSIPQTzJgaIIhrNTt0pgDauy-wb7lTxa_i_6HTZiPPevL9sO3lrWBkNiFK-d1gjwI-wg3ohoak4ak6j67zc67n6cIkSTy2lpmqxk6OxuH6_vjmHa5B6iK3Esf5SvMYA0QS82r7EGgFUmnld5_87bBEFq32-1Q2hcZuJsJUoDagM4JIlvxd9Z3yzLRB868X26ZG_Wythd1JQyjqfyl0BsB8ed7ncCKWmc_tPenPhdnFt9FvRxxuOJpQEPHmQAk_1TxI3n09yJcc1mJSdhDNzfzOngo09OcDGnXk8v0FD2ZQTdyqmC_OUSxN2kTdSGUL2K0XtC9iD5B51YsCZJSkbyTTlK_6v7-gkJUlJSztTUZrcA5n7mqfNOIB6Lv88CSquEX9WFjnPBKYwfmtLxHQfHEvj76yIUAgzaDOC8eJpB5A89ZmWcQKNovBuOIh0OnBn6epyGsc7oxa9q32Qx0kR0GGY-HXbms864kvLePoOl51uPEKhqSolV3RbBWEcWR_OV3b-jTjpE3JCMdht5VdHMMjmWL9o3CtrJVJnKCHYwsslJbPzwcYBuPd_KAJmsUxVLkfq3QPVH8AQIiyAzEIkBjPdAVBKwr6AxYOnyxRUCPb9S-ds7OWAqo6YpRgSo0bV5Dr0hFyjkHtz_II-bXQkGem9XGh-jnIs6wLhv5iTrSjkKsFARS3_FKmsNnYoSLc_xxKUgW-Eg244VXOL_hCpMuEcj8Kn23EB6rmAkXs4DsN4JsSG-t6cvpuobdE4S1ivLpblcvjuIDzKJLkcVeAlIaqiNyM9a7Uj4ba_nucByoWE75ARkrLGv9-Dl8nxKDRARQwn5WarN_sHE6pR7X_3RrBqY30sbNW3_o7gujHtXdav65BU2pghNK-TB5U9dKsUQAV2-BTTnCVc-QbWkCb9t53Dj9yhYcYJj1w0IRwVAaAiE0vgRGNpRRWV9aSsCO6DBb1teJkuMI53Zd2BxuRr7XXeB-o63sIJGrMXRPsjQCfIKrnywpmyk0IgXjc163g15jndhAA9bT_jOB4fVfOxe59_U8ehK3pfMnhiG0Ivqik0--SCDwlkXDChv2xPfs8iub6CZWGlOX2D_dcVG5tbfoo3tszzhtk50esS2PMXKIcHJsnKD6Up5-FkLcHnXQZG4dvgeRWmhbrZFWUl_v8-NosH8MvfxnhMxtJaeX8qqNrAf4Hq6ppJHLRj4YMj2LHwXa4hfiE45-_JsPQfiF_h-uzcFjBLjY-BbTrF_knoXgGDz5g8FtZKX2T0c6nz0gUTrVqpcXtOSEJOCh1NvuO24XHinuBl3KaviWhpH28B5Q-dNHfF-Y-r88QywEMrB6_45W4yANjRLtryJM9lULYIDw9ROQgpsvFvBgLlsKMhV9CJ0sJPJ0pGfZ-XZhftiZsQXwdbFqHgQn5021-ePeO8tvUu50vVW9Qc4baVC13BtEr2uoQ-d4AdDrGItoIwt3c1auyBVeFKwQ3jMQV7gykB2QQ2Cx1MJHGpGUbRLmakaWvNhrcpet1flmr1f0z29Fy2uYKnOscODdaFH1IR8xX7i10QbvxTW9Plc6yW2UhRRww4ydYQ8vIVIK6lInRYHHB_9gBRbhObBzf4yyBDGaIbnZvaiGfQaWQ4aU7JvIJszcrlFE3a9a7LTf3lhvYQPAfADvTt0ZccYhU_RLh4ZBDalMhtDvt5pDDADbCxwdS1bmK9l6wdotKSNvl_tmzBnjGznL9GpFjIcYIoLiL48jDqiiTAVVNZOx364Y4zz6gFpgOMlXct5G3xKlq3-HplDLwJGTsRsnLRKKTKRLrAEq_j4KPr_1zPVwr78eWcNCIW-ciq-QhPRO0bFY2R5cCTSDoV35oHwm6SwXVwuf0ILvK1f6wNimxIl0TjriPdy8Jx1aT5dnUXLGjc8o90NXlLPL12FPt5feNUOyMg9pxmwcwz0F2e-RL-IAvXsfD1n9WEeihnnZBVRedp4FQLdVSaxMzW0eLIHyYti7av4z7TQfi-bgVw7L3pFQhPmlJkJwOdFzj663kJ93ZI-tGY5QCzRUsGFnizi2VK_R5fDD9op6satVQoIEDn2daZFJHeDJwm5pBozUqQAf_Dv7fLgew-fvVpUlcNoR8rviYE3f3NtqKuCHl-FnKS1_sLrAyGw52jp0oiRLfLSk9aXPeb7SbN3-xgQZyjB8SFYPiPp2UBK0qjr1yXsdxz5BLcKeD-wGWmFXZ8Lh44QZhGlZ5GfK8xSPNT0Bes9IuLxGWLpLGUJ8yqvPsjZ3sm-rAOyJG6FF133sOxq1pz8JaaNanj5Z4gD0dwvh1gAw2MUxuzldsMc1FEZU9f-oZEHiD1KRYCAqPgi-bGOI2zig2loHrmbQjxEuqmB1Yv0x327nmTZO0zXtHZZoo15GKeNYMnUo4JrRQT_IcAUEfDWKxeC0TU87EuxiNHEyCRWKfnma05DjIBMoCeErDOz_494tBHF29CCKYTgSzRlojlsWa2eTXQn9Bg9FSCVco-cqjadK4jqioMAcfOo05HCiYaXVGmbE5rBZayBAmLuSajWJQayZ7Whghv8UTcgXpMyd_PRtfhGdgga-KxRpVUUQUsi92Ss_4dI6yFclibCdsSIyG9AT_R6aLvDQL5y16aep5Awj3EnSBWoPouvYBPqj26hwboumky0wDphA3IF7vVVbqHR8V05IheRwYZDB9oPo81nQmHX2vafQETY7oFhKL8qRrmZcP4L9I2Bt-N_cmsoNy92VYq6S-v8FhOrcnJKd04EYR8GKj785AZbZ-0zyTmGiPaZpnWrr5lEj-RRb6WhYUoFOPcBHvuiUX_5rCxDPnXyvsZWDqNkOQ9Vr3kdQnKaNWG-feoaRSu2Qcp6e9zNp6YlLJE_u3UUnJj6roM3Wk1boUu3UfM-2C0tCGOWQGCA3kx-G72VxzcJZ87E_nXX1WvNbZgIfqZAUWP2wgQWf9pelEOMriFx8ORtjzYfrWvGc_fXPuGTVknngLfk9hkHd377lrILo5XAFkTUzkRYqoL8Q3Hyt63w2UBvTyghXEzajrZ_g5PQBEwh-dmTGrDNuVo-LUDXRCFol5InE1LIrZBEmWJvW3CzHmQZNlriPWcc4gt-i6HVacvc6hduSW32rx_eEimh_zRH2VyGm6RTHbIb9fFeiUilcINA_hzZXj8Md0_krpZXAUAXw7lxD1xsua0h-wY2FCI1dqbO9NIzKfP4iISauYuzRV9bWM_yECHl0YViygkk_6bAT7XUM02HNnY3P4t1-ni1n4EHeqtAF_3Gbwt8xQEFY6hZIiz38HDRTSTisGvqWJlhA8AfVtXM2kn20Y6krSWO1CqkjhCszAabErH6Kx8ivJoskaFTpjoGBBTeCihGssjTn9KJX5gpgMRFGYV4yotcNy488zhoKsn-LHu6i7AMuNTSaCKcxlItS_MG0CFuZHmEKXBCn8MZuimqk69e_sy7733lYROvKtwXIOgEAxJwSHgTLv0e8qWZ3sK8=",
+      "summary": []
+    },
+    {
+      "id": "msg_053e2d2ec5ee3ad8016ae8c2b84f8887d19bcb26ecbf137b96",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "The weather tool returned an image without readable weather details, so I can\u2019t determine the weather in Paris."
+        }
+      ],
+      "phase": "final_answer",
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "low",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [
+    {
+      "type": "function",
+      "description": "Get the weather for a city",
+      "name": "get_weather",
+      "output_schema": null,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 141,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 292,
+    "output_tokens_details": {
+      "reasoning_tokens": 265
+    },
+    "total_tokens": 433
+  },
+  "user": null,
+  "metadata": {}
+}
