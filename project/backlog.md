@@ -88,6 +88,25 @@ OpenAI's strict mode needs every property listed in `required`, with an optional
 
 Most decision models take images, Jev 1.14 answers a `box` question, and the surfaces disagree: `assets` with references on TypeSafe, `image_url` parts in the `state` array on OpenRouter, `input_image` parts on OpenAI, which also takes them per question ([findings](2026-11-02-decision-models-findings.md)). Parked because no consumer needs them yet and three syntaxes want a neutral image type of their own; a Box answer already arrives as an `UnknownAnswer`, and a caller can already put OpenRouter's parts in the `state`. Revive when a consumer has an image to judge. `goodall.Block` already has a neutral image to start from.
 
+Facts for whoever builds it, read 2026-11-02 from [Images](https://docs.typesafe.ai/images.md), [Box](https://docs.typesafe.ai/primitives/box.md) and the [1.14 post](https://typesafe.ai/blog/jev-1-14):
+
+- **TypeSafe gates images and Box behind `TypeSafe-Danger-Zone-Images: true`, per request.** Without it the API answers 400, "Images are experimental. Send the header TypeSafe-Danger-Zone-Images: true to use them." goodall's TypeSafe client does not send it.
+- **TypeSafe does not vouch for this in production.** It calls these features "Dreamer-ready": the format, answers and limits can change between releases, and its post warns that models do worse on images than on text. So goodall should send the header only when a caller opts in, by a name that says what they are opting into, and never because a request happens to hold an image.
+- **Box has no "not found".** It returns a box even when the target is absent, so a caller needs a yes/no question beside it. Box needs `jev-1.14.0`, where images work on 1.13 too.
+
+Observed the same day, one raw POST per row to `api.typesafe.ai/v1/systemone`, no script kept, on one generated 400×300 PNG holding an orange rectangle. So this shows the mechanics and says nothing about accuracy on real images:
+
+| Model, header | Asked | Answer |
+|---|---|---|
+| 1.14, none | Yes/no, Box, Choice | 400, the sentence above |
+| 1.14, on | Box on the rectangle | 200, every edge within 0.02, confidence 0.93 |
+| 1.14, on | Box on a blue circle that is not there | 200, a box, confidence 0.2 |
+| 1.14, on | Yes/no on the rectangle, then on the circle | 0.95, then 0.02 |
+| 1.13, on | Yes/no and Choice, no Box | 200, 0.86 and 0.00, Choice correct |
+| 1.13, on | The same with Box | 400, "Invalid request." |
+
+TypeSafe's [models page](https://docs.typesafe.ai/models.md) still gives Jev's input as "Text", which these calls contradict.
+
 ## 2026-11-02 OpenAI's conversation input and prompt-cache controls on decisions
 
 `/v1/decisions` takes messages, tool calls and tool outputs as `input`, which could let a `goodall.Conversation` be judged directly, and it has explicit cache breakpoints, a cache key and a TTL. Neither has an equivalent on the System One wire, and neither was exercised. Parked because `decision` starts from what every wire shares. Revive when an agent wants a decision over its own history and rendering that history into the `state` proves worse, or when a consumer's repeated evidence is large enough for the cache discount to matter.
